@@ -36,26 +36,20 @@ jobs:
         run: cargo build --verbose
       - name: Run unit tests
         run: cargo test --verbose
-      # - name: Cache cargo registry, index, and build artifacts
-      #   uses: Swatinem/rust-cache@v2
-      #   with:
-      #     shared-key: "coverage"
-      #     cache-targets: false
+      - name: Cache cargo registry, index, and build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-targets: false
+          cache-all-crates: true
       - name: Install code coverage dependencies
         run: |
           rustup component add llvm-tools-preview
           cargo install cargo-llvm-cov --locked
       - name: Generate coverage
-        run: cargo llvm-cov --lcov --lib --output-path lcov.info
+        run: cargo llvm-cov --lcov --output-path lcov.info
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           files: lcov.info
-      - name: list folder content
-        run: |
-          ls -la
-          ls -la target/
-          ls -la target/debug
-          ls -la target/debug/build
       - name: Run executable
         run: ./target/debug/tiny-wasm tests/assets/empty-fn.wat
