@@ -18,6 +18,7 @@ My goal is to split this into small chapters with very specific goals and additi
 - [x] Set up a CI workflow (e.g. GitHub Action) to build and run the hello-world application natively for aarch64.
 - [x] Execute the unit-tests in the CI environment.
 - [x] Extend the CI setup with code coverage measurements.
+- [x] Extend the CI setup with a code formatter and linter step.
 - [x] Add a status/badge to the README.md that indicates the build/test result and coverage information.
 
 ### Detailed Description
@@ -26,6 +27,7 @@ My goal is to split this into small chapters with very specific goals and additi
 - The hello-world application should consist at least of a main function that prints a string obtained from a helper function to stdout. The helper function will be used for the unit-test.
 - To execute ARM64 (aarch64) binaries on Ubuntu, you need to install `qemu-user and qemu-user-static` first.
 - Refer to [The Rust Programming Language - Test Organization](https://doc.rust-lang.org/book/ch11-03-test-organization.html) on testing.
+- `cargo fmt` and `cargo clippy` are the basic code quality tools to be used.
 
 ### Solution Documentation
 
