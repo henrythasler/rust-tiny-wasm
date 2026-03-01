@@ -1,3 +1,5 @@
+[![build aarch64](https://github.com/henrythasler/rust-tiny-wasm/actions/workflows/build-aarch64.yml/badge.svg)](https://github.com/henrythasler/rust-tiny-wasm/actions/workflows/build-aarch64.yml)
+
 # Rust-Tiny-Wasm
 
 A [WebAssembly](https://webassembly.org/) Compiler and Runtime for ARM64 (aarch64) written in [Rust](https://rust-lang.org/) based on [Tiny-Wasm](https://github.com/henrythasler/wasm-playground).
@@ -13,9 +15,10 @@ My goal is to split this into small chapters with very specific goals and additi
 - [x] Install [QEMU](https://www.qemu.org/) if you use a x86_64 machine for local development.
 - [x] Run the hello-world application for aarch64 target using `qemu-aarch64`.
 - [x] Create and run a unit-test.
-- [ ] Set up a github-action to build and run the hello-world application natively for aarch64
-- [ ] Execute the unit-tests in a github action
-- [ ] Add a badge to the README.md that indicates the build result
+- [x] Set up a CI workflow (e.g. GitHub Action) to build and run the hello-world application natively for aarch64.
+- [x] Execute the unit-tests in the CI environment.
+- [ ] Extend the CI setup with code coverage measurements.
+- [x] Add a status/badge to the README.md that indicates the build/test result and coverage information.
 
 ### Detailed Description
 
@@ -29,6 +32,7 @@ My goal is to split this into small chapters with very specific goals and additi
 - The ARM64 (aarch64) target can be installed with `rustup target add aarch64-unknown-linux-gnu`.
 - Build and run the application with `cargo run` on the native target.
 - Run the ARM64 application with `qemu-aarch64 -L /usr/aarch64-linux-gnu/ target/aarch64-unknown-linux-gnu/debug/rust-tiny-wasm`
+- To build on a native ARM64 target in the github CI, use `runs-on: ubuntu-24.04-arm`.
 
 ### References
 
