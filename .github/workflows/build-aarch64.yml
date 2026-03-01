@@ -18,17 +18,22 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-24.04-arm
-    # needs: code-quality-checks
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-      # - name: checkout submodules
-      #   run: git submodule update --init --recursive
-      # - name: Install dependencies
-      #   run: sudo apt-get install -y build-essential
+        uses: actions/checkout@main
       - name: Build the project
         run: cargo build --verbose
       - name: Run unit tests
         run: cargo test --verbose
+      - name: Install dependencies
+        run: |
+          rustup component add llvm-tools-preview
+          cargo install cargo-llvm-cov
+      - name: Generate coverage
+        run: cargo llvm-cov --lcov --output-path lcov.info
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: lcov.info
       - name: Run executable
         run: ./target/debug/rust-tiny-wasm
