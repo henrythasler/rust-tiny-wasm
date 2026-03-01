@@ -36,11 +36,11 @@ jobs:
         run: cargo build --verbose
       - name: Run unit tests
         run: cargo test --verbose
-      - name: Cache cargo registry, index, and build artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "coverage"
-          cache-targets: false
+      # - name: Cache cargo registry, index, and build artifacts
+      #   uses: Swatinem/rust-cache@v2
+      #   with:
+      #     shared-key: "coverage"
+      #     cache-targets: false
       - name: Install code coverage dependencies
         run: |
           rustup component add llvm-tools-preview
@@ -56,5 +56,6 @@ jobs:
           ls -la
           ls -la target/
           ls -la target/debug
+          ls -la target/debug/build
       - name: Run executable
         run: ./target/debug/tiny-wasm tests/assets/empty-fn.wat
