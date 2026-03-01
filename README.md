@@ -41,3 +41,13 @@ My goal is to split this into small chapters with very specific goals and additi
 
 - [Getting started with Rust](https://rust-lang.org/learn/get-started/)
 - [A guide to cross-compilation in Rust by Greg Stoll](https://blog.logrocket.com/guide-cross-compilation-rust/)
+
+
+## Chapter 2 - WebAssembly Bytecode Parser
+
+- [ ] Parse a WebAssembly module (`.wasm` binary format) and print the length and content (opcodes) of the code section.
+- [ ] Print the names of all exported functions.
+
+### Detailed Description
+
+- You can implement your own parser or use an off-the-shelf library.
