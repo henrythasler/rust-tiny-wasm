@@ -1,0 +1,34 @@
+name: build aarch64
+
+permissions:
+  contents: read # This is required to allow the workflow to read the repository contents
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  release:
+    types: [ published ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-24.04-arm
+    # needs: code-quality-checks
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      # - name: checkout submodules
+      #   run: git submodule update --init --recursive
+      # - name: Install dependencies
+      #   run: sudo apt-get install -y build-essential
+      - name: Build the project
+        run: cargo build --verbose
+      - name: Run unit tests
+        run: cargo test --verbose
+      - name: Run executable
+        run: ./target/aarch64-unknown-linux-gnu/debug/rust-tiny-wasm
