@@ -35,7 +35,7 @@ jobs:
           rustup component add llvm-tools-preview
           cargo install cargo-llvm-cov --locked
       - name: Generate coverage
-        run: cargo llvm-cov --lcov --output-path lcov.info
+        run: cargo llvm-cov --lcov --ignore-filename-regex '::tests' --output-path lcov.info
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@v2
         with:
