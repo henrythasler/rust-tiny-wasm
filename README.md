@@ -1,4 +1,4 @@
-[![build aarch64](https://github.com/henrythasler/rust-tiny-wasm/actions/workflows/build-aarch64.yml/badge.svg)](https://github.com/henrythasler/rust-tiny-wasm/actions/workflows/build-aarch64.yml)
+[![Build Status](https://github.com/henrythasler/rust-tiny-wasm/actions/workflows/build-aarch64.yml/badge.svg)](https://github.com/henrythasler/rust-tiny-wasm/actions/workflows/build-aarch64.yml) [![Coverage Status](https://coveralls.io/repos/github/henrythasler/rust-tiny-wasm/badge.svg?branch=main)](https://coveralls.io/github/henrythasler/rust-tiny-wasm?branch=main)
 
 # Rust-Tiny-Wasm
 
