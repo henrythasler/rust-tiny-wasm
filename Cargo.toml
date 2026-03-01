@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 current_platform = "0.2.0"
+owo-colors = "4"
 kaitai = { git = "https://github.com/kaitai-io/kaitai_struct_rust_runtime.git", tag = "v0.11.0" }

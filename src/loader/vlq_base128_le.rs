@@ -8,8 +8,8 @@
 
 extern crate kaitai;
 use kaitai::*;
+use std::cell::{Cell, Ref, RefCell};
 use std::convert::{TryFrom, TryInto};
-use std::cell::{Ref, Cell, RefCell};
 use std::rc::{Rc, Weak};
 
 /**
@@ -52,7 +52,12 @@ impl KStruct for VlqBase128Le {
         {
             let mut _i = 0;
             while {
-                let t = Self::read_into::<_, VlqBase128Le_Group>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, VlqBase128Le_Group>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 self_rc.groups.borrow_mut().push(t);
                 let _t_groups = self_rc.groups.borrow();
                 let _tmpa = _t_groups.last().unwrap();
@@ -65,9 +70,7 @@ impl KStruct for VlqBase128Le {
     }
 }
 impl VlqBase128Le {
-    pub fn len(
-        &self
-    ) -> KResult<Ref<'_, i32>> {
+    pub fn len(&self) -> KResult<Ref<'_, i32>> {
         let _io = self._io.borrow();
         let _rrc = self._root.get_value().borrow().upgrade();
         let _prc = self._parent.get_value().borrow().upgrade();
@@ -83,9 +86,7 @@ impl VlqBase128Le {
     /**
      * Resulting value as normal integer
      */
-    pub fn value(
-        &self
-    ) -> KResult<Ref<'_, i32>> {
+    pub fn value(&self) -> KResult<Ref<'_, i32>> {
         let _io = self._io.borrow();
         let _rrc = self._root.get_value().borrow().upgrade();
         let _prc = self._parent.get_value().borrow().upgrade();
@@ -94,7 +95,42 @@ impl VlqBase128Le {
             return Ok(self.value.borrow());
         }
         self.f_value.set(true);
-        *self.value.borrow_mut() = (((((((((((((((*self.groups()[0 as usize].value()? as i32) + (if ((*self.len()? as i32) >= (2 as i32)) { ((*self.groups()[1 as usize].value()? as i32) << (7 as i32)) } else { 0 } as i32)) as i32) + (if ((*self.len()? as i32) >= (3 as i32)) { ((*self.groups()[2 as usize].value()? as i32) << (14 as i32)) } else { 0 } as i32)) as i32) + (if ((*self.len()? as i32) >= (4 as i32)) { ((*self.groups()[3 as usize].value()? as i32) << (21 as i32)) } else { 0 } as i32)) as i32) + (if ((*self.len()? as i32) >= (5 as i32)) { ((*self.groups()[4 as usize].value()? as i32) << (28 as i32)) } else { 0 } as i32)) as i32) + (if ((*self.len()? as i32) >= (6 as i32)) { ((*self.groups()[5 as usize].value()? as i32) << (35 as i32)) } else { 0 } as i32)) as i32) + (if ((*self.len()? as i32) >= (7 as i32)) { ((*self.groups()[6 as usize].value()? as i32) << (42 as i32)) } else { 0 } as i32)) as i32) + (if ((*self.len()? as i32) >= (8 as i32)) { ((*self.groups()[7 as usize].value()? as i32) << (49 as i32)) } else { 0 } as i32))) as i32;
+        *self.value.borrow_mut() = ((((((((((((((*self.groups()[0 as usize].value()? as i32)
+            + (if ((*self.len()? as i32) >= (2 as i32)) {
+                ((*self.groups()[1 as usize].value()? as i64) << (7 as i32))
+            } else {
+                0
+            } as i32)) as i32)
+            + (if ((*self.len()? as i32) >= (3 as i32)) {
+                ((*self.groups()[2 as usize].value()? as i64) << (14 as i32))
+            } else {
+                0
+            } as i32)) as i32)
+            + (if ((*self.len()? as i32) >= (4 as i32)) {
+                ((*self.groups()[3 as usize].value()? as i64) << (21 as i32))
+            } else {
+                0
+            } as i32)) as i32)
+            + (if ((*self.len()? as i32) >= (5 as i32)) {
+                ((*self.groups()[4 as usize].value()? as i64) << (28 as i32))
+            } else {
+                0
+            } as i32)) as i32)
+            + (if ((*self.len()? as i32) >= (6 as i32)) {
+                ((*self.groups()[5 as usize].value()? as i64) << (35 as i32))
+            } else {
+                0
+            } as i32)) as i32)
+            + (if ((*self.len()? as i32) >= (7 as i32)) {
+                ((*self.groups()[6 as usize].value()? as i64) << (42 as i32))
+            } else {
+                0
+            } as i32)) as i32)
+            + (if ((*self.len()? as i32) >= (8 as i32)) {
+                ((*self.groups()[7 as usize].value()? as i64) << (49 as i32))
+            } else {
+                0
+            } as i32)) as i32;
         Ok(self.value.borrow())
     }
 }
@@ -148,13 +184,10 @@ impl KStruct for VlqBase128Le_Group {
     }
 }
 impl VlqBase128Le_Group {
-
     /**
      * If true, then we have more bytes to read
      */
-    pub fn has_next(
-        &self
-    ) -> KResult<Ref<'_, bool>> {
+    pub fn has_next(&self) -> KResult<Ref<'_, bool>> {
         let _io = self._io.borrow();
         let _rrc = self._root.get_value().borrow().upgrade();
         let _prc = self._parent.get_value().borrow().upgrade();
@@ -163,16 +196,15 @@ impl VlqBase128Le_Group {
             return Ok(self.has_next.borrow());
         }
         self.f_has_next.set(true);
-        *self.has_next.borrow_mut() = (((((*self.b() as u8) & (128 as u8)) as i32) != (0 as i32))) as bool;
+        *self.has_next.borrow_mut() =
+            ((((*self.b() as u8) & (128 as u8)) as i32) != (0 as i32)) as bool;
         Ok(self.has_next.borrow())
     }
 
     /**
      * The 7-bit (base128) numeric value of this group
      */
-    pub fn value(
-        &self
-    ) -> KResult<Ref<'_, i32>> {
+    pub fn value(&self) -> KResult<Ref<'_, i32>> {
         let _io = self._io.borrow();
         let _rrc = self._root.get_value().borrow().upgrade();
         let _prc = self._parent.get_value().borrow().upgrade();
@@ -181,7 +213,7 @@ impl VlqBase128Le_Group {
             return Ok(self.value.borrow());
         }
         self.f_value.set(true);
-        *self.value.borrow_mut() = (((*self.b() as u8) & (127 as u8))) as i32;
+        *self.value.borrow_mut() = ((*self.b() as u8) & (127 as u8)) as i32;
         Ok(self.value.borrow())
     }
 }
