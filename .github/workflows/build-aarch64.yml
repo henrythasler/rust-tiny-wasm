@@ -36,11 +36,11 @@ jobs:
         run: cargo build --verbose
       - name: Run unit tests
         run: cargo test --verbose
-      - name: Cache cargo registry, index, and build artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-targets: false
-          cache-all-crates: true
+      # - name: Cache cargo registry, index, and build artifacts
+      #   uses: Swatinem/rust-cache@v2
+      #   with:
+      #     cache-targets: false
+      #     cache-all-crates: true
       - name: Install code coverage dependencies
         run: |
           rustup component add llvm-tools-preview
