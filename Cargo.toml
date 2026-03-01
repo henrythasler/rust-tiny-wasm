@@ -5,3 +5,6 @@ edition = "2024"
 
 [dependencies]
 current_platform = "0.2.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)'] }

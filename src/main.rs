@@ -6,6 +6,7 @@ fn get_name() -> &'static str {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage, coverage(off))]
 mod tests {
     use super::*;
 
