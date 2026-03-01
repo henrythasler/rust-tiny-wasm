@@ -1,3 +1,11 @@
+/// This function returns a name
+/// 
+/// For now, this can only return "world"
+/// 
+/// ```
+/// let result = tiny_wasm::names::get_name();
+/// assert_eq!(result, "world");
+/// ```
 pub fn get_name() -> &'static str {
     let name: &'static str = "world";
     return name
