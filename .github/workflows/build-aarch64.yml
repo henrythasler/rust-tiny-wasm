@@ -55,5 +55,6 @@ jobs:
         run: |
           ls -la
           ls -la target/
+          ls -la target/debug
       - name: Run executable
-        run: ./target/debug/tiny-wasm LICENSE
+        run: ./target/debug/tiny-wasm tests/assets/empty-fn.wat
