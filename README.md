@@ -17,7 +17,7 @@ My goal is to split this into small chapters with very specific goals and additi
 - [x] Create and run a unit-test.
 - [x] Set up a CI workflow (e.g. GitHub Action) to build and run the hello-world application natively for aarch64.
 - [x] Execute the unit-tests in the CI environment.
-- [ ] Extend the CI setup with code coverage measurements.
+- [x] Extend the CI setup with code coverage measurements.
 - [x] Add a status/badge to the README.md that indicates the build/test result and coverage information.
 
 ### Detailed Description
@@ -25,6 +25,7 @@ My goal is to split this into small chapters with very specific goals and additi
 - Use `rustup target list` or check [The rustc book - Platform Support](https://doc.rust-lang.org/nightly/rustc/platform-support.html) for a list of supported target platforms. Install additional targets with `rustup target add <target>`.
 - The hello-world application should consist at least of a main function that prints a string obtained from a helper function to stdout. The helper function will be used for the unit-test.
 - To execute ARM64 (aarch64) binaries on Ubuntu, you need to install `qemu-user and qemu-user-static` first.
+- Refer to [The Rust Programming Language - Test Organization](https://doc.rust-lang.org/book/ch11-03-test-organization.html) on testing.
 
 ### Solution Documentation
 
