@@ -23,9 +23,38 @@ fn main() -> Result<(), String> {
     println!();
 
     for section in module.sections().iter() {
-        println!("  Section ID: {:#?}", section.id().bright_blue());
-        println!("  Size: {} Bytes", section.content_raw().len().bright_green());
-        println!("  Content: {}", section.content_raw().escape_ascii().white());
+        println!("  Section ID: {:?}", section.id().bright_blue());
+        println!(
+            "  Size: {} Bytes",
+            section.content_raw().len().bright_green()
+        );
+        println!(
+            "  Content ({:#?} Bytes): {}",
+            Some(section.len_content()).unwrap().value().expect("empty"),
+            section.content_raw().escape_ascii().white()
+        );
+
+        let content_ref = section.content();
+        let content = content_ref.as_ref();
+
+        match content {
+            Some(loader::webassembly::Webassembly_Section_Content::Webassembly_ExportSection(
+                section,
+            )) => {
+                let export_section = section.get();
+                let num_exports_wrapper = export_section.num_exports();
+                let num_exports = num_exports_wrapper.value().expect("value missing");
+                println!("  Number of Exports: {}", num_exports);
+
+                let exports = export_section.exports();
+                for export in exports.iter() {
+                    let export_name = export.name();
+                    let export_name_str = export_name.value();
+                    println!("    - {}", export_name_str.bright_yellow());
+                }
+            }
+            _ => (),
+        }
         println!();
     }
     Ok(())
