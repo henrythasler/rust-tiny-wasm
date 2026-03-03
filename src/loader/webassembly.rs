@@ -7,18 +7,18 @@
 #![allow(unused_comparisons)]
 
 extern crate kaitai;
-use kaitai::*;
-use std::convert::{TryFrom, TryInto};
-use std::cell::{Ref, Cell, RefCell};
-use std::rc::{Rc, Weak};
 use super::vlq_base128_le::VlqBase128Le;
+use kaitai::*;
+use std::cell::{Cell, Ref, RefCell};
+use std::convert::{TryFrom, TryInto};
+use std::rc::{Rc, Weak};
 
 /**
- * This document describes the binary format of a WebAssembly module 
+ * This document describes the binary format of a WebAssembly module
  * following the version 1.0 of the core WebAssembly standard.
- * 
+ *
  * Repository: https://github.com/henrythasler/wasm-kaitai-struct
- * 
+ *
  * * Naming of entities follows the official specification.
  * * All integers are encoded using the LEB128 variable-length integer encoding (see vlq_base128_le.ksy).
  * * The schema follows the KSY Style Guide
@@ -56,14 +56,22 @@ impl KStruct for Webassembly {
         let _r = _rrc.as_ref().unwrap();
         *self_rc.magic.borrow_mut() = _io.read_bytes(4 as usize)?.into();
         if !(*self_rc.magic() == vec![0x0u8, 0x61u8, 0x73u8, 0x6du8]) {
-            return Err(KError::ValidationFailed(ValidationFailedError { kind: ValidationKind::NotEqual, src_path: "/seq/0".to_string() }));
+            return Err(KError::ValidationFailed(ValidationFailedError {
+                kind: ValidationKind::NotEqual,
+                src_path: "/seq/0".to_string(),
+            }));
         }
         *self_rc.version.borrow_mut() = _io.read_u4le()?.into();
         *self_rc.sections.borrow_mut() = Vec::new();
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_Section>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, Webassembly_Section>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 self_rc.sections.borrow_mut().push(t);
                 _i += 1;
             }
@@ -71,8 +79,7 @@ impl KStruct for Webassembly {
         Ok(())
     }
 }
-impl Webassembly {
-}
+impl Webassembly {}
 
 /**
  * Magic number identifying the file as a WebAssembly module
@@ -137,13 +144,15 @@ impl From<&Webassembly_ExportTypes> for i64 {
             Webassembly_ExportTypes::TableType => 1,
             Webassembly_ExportTypes::MemType => 2,
             Webassembly_ExportTypes::GlobalType => 3,
-            Webassembly_ExportTypes::Unknown(v) => v
+            Webassembly_ExportTypes::Unknown(v) => v,
         }
     }
 }
 
 impl Default for Webassembly_ExportTypes {
-    fn default() -> Self { Webassembly_ExportTypes::Unknown(0) }
+    fn default() -> Self {
+        Webassembly_ExportTypes::Unknown(0)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -175,13 +184,15 @@ impl From<&Webassembly_ImportTypes> for i64 {
             Webassembly_ImportTypes::TableType => 1,
             Webassembly_ImportTypes::MemType => 2,
             Webassembly_ImportTypes::GlobalType => 3,
-            Webassembly_ImportTypes::Unknown(v) => v
+            Webassembly_ImportTypes::Unknown(v) => v,
         }
     }
 }
 
 impl Default for Webassembly_ImportTypes {
-    fn default() -> Self { Webassembly_ImportTypes::Unknown(0) }
+    fn default() -> Self {
+        Webassembly_ImportTypes::Unknown(0)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -207,13 +218,15 @@ impl From<&Webassembly_MutabilityTypes> for i64 {
         match *v {
             Webassembly_MutabilityTypes::Const => 0,
             Webassembly_MutabilityTypes::Var => 1,
-            Webassembly_MutabilityTypes::Unknown(v) => v
+            Webassembly_MutabilityTypes::Unknown(v) => v,
         }
     }
 }
 
 impl Default for Webassembly_MutabilityTypes {
-    fn default() -> Self { Webassembly_MutabilityTypes::Unknown(0) }
+    fn default() -> Self {
+        Webassembly_MutabilityTypes::Unknown(0)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -269,13 +282,15 @@ impl From<&Webassembly_SectionId> for i64 {
             Webassembly_SectionId::ElementSection => 9,
             Webassembly_SectionId::CodeSection => 10,
             Webassembly_SectionId::DataSection => 11,
-            Webassembly_SectionId::Unknown(v) => v
+            Webassembly_SectionId::Unknown(v) => v,
         }
     }
 }
 
 impl Default for Webassembly_SectionId {
-    fn default() -> Self { Webassembly_SectionId::Unknown(0) }
+    fn default() -> Self {
+        Webassembly_SectionId::Unknown(0)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -301,13 +316,15 @@ impl From<&Webassembly_Types> for i64 {
         match *v {
             Webassembly_Types::Function => 96,
             Webassembly_Types::Element => 112,
-            Webassembly_Types::Unknown(v) => v
+            Webassembly_Types::Unknown(v) => v,
         }
     }
 }
 
 impl Default for Webassembly_Types {
-    fn default() -> Self { Webassembly_Types::Unknown(0) }
+    fn default() -> Self {
+        Webassembly_Types::Unknown(0)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -339,15 +356,16 @@ impl From<&Webassembly_ValTypes> for i64 {
             Webassembly_ValTypes::F32 => 125,
             Webassembly_ValTypes::I64 => 126,
             Webassembly_ValTypes::I32 => 127,
-            Webassembly_ValTypes::Unknown(v) => v
+            Webassembly_ValTypes::Unknown(v) => v,
         }
     }
 }
 
 impl Default for Webassembly_ValTypes {
-    fn default() -> Self { Webassembly_ValTypes::Unknown(0) }
+    fn default() -> Self {
+        Webassembly_ValTypes::Unknown(0)
+    }
 }
-
 
 #[derive(Default, Debug, Clone)]
 pub struct Webassembly_Code {
@@ -378,16 +396,22 @@ impl KStruct for Webassembly_Code {
         let _r = _rrc.as_ref().unwrap();
         let t = Self::read_into::<_, VlqBase128Le>(&*_io, None, None)?.into();
         *self_rc.len_func.borrow_mut() = t;
-        *self_rc.func_raw.borrow_mut() = _io.read_bytes(*self_rc.len_func().value()? as usize)?.into();
+        *self_rc.func_raw.borrow_mut() = _io
+            .read_bytes(*self_rc.len_func().value()? as usize)?
+            .into();
         let func_raw = self_rc.func_raw.borrow();
         let _t_func_raw_io = BytesReader::from(func_raw.clone());
-        let t = Self::read_into::<BytesReader, Webassembly_Func>(&_t_func_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+        let t = Self::read_into::<BytesReader, Webassembly_Func>(
+            &_t_func_raw_io,
+            Some(self_rc._root.clone()),
+            Some(self_rc._self.clone()),
+        )?
+        .into();
         *self_rc.func.borrow_mut() = t;
         Ok(())
     }
 }
-impl Webassembly_Code {
-}
+impl Webassembly_Code {}
 impl Webassembly_Code {
     pub fn len_func(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.len_func.borrow()
@@ -446,7 +470,12 @@ impl KStruct for Webassembly_CodeSection {
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_Code>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, Webassembly_Code>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 self_rc.entries.borrow_mut().push(t);
                 _i += 1;
             }
@@ -454,8 +483,7 @@ impl KStruct for Webassembly_CodeSection {
         Ok(())
     }
 }
-impl Webassembly_CodeSection {
-}
+impl Webassembly_CodeSection {}
 impl Webassembly_CodeSection {
     pub fn num_entries(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_entries.borrow()
@@ -503,14 +531,14 @@ impl KStruct for Webassembly_CustomSection {
         let _rrc = self_rc._root.get_value().borrow().upgrade();
         let _prc = self_rc._parent.get_value().borrow().upgrade();
         let _r = _rrc.as_ref().unwrap();
-        let t = Self::read_into::<_, Webassembly_Name>(&*_io, Some(self_rc._root.clone()), None)?.into();
+        let t = Self::read_into::<_, Webassembly_Name>(&*_io, Some(self_rc._root.clone()), None)?
+            .into();
         *self_rc.name.borrow_mut() = t;
         *self_rc.data.borrow_mut() = _io.read_bytes_full()?.into();
         Ok(())
     }
 }
-impl Webassembly_CustomSection {
-}
+impl Webassembly_CustomSection {}
 impl Webassembly_CustomSection {
     pub fn name(&self) -> Ref<'_, OptRc<Webassembly_Name>> {
         self.name.borrow()
@@ -568,7 +596,12 @@ impl KStruct for Webassembly_DataSection {
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_DataSegment>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, Webassembly_DataSegment>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 self_rc.data_segments.borrow_mut().push(t);
                 _i += 1;
             }
@@ -576,8 +609,7 @@ impl KStruct for Webassembly_DataSection {
         Ok(())
     }
 }
-impl Webassembly_DataSection {
-}
+impl Webassembly_DataSection {}
 impl Webassembly_DataSection {
     pub fn num_data(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_data.borrow()
@@ -624,16 +656,19 @@ impl KStruct for Webassembly_DataSegment {
         let _r = _rrc.as_ref().unwrap();
         let t = Self::read_into::<_, VlqBase128Le>(&*_io, None, None)?.into();
         *self_rc.data_memidx.borrow_mut() = t;
-        let t = Self::read_into::<_, Webassembly_Expression>(&*_io, Some(self_rc._root.clone()), None)?.into();
+        let t =
+            Self::read_into::<_, Webassembly_Expression>(&*_io, Some(self_rc._root.clone()), None)?
+                .into();
         *self_rc.offset_expr.borrow_mut() = t;
         let t = Self::read_into::<_, VlqBase128Le>(&*_io, None, None)?.into();
         *self_rc.num_init.borrow_mut() = t;
-        *self_rc.init_vec.borrow_mut() = _io.read_bytes(*self_rc.num_init().value()? as usize)?.into();
+        *self_rc.init_vec.borrow_mut() = _io
+            .read_bytes(*self_rc.num_init().value()? as usize)?
+            .into();
         Ok(())
     }
 }
-impl Webassembly_DataSegment {
-}
+impl Webassembly_DataSegment {}
 impl Webassembly_DataSegment {
     pub fn data_memidx(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.data_memidx.borrow()
@@ -695,7 +730,9 @@ impl KStruct for Webassembly_Element {
         let _r = _rrc.as_ref().unwrap();
         let t = Self::read_into::<_, VlqBase128Le>(&*_io, None, None)?.into();
         *self_rc.tableidx.borrow_mut() = t;
-        let t = Self::read_into::<_, Webassembly_Expression>(&*_io, Some(self_rc._root.clone()), None)?.into();
+        let t =
+            Self::read_into::<_, Webassembly_Expression>(&*_io, Some(self_rc._root.clone()), None)?
+                .into();
         *self_rc.offset_expr.borrow_mut() = t;
         let t = Self::read_into::<_, VlqBase128Le>(&*_io, None, None)?.into();
         *self_rc.num_init.borrow_mut() = t;
@@ -708,8 +745,7 @@ impl KStruct for Webassembly_Element {
         Ok(())
     }
 }
-impl Webassembly_Element {
-}
+impl Webassembly_Element {}
 impl Webassembly_Element {
     pub fn tableidx(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.tableidx.borrow()
@@ -778,7 +814,12 @@ impl KStruct for Webassembly_ElementSection {
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_Element>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, Webassembly_Element>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 self_rc.elements.borrow_mut().push(t);
                 _i += 1;
             }
@@ -786,8 +827,7 @@ impl KStruct for Webassembly_ElementSection {
         Ok(())
     }
 }
-impl Webassembly_ElementSection {
-}
+impl Webassembly_ElementSection {}
 impl Webassembly_ElementSection {
     pub fn num_elements(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_elements.borrow()
@@ -831,7 +871,8 @@ impl KStruct for Webassembly_Export {
         let _rrc = self_rc._root.get_value().borrow().upgrade();
         let _prc = self_rc._parent.get_value().borrow().upgrade();
         let _r = _rrc.as_ref().unwrap();
-        let t = Self::read_into::<_, Webassembly_Name>(&*_io, Some(self_rc._root.clone()), None)?.into();
+        let t = Self::read_into::<_, Webassembly_Name>(&*_io, Some(self_rc._root.clone()), None)?
+            .into();
         *self_rc.name.borrow_mut() = t;
         *self_rc.exportdesc.borrow_mut() = (_io.read_u1()? as i64).try_into()?;
         let t = Self::read_into::<_, VlqBase128Le>(&*_io, None, None)?.into();
@@ -839,8 +880,7 @@ impl KStruct for Webassembly_Export {
         Ok(())
     }
 }
-impl Webassembly_Export {
-}
+impl Webassembly_Export {}
 impl Webassembly_Export {
     pub fn name(&self) -> Ref<'_, OptRc<Webassembly_Name>> {
         self.name.borrow()
@@ -899,7 +939,12 @@ impl KStruct for Webassembly_ExportSection {
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_Export>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, Webassembly_Export>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 self_rc.exports.borrow_mut().push(t);
                 _i += 1;
             }
@@ -907,8 +952,7 @@ impl KStruct for Webassembly_ExportSection {
         Ok(())
     }
 }
-impl Webassembly_ExportSection {
-}
+impl Webassembly_ExportSection {}
 impl Webassembly_ExportSection {
     pub fn num_exports(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_exports.borrow()
@@ -958,15 +1002,20 @@ impl KStruct for Webassembly_Expression {
                 let _t_bytes = self_rc.bytes.borrow();
                 let _tmpa = *_t_bytes.last().unwrap();
                 _i += 1;
-                let x = !( ((((self_rc.bytes()[((self_rc.bytes().len() as i32) - (1 as i32)) as usize] as u8) == (11 as u8))) && ( ((((self_rc.bytes().len() as i32) == (1 as i32))) || (self_rc.bytes()[((self_rc.bytes().len() as i32) - (2 as i32)) as usize] < 128)) )) );
+                let x = !(((self_rc.bytes()[((self_rc.bytes().len() as i32) - (1 as i32)) as usize]
+                    as u8)
+                    == (11 as u8))
+                    && (((self_rc.bytes().len() as i32) == (1 as i32))
+                        || (self_rc.bytes()
+                            [((self_rc.bytes().len() as i32) - (2 as i32)) as usize]
+                            < 128)));
                 x
             } {}
         }
         Ok(())
     }
 }
-impl Webassembly_Expression {
-}
+impl Webassembly_Expression {}
 impl Webassembly_Expression {
     pub fn bytes(&self) -> Ref<'_, Vec<u8>> {
         self.bytes.borrow()
@@ -1010,15 +1059,19 @@ impl KStruct for Webassembly_Func {
         *self_rc.locals.borrow_mut() = Vec::new();
         let l_locals = *self_rc.num_locals().value()?;
         for _i in 0..l_locals {
-            let t = Self::read_into::<_, Webassembly_Local>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+            let t = Self::read_into::<_, Webassembly_Local>(
+                &*_io,
+                Some(self_rc._root.clone()),
+                Some(self_rc._self.clone()),
+            )?
+            .into();
             self_rc.locals.borrow_mut().push(t);
         }
         *self_rc.expr.borrow_mut() = _io.read_bytes_full()?.into();
         Ok(())
     }
 }
-impl Webassembly_Func {
-}
+impl Webassembly_Func {}
 impl Webassembly_Func {
     pub fn num_locals(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_locals.borrow()
@@ -1085,8 +1138,7 @@ impl KStruct for Webassembly_FunctionSection {
         Ok(())
     }
 }
-impl Webassembly_FunctionSection {
-}
+impl Webassembly_FunctionSection {}
 impl Webassembly_FunctionSection {
     pub fn num_typeidx(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_typeidx.borrow()
@@ -1137,17 +1189,29 @@ impl KStruct for Webassembly_Functype {
         let _r = _rrc.as_ref().unwrap();
         *self_rc.functype.borrow_mut() = (_io.read_u1()? as i64).try_into()?;
         if !(*self_rc.functype() == Webassembly_Types::Function) {
-            return Err(KError::ValidationFailed(ValidationFailedError { kind: ValidationKind::NotEqual, src_path: "/types/functype/seq/0".to_string() }));
+            return Err(KError::ValidationFailed(ValidationFailedError {
+                kind: ValidationKind::NotEqual,
+                src_path: "/types/functype/seq/0".to_string(),
+            }));
         }
-        let t = Self::read_into::<_, Webassembly_VecValtype>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+        let t = Self::read_into::<_, Webassembly_VecValtype>(
+            &*_io,
+            Some(self_rc._root.clone()),
+            Some(self_rc._self.clone()),
+        )?
+        .into();
         *self_rc.parameters.borrow_mut() = t;
-        let t = Self::read_into::<_, Webassembly_VecValtype>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+        let t = Self::read_into::<_, Webassembly_VecValtype>(
+            &*_io,
+            Some(self_rc._root.clone()),
+            Some(self_rc._self.clone()),
+        )?
+        .into();
         *self_rc.results.borrow_mut() = t;
         Ok(())
     }
 }
-impl Webassembly_Functype {
-}
+impl Webassembly_Functype {}
 impl Webassembly_Functype {
     pub fn functype(&self) -> Ref<'_, Webassembly_Types> {
         self.functype.borrow()
@@ -1198,16 +1262,22 @@ impl KStruct for Webassembly_Global {
         let _r = _rrc.as_ref().unwrap();
         *self_rc.valtype.borrow_mut() = (_io.read_u1()? as i64).try_into()?;
         *self_rc.mutability.borrow_mut() = (_io.read_u1()? as i64).try_into()?;
-        if !( ((*self_rc.mutability() == Webassembly_MutabilityTypes::Const) || (*self_rc.mutability() == Webassembly_MutabilityTypes::Var)) ) {
-            return Err(KError::ValidationFailed(ValidationFailedError { kind: ValidationKind::NotAnyOf, src_path: "/types/global/seq/1".to_string() }));
+        if !((*self_rc.mutability() == Webassembly_MutabilityTypes::Const)
+            || (*self_rc.mutability() == Webassembly_MutabilityTypes::Var))
+        {
+            return Err(KError::ValidationFailed(ValidationFailedError {
+                kind: ValidationKind::NotAnyOf,
+                src_path: "/types/global/seq/1".to_string(),
+            }));
         }
-        let t = Self::read_into::<_, Webassembly_Expression>(&*_io, Some(self_rc._root.clone()), None)?.into();
+        let t =
+            Self::read_into::<_, Webassembly_Expression>(&*_io, Some(self_rc._root.clone()), None)?
+                .into();
         *self_rc.init_expr.borrow_mut() = t;
         Ok(())
     }
 }
-impl Webassembly_Global {
-}
+impl Webassembly_Global {}
 impl Webassembly_Global {
     pub fn valtype(&self) -> Ref<'_, Webassembly_ValTypes> {
         self.valtype.borrow()
@@ -1257,14 +1327,18 @@ impl KStruct for Webassembly_GlobalImport {
         let _r = _rrc.as_ref().unwrap();
         *self_rc.valtype.borrow_mut() = (_io.read_u1()? as i64).try_into()?;
         *self_rc.mutability.borrow_mut() = (_io.read_u1()? as i64).try_into()?;
-        if !( ((*self_rc.mutability() == Webassembly_MutabilityTypes::Const) || (*self_rc.mutability() == Webassembly_MutabilityTypes::Var)) ) {
-            return Err(KError::ValidationFailed(ValidationFailedError { kind: ValidationKind::NotAnyOf, src_path: "/types/global_import/seq/1".to_string() }));
+        if !((*self_rc.mutability() == Webassembly_MutabilityTypes::Const)
+            || (*self_rc.mutability() == Webassembly_MutabilityTypes::Var))
+        {
+            return Err(KError::ValidationFailed(ValidationFailedError {
+                kind: ValidationKind::NotAnyOf,
+                src_path: "/types/global_import/seq/1".to_string(),
+            }));
         }
         Ok(())
     }
 }
-impl Webassembly_GlobalImport {
-}
+impl Webassembly_GlobalImport {}
 impl Webassembly_GlobalImport {
     pub fn valtype(&self) -> Ref<'_, Webassembly_ValTypes> {
         self.valtype.borrow()
@@ -1318,7 +1392,12 @@ impl KStruct for Webassembly_GlobalSection {
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_Global>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, Webassembly_Global>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 self_rc.globals.borrow_mut().push(t);
                 _i += 1;
             }
@@ -1326,8 +1405,7 @@ impl KStruct for Webassembly_GlobalSection {
         Ok(())
     }
 }
-impl Webassembly_GlobalSection {
-}
+impl Webassembly_GlobalSection {}
 impl Webassembly_GlobalSection {
     pub fn num_globals(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_globals.borrow()
@@ -1371,7 +1449,10 @@ impl From<&Webassembly_Import_Importdesc> for OptRc<VlqBase128Le> {
         if let Webassembly_Import_Importdesc::VlqBase128Le(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Import_Importdesc::VlqBase128Le, got {:?}", v)
+        panic!(
+            "expected Webassembly_Import_Importdesc::VlqBase128Le, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<VlqBase128Le>> for Webassembly_Import_Importdesc {
@@ -1384,7 +1465,10 @@ impl From<&Webassembly_Import_Importdesc> for OptRc<Webassembly_GlobalImport> {
         if let Webassembly_Import_Importdesc::Webassembly_GlobalImport(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Import_Importdesc::Webassembly_GlobalImport, got {:?}", v)
+        panic!(
+            "expected Webassembly_Import_Importdesc::Webassembly_GlobalImport, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_GlobalImport>> for Webassembly_Import_Importdesc {
@@ -1397,7 +1481,10 @@ impl From<&Webassembly_Import_Importdesc> for OptRc<Webassembly_Memory> {
         if let Webassembly_Import_Importdesc::Webassembly_Memory(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Import_Importdesc::Webassembly_Memory, got {:?}", v)
+        panic!(
+            "expected Webassembly_Import_Importdesc::Webassembly_Memory, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_Memory>> for Webassembly_Import_Importdesc {
@@ -1410,7 +1497,10 @@ impl From<&Webassembly_Import_Importdesc> for OptRc<Webassembly_Table> {
         if let Webassembly_Import_Importdesc::Webassembly_Table(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Import_Importdesc::Webassembly_Table, got {:?}", v)
+        panic!(
+            "expected Webassembly_Import_Importdesc::Webassembly_Table, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_Table>> for Webassembly_Import_Importdesc {
@@ -1435,9 +1525,11 @@ impl KStruct for Webassembly_Import {
         let _rrc = self_rc._root.get_value().borrow().upgrade();
         let _prc = self_rc._parent.get_value().borrow().upgrade();
         let _r = _rrc.as_ref().unwrap();
-        let t = Self::read_into::<_, Webassembly_Name>(&*_io, Some(self_rc._root.clone()), None)?.into();
+        let t = Self::read_into::<_, Webassembly_Name>(&*_io, Some(self_rc._root.clone()), None)?
+            .into();
         *self_rc.module.borrow_mut() = t;
-        let t = Self::read_into::<_, Webassembly_Name>(&*_io, Some(self_rc._root.clone()), None)?.into();
+        let t = Self::read_into::<_, Webassembly_Name>(&*_io, Some(self_rc._root.clone()), None)?
+            .into();
         *self_rc.name.borrow_mut() = t;
         *self_rc.import_type.borrow_mut() = (_io.read_u1()? as i64).try_into()?;
         match *self_rc.import_type() {
@@ -1446,15 +1538,30 @@ impl KStruct for Webassembly_Import {
                 *self_rc.importdesc.borrow_mut() = Some(t);
             }
             Webassembly_ImportTypes::GlobalType => {
-                let t = Self::read_into::<_, Webassembly_GlobalImport>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, Webassembly_GlobalImport>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.importdesc.borrow_mut() = Some(t);
             }
             Webassembly_ImportTypes::MemType => {
-                let t = Self::read_into::<_, Webassembly_Memory>(&*_io, Some(self_rc._root.clone()), None)?.into();
+                let t = Self::read_into::<_, Webassembly_Memory>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    None,
+                )?
+                .into();
                 *self_rc.importdesc.borrow_mut() = Some(t);
             }
             Webassembly_ImportTypes::TableType => {
-                let t = Self::read_into::<_, Webassembly_Table>(&*_io, Some(self_rc._root.clone()), None)?.into();
+                let t = Self::read_into::<_, Webassembly_Table>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    None,
+                )?
+                .into();
                 *self_rc.importdesc.borrow_mut() = Some(t);
             }
             _ => {}
@@ -1462,8 +1569,7 @@ impl KStruct for Webassembly_Import {
         Ok(())
     }
 }
-impl Webassembly_Import {
-}
+impl Webassembly_Import {}
 impl Webassembly_Import {
     pub fn module(&self) -> Ref<'_, OptRc<Webassembly_Name>> {
         self.module.borrow()
@@ -1527,7 +1633,12 @@ impl KStruct for Webassembly_ImportSection {
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_Import>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, Webassembly_Import>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 self_rc.imports.borrow_mut().push(t);
                 _i += 1;
             }
@@ -1535,8 +1646,7 @@ impl KStruct for Webassembly_ImportSection {
         Ok(())
     }
 }
-impl Webassembly_ImportSection {
-}
+impl Webassembly_ImportSection {}
 impl Webassembly_ImportSection {
     pub fn num_imports(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_imports.borrow()
@@ -1581,20 +1691,22 @@ impl KStruct for Webassembly_Limits {
         let _prc = self_rc._parent.get_value().borrow().upgrade();
         let _r = _rrc.as_ref().unwrap();
         *self_rc.flags.borrow_mut() = _io.read_u1()?.into();
-        if !( ((((*self_rc.flags() as u8) == (0 as u8))) || (((*self_rc.flags() as u8) == (1 as u8)))) ) {
-            return Err(KError::ValidationFailed(ValidationFailedError { kind: ValidationKind::NotAnyOf, src_path: "/types/limits/seq/0".to_string() }));
+        if !(((*self_rc.flags() as u8) == (0 as u8)) || ((*self_rc.flags() as u8) == (1 as u8))) {
+            return Err(KError::ValidationFailed(ValidationFailedError {
+                kind: ValidationKind::NotAnyOf,
+                src_path: "/types/limits/seq/0".to_string(),
+            }));
         }
         let t = Self::read_into::<_, VlqBase128Le>(&*_io, None, None)?.into();
         *self_rc.min.borrow_mut() = t;
-        if ((*self_rc.flags() as u8) == (1 as u8)) {
+        if (*self_rc.flags() as u8) == (1 as u8) {
             let t = Self::read_into::<_, VlqBase128Le>(&*_io, None, None)?.into();
             *self_rc.max.borrow_mut() = t;
         }
         Ok(())
     }
 }
-impl Webassembly_Limits {
-}
+impl Webassembly_Limits {}
 impl Webassembly_Limits {
     pub fn flags(&self) -> Ref<'_, u8> {
         self.flags.borrow()
@@ -1648,8 +1760,7 @@ impl KStruct for Webassembly_Local {
         Ok(())
     }
 }
-impl Webassembly_Local {
-}
+impl Webassembly_Local {}
 impl Webassembly_Local {
     pub fn num_valtype(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_valtype.borrow()
@@ -1691,13 +1802,13 @@ impl KStruct for Webassembly_Memory {
         let _rrc = self_rc._root.get_value().borrow().upgrade();
         let _prc = self_rc._parent.get_value().borrow().upgrade();
         let _r = _rrc.as_ref().unwrap();
-        let t = Self::read_into::<_, Webassembly_Limits>(&*_io, Some(self_rc._root.clone()), None)?.into();
+        let t = Self::read_into::<_, Webassembly_Limits>(&*_io, Some(self_rc._root.clone()), None)?
+            .into();
         *self_rc.limits.borrow_mut() = t;
         Ok(())
     }
 }
-impl Webassembly_Memory {
-}
+impl Webassembly_Memory {}
 impl Webassembly_Memory {
     pub fn limits(&self) -> Ref<'_, OptRc<Webassembly_Limits>> {
         self.limits.borrow()
@@ -1746,7 +1857,12 @@ impl KStruct for Webassembly_MemorySection {
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_Memory>(&*_io, Some(self_rc._root.clone()), None)?.into();
+                let t = Self::read_into::<_, Webassembly_Memory>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    None,
+                )?
+                .into();
                 self_rc.memories.borrow_mut().push(t);
                 _i += 1;
             }
@@ -1754,8 +1870,7 @@ impl KStruct for Webassembly_MemorySection {
         Ok(())
     }
 }
-impl Webassembly_MemorySection {
-}
+impl Webassembly_MemorySection {}
 impl Webassembly_MemorySection {
     pub fn num_memories(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_memories.borrow()
@@ -1805,12 +1920,14 @@ impl KStruct for Webassembly_Name {
         let _r = _rrc.as_ref().unwrap();
         let t = Self::read_into::<_, VlqBase128Le>(&*_io, None, None)?.into();
         *self_rc.length.borrow_mut() = t;
-        *self_rc.value.borrow_mut() = bytes_to_str(&_io.read_bytes(*self_rc.length().value()? as usize)?.into(), "UTF-8")?;
+        *self_rc.value.borrow_mut() = bytes_to_str(
+            &_io.read_bytes(*self_rc.length().value()? as usize)?.into(),
+            "UTF-8",
+        )?;
         Ok(())
     }
 }
-impl Webassembly_Name {
-}
+impl Webassembly_Name {}
 impl Webassembly_Name {
     pub fn length(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.length.borrow()
@@ -1864,7 +1981,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_GlobalSection> {
         if let Webassembly_Section_Content::Webassembly_GlobalSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_GlobalSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_GlobalSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_GlobalSection>> for Webassembly_Section_Content {
@@ -1877,7 +1997,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_CustomSection> {
         if let Webassembly_Section_Content::Webassembly_CustomSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_CustomSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_CustomSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_CustomSection>> for Webassembly_Section_Content {
@@ -1890,7 +2013,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_MemorySection> {
         if let Webassembly_Section_Content::Webassembly_MemorySection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_MemorySection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_MemorySection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_MemorySection>> for Webassembly_Section_Content {
@@ -1903,7 +2029,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_ElementSection> {
         if let Webassembly_Section_Content::Webassembly_ElementSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_ElementSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_ElementSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_ElementSection>> for Webassembly_Section_Content {
@@ -1916,7 +2045,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_TableSection> {
         if let Webassembly_Section_Content::Webassembly_TableSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_TableSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_TableSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_TableSection>> for Webassembly_Section_Content {
@@ -1929,7 +2061,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_FunctionSection> {
         if let Webassembly_Section_Content::Webassembly_FunctionSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_FunctionSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_FunctionSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_FunctionSection>> for Webassembly_Section_Content {
@@ -1942,7 +2077,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_ExportSection> {
         if let Webassembly_Section_Content::Webassembly_ExportSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_ExportSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_ExportSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_ExportSection>> for Webassembly_Section_Content {
@@ -1968,7 +2106,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_CodeSection> {
         if let Webassembly_Section_Content::Webassembly_CodeSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_CodeSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_CodeSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_CodeSection>> for Webassembly_Section_Content {
@@ -1981,7 +2122,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_ImportSection> {
         if let Webassembly_Section_Content::Webassembly_ImportSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_ImportSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_ImportSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_ImportSection>> for Webassembly_Section_Content {
@@ -1994,7 +2138,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_TypeSection> {
         if let Webassembly_Section_Content::Webassembly_TypeSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_TypeSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_TypeSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_TypeSection>> for Webassembly_Section_Content {
@@ -2007,7 +2154,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_StartSection> {
         if let Webassembly_Section_Content::Webassembly_StartSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_StartSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_StartSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_StartSection>> for Webassembly_Section_Content {
@@ -2020,7 +2170,10 @@ impl From<&Webassembly_Section_Content> for OptRc<Webassembly_DataSection> {
         if let Webassembly_Section_Content::Webassembly_DataSection(x) = v {
             return x.clone();
         }
-        panic!("expected Webassembly_Section_Content::Webassembly_DataSection, got {:?}", v)
+        panic!(
+            "expected Webassembly_Section_Content::Webassembly_DataSection, got {:?}",
+            v
+        )
     }
 }
 impl From<OptRc<Webassembly_DataSection>> for Webassembly_Section_Content {
@@ -2050,98 +2203,184 @@ impl KStruct for Webassembly_Section {
         *self_rc.len_content.borrow_mut() = t;
         match *self_rc.id() {
             Webassembly_SectionId::CodeSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_CodeSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_CodeSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::CustomSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_CustomSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_CustomSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::DataSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_DataSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_DataSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::ElementSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_ElementSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_ElementSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::ExportSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_ExportSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_ExportSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::FunctionSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_FunctionSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_FunctionSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::GlobalSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_GlobalSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_GlobalSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::ImportSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_ImportSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_ImportSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::MemorySection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_MemorySection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_MemorySection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::StartSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_StartSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_StartSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::TableSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_TableSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_TableSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             Webassembly_SectionId::TypeSection => {
-                *self_rc.content_raw.borrow_mut() = _io.read_bytes(*self_rc.len_content().value()? as usize)?.into();
+                *self_rc.content_raw.borrow_mut() = _io
+                    .read_bytes(*self_rc.len_content().value()? as usize)?
+                    .into();
                 let content_raw = self_rc.content_raw.borrow();
                 let _t_content_raw_io = BytesReader::from(content_raw.clone());
-                let t = Self::read_into::<BytesReader, Webassembly_TypeSection>(&_t_content_raw_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<BytesReader, Webassembly_TypeSection>(
+                    &_t_content_raw_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 *self_rc.content.borrow_mut() = Some(t);
             }
             _ => {
-                *self_rc.content.borrow_mut() = Some(_io.read_bytes(*self_rc.len_content().value()? as usize)?.into());
+                *self_rc.content.borrow_mut() = Some(
+                    _io.read_bytes(*self_rc.len_content().value()? as usize)?
+                        .into(),
+                );
             }
         }
         Ok(())
     }
 }
-impl Webassembly_Section {
-}
+impl Webassembly_Section {}
 
 /**
  * Section identifier
@@ -2215,8 +2454,7 @@ impl KStruct for Webassembly_StartSection {
         Ok(())
     }
 }
-impl Webassembly_StartSection {
-}
+impl Webassembly_StartSection {}
 
 /**
  * function index of the start-function
@@ -2260,15 +2498,18 @@ impl KStruct for Webassembly_Table {
         let _r = _rrc.as_ref().unwrap();
         *self_rc.elemtype.borrow_mut() = (_io.read_u1()? as i64).try_into()?;
         if !(*self_rc.elemtype() == Webassembly_Types::Element) {
-            return Err(KError::ValidationFailed(ValidationFailedError { kind: ValidationKind::NotEqual, src_path: "/types/table/seq/0".to_string() }));
+            return Err(KError::ValidationFailed(ValidationFailedError {
+                kind: ValidationKind::NotEqual,
+                src_path: "/types/table/seq/0".to_string(),
+            }));
         }
-        let t = Self::read_into::<_, Webassembly_Limits>(&*_io, Some(self_rc._root.clone()), None)?.into();
+        let t = Self::read_into::<_, Webassembly_Limits>(&*_io, Some(self_rc._root.clone()), None)?
+            .into();
         *self_rc.limits.borrow_mut() = t;
         Ok(())
     }
 }
-impl Webassembly_Table {
-}
+impl Webassembly_Table {}
 impl Webassembly_Table {
     pub fn elemtype(&self) -> Ref<'_, Webassembly_Types> {
         self.elemtype.borrow()
@@ -2322,7 +2563,12 @@ impl KStruct for Webassembly_TableSection {
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_Table>(&*_io, Some(self_rc._root.clone()), None)?.into();
+                let t = Self::read_into::<_, Webassembly_Table>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    None,
+                )?
+                .into();
                 self_rc.tables.borrow_mut().push(t);
                 _i += 1;
             }
@@ -2330,8 +2576,7 @@ impl KStruct for Webassembly_TableSection {
         Ok(())
     }
 }
-impl Webassembly_TableSection {
-}
+impl Webassembly_TableSection {}
 impl Webassembly_TableSection {
     pub fn num_tables(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_tables.borrow()
@@ -2385,7 +2630,12 @@ impl KStruct for Webassembly_TypeSection {
         {
             let mut _i = 0;
             while !_io.is_eof() {
-                let t = Self::read_into::<_, Webassembly_Functype>(&*_io, Some(self_rc._root.clone()), Some(self_rc._self.clone()))?.into();
+                let t = Self::read_into::<_, Webassembly_Functype>(
+                    &*_io,
+                    Some(self_rc._root.clone()),
+                    Some(self_rc._self.clone()),
+                )?
+                .into();
                 self_rc.functypes.borrow_mut().push(t);
                 _i += 1;
             }
@@ -2393,8 +2643,7 @@ impl KStruct for Webassembly_TypeSection {
         Ok(())
     }
 }
-impl Webassembly_TypeSection {
-}
+impl Webassembly_TypeSection {}
 impl Webassembly_TypeSection {
     pub fn num_functypes(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_functypes.borrow()
@@ -2442,13 +2691,15 @@ impl KStruct for Webassembly_VecValtype {
         *self_rc.valtype.borrow_mut() = Vec::new();
         let l_valtype = *self_rc.num_types().value()?;
         for _i in 0..l_valtype {
-            self_rc.valtype.borrow_mut().push((_io.read_u1()? as i64).try_into()?);
+            self_rc
+                .valtype
+                .borrow_mut()
+                .push((_io.read_u1()? as i64).try_into()?);
         }
         Ok(())
     }
 }
-impl Webassembly_VecValtype {
-}
+impl Webassembly_VecValtype {}
 impl Webassembly_VecValtype {
     pub fn num_types(&self) -> Ref<'_, OptRc<VlqBase128Le>> {
         self.num_types.borrow()

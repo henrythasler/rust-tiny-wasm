@@ -3,6 +3,7 @@ use owo_colors::OwoColorize;
 use std::env;
 
 mod loader;
+use loader::webassembly;
 
 fn main() -> Result<(), String> {
     println!("Compiled on '{}' for '{}'", COMPILED_ON, CURRENT_PLATFORM);
@@ -38,9 +39,7 @@ fn main() -> Result<(), String> {
         let content = content_ref.as_ref();
 
         match content {
-            Some(loader::webassembly::Webassembly_Section_Content::Webassembly_ExportSection(
-                section,
-            )) => {
+            Some(webassembly::Webassembly_Section_Content::Webassembly_ExportSection(section)) => {
                 let export_section = section.get();
                 let num_exports_wrapper = export_section.num_exports();
                 let num_exports = num_exports_wrapper.value().expect("value missing");

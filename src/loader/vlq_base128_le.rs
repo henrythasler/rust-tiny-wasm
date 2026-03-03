@@ -96,38 +96,38 @@ impl VlqBase128Le {
         }
         self.f_value.set(true);
         *self.value.borrow_mut() = ((((((((((((((*self.groups()[0 as usize].value()? as i32)
-            + (if ((*self.len()? as i32) >= (2 as i32)) {
-                ((*self.groups()[1 as usize].value()? as i64) << (7 as i32))
+            + (if (*self.len()? as i32) >= (2 as i32) {
+                (*self.groups()[1 as usize].value()? as i64) << (7 as i32)
             } else {
                 0
             } as i32)) as i32)
-            + (if ((*self.len()? as i32) >= (3 as i32)) {
-                ((*self.groups()[2 as usize].value()? as i64) << (14 as i32))
+            + (if (*self.len()? as i32) >= (3 as i32) {
+                (*self.groups()[2 as usize].value()? as i64) << (14 as i32)
             } else {
                 0
             } as i32)) as i32)
-            + (if ((*self.len()? as i32) >= (4 as i32)) {
-                ((*self.groups()[3 as usize].value()? as i64) << (21 as i32))
+            + (if (*self.len()? as i32) >= (4 as i32) {
+                (*self.groups()[3 as usize].value()? as i64) << (21 as i32)
             } else {
                 0
             } as i32)) as i32)
-            + (if ((*self.len()? as i32) >= (5 as i32)) {
-                ((*self.groups()[4 as usize].value()? as i64) << (28 as i32))
+            + (if (*self.len()? as i32) >= (5 as i32) {
+                (*self.groups()[4 as usize].value()? as i64) << (28 as i32)
             } else {
                 0
             } as i32)) as i32)
-            + (if ((*self.len()? as i32) >= (6 as i32)) {
-                ((*self.groups()[5 as usize].value()? as i64) << (35 as i32))
+            + (if (*self.len()? as i32) >= (6 as i32) {
+                (*self.groups()[5 as usize].value()? as i64) << (35 as i32)
             } else {
                 0
             } as i32)) as i32)
-            + (if ((*self.len()? as i32) >= (7 as i32)) {
-                ((*self.groups()[6 as usize].value()? as i64) << (42 as i32))
+            + (if (*self.len()? as i32) >= (7 as i32) {
+                (*self.groups()[6 as usize].value()? as i64) << (42 as i32)
             } else {
                 0
             } as i32)) as i32)
-            + (if ((*self.len()? as i32) >= (8 as i32)) {
-                ((*self.groups()[7 as usize].value()? as i64) << (49 as i32))
+            + (if (*self.len()? as i32) >= (8 as i32) {
+                (*self.groups()[7 as usize].value()? as i64) << (49 as i32)
             } else {
                 0
             } as i32)) as i32;
