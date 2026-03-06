@@ -3,58 +3,49 @@ use owo_colors::OwoColorize;
 use std::env;
 
 mod loader;
-use loader::webassembly;
 
 fn main() -> Result<(), String> {
-    println!("Compiled on '{}' for '{}'", COMPILED_ON, CURRENT_PLATFORM);
+    println!("Compiled on '{}' for '{}'\n", COMPILED_ON, CURRENT_PLATFORM);
     let args: Vec<String> = env::args().collect();
     let file_path = &args[1];
 
-    print!("Loading '{}'... ", file_path);
-    let module = loader::load_wasm_module(file_path).expect("Error parsing WebAssembly module");
-    println!("OK");
-    println!();
+    println!("Loading '{}'...", file_path.bright_blue());
+    let wasm_module = loader::load_wasm_module(file_path);
 
     println!(
-        "  Magic Number: {} ({} Bytes)",
-        module.magic().escape_ascii(),
-        module.magic().len()
+        "Found {} section(s)",
+        wasm_module.sections.len().bright_green()
     );
-    println!("  Version: {}", module.version());
-    println!();
+    for section in &wasm_module.sections {
+        match section {
+            loader::Sections::Export(export_section) => {
+                println!("  Section ID: {}", export_section.name().bright_blue());
+                println!(
+                    "  Number of Exports: {}",
+                    export_section.exports.len().bright_green()
+                );
 
-    for section in module.sections().iter() {
-        println!("  Section ID: {:?}", section.id().bright_blue());
-        println!(
-            "  Size: {} Bytes",
-            section.content_raw().len().bright_green()
-        );
-        println!(
-            "  Content ({:#?} Bytes): {}",
-            Some(section.len_content()).unwrap().value().expect("empty"),
-            section.content_raw().escape_ascii().white()
-        );
-
-        let content_ref = section.content();
-        let content = content_ref.as_ref();
-
-        match content {
-            Some(webassembly::Webassembly_Section_Content::Webassembly_ExportSection(section)) => {
-                let export_section = section.get();
-                let num_exports_wrapper = export_section.num_exports();
-                let num_exports = num_exports_wrapper.value().expect("value missing");
-                println!("  Number of Exports: {}", num_exports);
-
-                let exports = export_section.exports();
-                for export in exports.iter() {
-                    let export_name = export.name();
-                    let export_name_str = export_name.value();
-                    println!("    - {}", export_name_str.bright_yellow());
+                for export in &export_section.exports {
+                    println!("    - {}", export.name.bright_yellow());
+                }
+            }
+            loader::Sections::Code(code_section) => {
+                println!("  Section ID: {}", code_section.name().bright_blue());
+                println!(
+                    "  Number of Entries: {}",
+                    code_section.entries.len().bright_green()
+                );
+                for entry in &code_section.entries {
+                    println!("    - Locals: {}", entry.get_locals().len().bright_green());
+                    println!(
+                        "    - Content ({:#?} Bytes): {}",
+                        entry.get_code().len(),
+                        entry.get_code().escape_ascii().bright_yellow()
+                    )
                 }
             }
             _ => (),
         }
-        println!();
     }
     Ok(())
 }
