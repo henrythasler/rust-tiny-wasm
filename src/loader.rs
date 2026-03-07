@@ -1,18 +1,21 @@
+#![allow(unused)]
+
 use kaitai::{BytesReader, KStruct, OptRc};
 use std::fs;
 
 mod vlq_base128_le;
 pub mod webassembly;
-use webassembly::{Webassembly, Webassembly_ValTypes};
+use webassembly::{Webassembly, Webassembly_ExportTypes, Webassembly_ValTypes};
 
+#[derive(Debug)]
 pub struct Local {
     count: i32,
     r#type: Webassembly_ValTypes,
 }
 
 pub struct Code {
-    locals: Vec<Local>,
-    code: Vec<u8>,
+    pub locals: Vec<Local>,
+    pub code: Vec<u8>,
 }
 
 impl Code {
@@ -36,8 +39,8 @@ impl CodeSection {
 
 pub struct Export {
     pub name: String,
-    r#type: i32,
-    index: i32,
+    pub r#type: Webassembly_ExportTypes,
+    pub index: i32,
 }
 
 pub struct ExportSection {
@@ -56,12 +59,12 @@ pub enum Sections {
 }
 
 pub struct WasmModule {
-    pub file_path: String,
+    file_path: String,
     pub sections: Vec<Sections>,
 }
 
 fn kaitai_parse_module(file_path: &str) -> Result<OptRc<Webassembly>, String> {
-    let bytes = fs::read(file_path).expect("Should have been able to read the file");
+    let bytes = fs::read(file_path).expect("Could not load file");
     let io = BytesReader::from(bytes);
     let parsed = Webassembly::read_into::<BytesReader, Webassembly>(&io, None, None)
         .expect("Failed to parse WebAssembly module");
@@ -94,8 +97,8 @@ pub fn load_wasm_module(file_path: &str) -> WasmModule {
                     let export_name_str = export_name.value();
                     new_export_section.exports.push(Export {
                         name: export_name_str.clone(),
-                        r#type: 0,
-                        index: 0,
+                        r#type: export.exportdesc().clone(),
+                        index: *export.idx().value().unwrap(),
                     });
                 }
                 wasm_module

@@ -5,6 +5,8 @@
 #![allow(non_camel_case_types)]
 #![allow(irrefutable_let_patterns)]
 #![allow(unused_comparisons)]
+// FIXME: remove ignore all clippy warnings, as this code is machine-generated
+#![allow(clippy::all)]
 
 extern crate kaitai;
 use super::vlq_base128_le::VlqBase128Le;

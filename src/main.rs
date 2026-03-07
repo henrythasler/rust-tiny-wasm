@@ -26,7 +26,12 @@ fn main() -> Result<(), String> {
                 );
 
                 for export in &export_section.exports {
-                    println!("    - {}", export.name.bright_yellow());
+                    println!(
+                        "    - {} ({:#?}, {})",
+                        export.name.bright_yellow(),
+                        export.r#type.white(),
+                        export.index.white()
+                    );
                 }
             }
             loader::Sections::Code(code_section) => {
@@ -36,15 +41,18 @@ fn main() -> Result<(), String> {
                     code_section.entries.len().bright_green()
                 );
                 for entry in &code_section.entries {
-                    println!("    - Locals: {}", entry.get_locals().len().bright_green());
                     println!(
-                        "    - Content ({:#?} Bytes): {}",
+                        "    - Locals: {} ({:#?})",
+                        entry.get_locals().len().bright_green(),
+                        entry.locals
+                    );
+                    println!(
+                        "      Content ({:#?} Bytes): {}\n",
                         entry.get_code().len(),
                         entry.get_code().escape_ascii().bright_yellow()
                     )
                 }
-            }
-            _ => (),
+            } // _ => (),
         }
     }
     Ok(())
