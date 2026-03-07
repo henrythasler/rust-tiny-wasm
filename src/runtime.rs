@@ -1,4 +1,3 @@
-use bytemuck;
 use memmap2::{Mmap, MmapMut};
 use std::mem;
 
