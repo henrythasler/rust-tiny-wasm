@@ -61,7 +61,7 @@ fn main() -> Result<(), String> {
 
     let jit_code: Vec<u32> = vec![0x0b000020, 0xd65f03c0];
     let instance = get_module_instance(&jit_code);
-    let add = instance.get_function();
-    println!("3 + 4 = {}", add(3, 4));
+    let add = unsafe { instance.get_function::<fn(i32, i32) -> i32>() };
+    println!("3 + 4 = {}", add(3, 4).bright_green());
     Ok(())
 }

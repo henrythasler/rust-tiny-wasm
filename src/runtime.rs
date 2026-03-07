@@ -18,8 +18,18 @@ pub struct Runtime {
 }
 
 impl Runtime {
-    pub fn get_function(&self) -> fn(i32, i32) -> i32 {
-        unsafe { mem::transmute::<*const u8, fn(i32, i32) -> i32>(self.machinecode.as_ptr()) }
+    pub unsafe fn get_function<F>(&self) -> F
+    where
+        F: Sized,
+    {
+        let ptr = self.machinecode.as_ptr();
+
+        // Ensure validity, proper alignment and size for function pointers
+        assert!(!ptr.is_null());
+        assert_eq!((ptr as usize) % mem::align_of::<F>(), 0);
+        assert_eq!(mem::size_of::<F>(), mem::size_of::<*const u8>());
+
+        unsafe { mem::transmute_copy(&ptr) }
     }
 }
 
