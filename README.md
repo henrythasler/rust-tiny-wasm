@@ -76,5 +76,8 @@ int add(int num1, int num2){
 
 - [ ] Extend the main.rs with argument parsing capabilities for two numbers (addends).
 - [ ] Create a runtime that copies the JIT code into an executable memory region on the heap.
+- [ ] Ensure that the instruction cache on ARM64 is cleared before executing the JIT code.
 - [ ] Call the JIT code from the main function using the parsed arguments and print the result (sum).
 - [ ] Write some unit- and integration-tests to verify the correct execution.
+
+### Detailled Description
