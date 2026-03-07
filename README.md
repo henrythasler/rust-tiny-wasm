@@ -4,7 +4,7 @@
 
 A [WebAssembly](https://webassembly.org/) Compiler and Runtime for ARM64 (aarch64) written in [Rust](https://rust-lang.org/) based on [Tiny-Wasm](https://github.com/henrythasler/wasm-playground).
 
-My goal is to split this into small chapters with very specific goals and additional documentation and a detailled solution description along the way. It can eventually be a good learing experience for others that want to start working with Rust and WebAssembly compilers.
+My goal is to split this into small chapters with very specific goals, additional documentation and a detailled solution description along the way. It can eventually be a good learing experience for others that want to start working with Rust and WebAssembly compilers.
 
 ## Chapter 1 - Toolchain Setup
 
@@ -65,12 +65,20 @@ In this chapter we will investigate how we can run JIT code in Rust. To simplify
 let jit_code: Vec<u32> = vec![0x0b000020, 0xd65f03c0];
 ```
 
-The function it implements is the following:
+The function it implements is:
 
 ```cpp
 int add(int num1, int num2){
     return num1 + num2;
 }
+```
+
+or written in arm assembly:
+
+```assembly
+add:
+        add     w0, w1, w0
+        ret
 ```
 
 ### Goals
