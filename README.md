@@ -77,8 +77,8 @@ or written in arm assembly:
 
 ```assembly
 add:
-        add     w0, w1, w0
-        ret
+    add     w0, w1, w0
+    ret
 ```
 
 ### Goals
@@ -87,7 +87,7 @@ add:
 - [x] Create a basic runtime that copies the JIT code into an executable memory region on the heap.
 - [x] Ensure that the instruction cache on ARM64 is cleared before executing the JIT code.
 - [x] Call the JIT code from the main function using the parsed arguments and print the result (sum).
-- [ ] Write some unit- and integration-tests to verify the correct execution.
+- [x] Write some unit- and integration-tests to verify the correct execution.
 
 ### Detailled Description
 

@@ -36,9 +36,10 @@ impl Runtime {
     }
 }
 
-pub fn get_module_instance(jit_code: &[u32]) -> Runtime {
+pub fn get_jit_instance(jit_code: &[u32]) -> Runtime {
     // Allocate executable memory and copy JIT code into that region
     let bytes = bytemuck::cast_slice(jit_code);
+    assert!(!bytes.is_empty());
     let mut mmap = MmapMut::map_anon(bytes.len()).expect("map_anon() failed");
     mmap.copy_from_slice(bytes);
 
@@ -51,4 +52,22 @@ pub fn get_module_instance(jit_code: &[u32]) -> Runtime {
     // set execution permissions
     let machinecode = mmap.make_exec().expect("make_exec() failed");
     Runtime { machinecode }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn simple_jit_code() {
+        let jit_code: Vec<u32> = vec![0x0b000020, 0xd65f03c0];
+        get_jit_instance(&jit_code);
+    }
+
+    #[test]
+    #[should_panic(expected = "!bytes.is_empty()")]
+    fn invalid_jit_code() {
+        let jit_code: Vec<u32> = vec![];
+        get_jit_instance(&jit_code);
+    }
 }

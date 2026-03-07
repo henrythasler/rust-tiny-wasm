@@ -63,16 +63,15 @@ pub struct WasmModule {
     pub sections: Vec<Sections>,
 }
 
-fn kaitai_parse_module(file_path: &str) -> Result<OptRc<Webassembly>, String> {
+fn kaitai_parser(file_path: &str) -> OptRc<Webassembly> {
     let bytes = fs::read(file_path).expect("Could not load file");
     let io = BytesReader::from(bytes);
-    let parsed = Webassembly::read_into::<BytesReader, Webassembly>(&io, None, None)
-        .expect("Failed to parse WebAssembly module");
-    Ok(parsed)
+    Webassembly::read_into::<BytesReader, Webassembly>(&io, None, None)
+        .expect("Failed to parse WebAssembly module")
 }
 
 pub fn load_wasm_module(file_path: &str) -> WasmModule {
-    let wasm = kaitai_parse_module(file_path).expect("Error parsing WebAssembly module");
+    let wasm = kaitai_parser(file_path);
 
     // we simplify the rather complex parser result and move the content to our own structure
     let mut wasm_module = WasmModule {
@@ -136,4 +135,47 @@ pub fn load_wasm_module(file_path: &str) -> WasmModule {
         }
     }
     wasm_module
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "Could not load file")]
+    fn file_error() {
+        let _ = load_wasm_module(&String::from("does_not.exist"));
+    }
+
+    #[test]
+    #[should_panic(expected = "Failed to parse WebAssembly module")]
+    fn invalid_module() {
+        let _ = load_wasm_module(&String::from("tests/assets/invalid-module.wasm"));
+    }
+
+    #[test]
+    fn test_get_name() {
+        let wasm_module = load_wasm_module(&String::from("tests/assets/empty-fn.wasm"));
+        assert!(wasm_module.sections.len() == 2);
+
+        for section in &wasm_module.sections {
+            match section {
+                Sections::Export(export_section) => {
+                    assert_eq!(export_section.name(), "export_section");
+                    assert_eq!(export_section.exports.len(), 2);
+                    for export in &export_section.exports {
+                        assert!(matches!(export.name.as_str(), "foo" | "bar"));
+                        assert_eq!(export.r#type, Webassembly_ExportTypes::FuncType);
+                    }
+                }
+                Sections::Code(code_section) => {
+                    assert_eq!(code_section.name(), "code_section");
+                    assert_eq!(code_section.entries.len(), 2);
+                    for entry in &code_section.entries {
+                        assert!(matches!(entry.get_locals().len(), 0 | 1));
+                    }
+                }
+            }
+        }
+    }
 }

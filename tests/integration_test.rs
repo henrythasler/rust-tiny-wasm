@@ -1,19 +1,16 @@
-// use std::borrow::Borrow;
-
-use tiny_wasm::loader::load_wasm_module;
-use tiny_wasm::runtime::get_module_instance;
+use tiny_wasm::{add_i32, dump_module_info};
 
 #[test]
-fn test_get_name() {
-    let _ = load_wasm_module(&String::from("tests/assets/empty-fn.wasm"));
+fn test_dump_module_info() {
+    dump_module_info("tests/assets/empty-fn.wasm");
 }
 
 #[test]
-fn test_get_module_instance() {
-    let jit_code: Vec<u32> = vec![0x0b000020, 0xd65f03c0];
-    let instance = get_module_instance(&jit_code);
-    let add = unsafe { instance.get_function::<fn(i32, i32) -> i32>() };
-    assert_eq!(add(3, 4), 7);
-    assert_eq!(add(-3, -4), -7);
-    assert_eq!(add(i32::pow(2, 10), i32::pow(2, 10)), 2 * i32::pow(2, 10));
+fn test_add_i32() {
+    assert_eq!(add_i32(3, 4), 7);
+    assert_eq!(add_i32(-3, -4), -7);
+    assert_eq!(
+        add_i32(i32::pow(2, 10), i32::pow(2, 10)),
+        2 * i32::pow(2, 10)
+    );
 }
