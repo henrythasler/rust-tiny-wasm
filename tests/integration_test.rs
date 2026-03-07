@@ -15,4 +15,5 @@ fn test_get_module_instance() {
     let add = unsafe { instance.get_function::<fn(i32, i32) -> i32>() };
     assert_eq!(add(3, 4), 7);
     assert_eq!(add(-3, -4), -7);
+    assert_eq!(add(i32::pow(2, 10), i32::pow(2, 10)), 2 * i32::pow(2, 10));
 }

@@ -43,6 +43,7 @@ The very first chapter is about installing and setting up the Rust toolchain loc
 
 - [Getting started with Rust](https://rust-lang.org/learn/get-started/)
 - [A guide to cross-compilation in Rust by Greg Stoll](https://blog.logrocket.com/guide-cross-compilation-rust/)
+- [Effortless Cross-Compilation for Rust: Building for Any Platform by Yen Wang](https://medium.com/rust-rock/effortless-cross-compilation-for-rust-building-for-any-platform-6cce81558123)
 
 
 ## Chapter 2 - WebAssembly Bytecode Parser
@@ -74,10 +75,17 @@ int add(int num1, int num2){
 
 ### Goals
 
-- [ ] Extend the main.rs with argument parsing capabilities for two numbers (addends).
+- [x] Extend the main.rs with argument parsing capabilities for two numbers (addends).
 - [x] Create a basic runtime that copies the JIT code into an executable memory region on the heap.
 - [x] Ensure that the instruction cache on ARM64 is cleared before executing the JIT code.
-- [ ] Call the JIT code from the main function using the parsed arguments and print the result (sum).
+- [x] Call the JIT code from the main function using the parsed arguments and print the result (sum).
 - [ ] Write some unit- and integration-tests to verify the correct execution.
 
 ### Detailled Description
+
+- Unit-Tests calling JIT-code for ARM64 also need to be run on an ARM64 machine or emulator.
+
+### References
+
+- [Just Programmer's Manual](https://just.systems/man/en/)
+- [clap Command Line Argument Parser for Rust](https://github.com/clap-rs/clap)

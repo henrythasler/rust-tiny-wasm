@@ -9,3 +9,4 @@ owo-colors = "4"
 kaitai = { git = "https://github.com/kaitai-io/kaitai_struct_rust_runtime.git", tag = "v0.11.0" }
 memmap2 = "0.9.10"
 bytemuck = "1.25.0"
+clap = { version = "4.5.60", features = ["derive"] }
