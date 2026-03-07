@@ -8,6 +8,8 @@ My goal is to split this into small chapters with very specific goals and additi
 
 ## Chapter 1 - Toolchain Setup
 
+The very first chapter is about installing and setting up the Rust toolchain locally and in the CI.
+
 ### Goals
 
 - [x] Set up local Rust toolchain for your local native target (e.g. x86_64) and aarch64 targets.
@@ -45,9 +47,34 @@ My goal is to split this into small chapters with very specific goals and additi
 
 ## Chapter 2 - WebAssembly Bytecode Parser
 
+### Goals
+
 - [x] Parse a WebAssembly module (`.wasm` binary format) and print the length and content (opcodes) of the code section.
 - [x] Print the names of all exported functions.
 
 ### Detailed Description
 
 - You can implement your own parser or use an off-the-shelf library.
+
+## Chapter 3 - Code Execution
+
+In this chapter we will investigate how we can run JIT code in Rust. To simplify this step, the JIT code is already available and we can focus on creating a runtime to call it. Note that the JIT code is for ARM64 so it needs to be run on an ARM64 machine or emulator:
+
+```rust
+let jit_code: Vec<u32> = vec![0x0b000020, 0xd65f03c0];
+```
+
+The function it implements is the following:
+
+```cpp
+int add(int num1, int num2){
+    return num1 + num2;
+}
+```
+
+### Goals
+
+- [ ] Extend the main.rs with argument parsing capabilities for two numbers (addends).
+- [ ] Create a runtime that copies the JIT code into an executable memory region on the heap.
+- [ ] Call the JIT code from the main function using the parsed arguments and print the result (sum).
+- [ ] Write some unit- and integration-tests to verify the correct execution.

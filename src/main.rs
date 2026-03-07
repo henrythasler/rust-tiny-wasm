@@ -2,7 +2,10 @@ use current_platform::{COMPILED_ON, CURRENT_PLATFORM};
 use owo_colors::OwoColorize;
 use std::env;
 
+use crate::runtime::get_module_instance;
+
 mod loader;
+mod runtime;
 
 fn main() -> Result<(), String> {
     println!("Compiled on '{}' for '{}'\n", COMPILED_ON, CURRENT_PLATFORM);
@@ -55,5 +58,10 @@ fn main() -> Result<(), String> {
             } // _ => (),
         }
     }
+
+    let jit_code: Vec<u32> = vec![0x0b000020, 0xd65f03c0];
+    let instance = get_module_instance(&jit_code);
+    let add = instance.get_function();
+    println!("3 + 4 = {}", add(3, 4));
     Ok(())
 }
