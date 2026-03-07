@@ -17,6 +17,10 @@ pub struct Runtime {
 }
 
 impl Runtime {
+    /// # Safety
+    ///
+    /// This function casts the memory address to a function. The user **MUST** ensure that the signature used for the
+    /// generic matches the actual function that is called.
     pub unsafe fn get_function<F>(&self) -> F
     where
         F: Sized,
