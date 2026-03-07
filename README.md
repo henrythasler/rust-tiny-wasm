@@ -77,7 +77,7 @@ or written in arm assembly:
 
 ```assembly
 add:
-    add     w0, w1, w0
+    add w0, w1, w0
     ret
 ```
 
@@ -92,6 +92,9 @@ add:
 ### Detailled Description
 
 - Unit-Tests calling JIT-code for ARM64 also need to be run on an ARM64 machine or emulator.
+- Make sure to structure [the project](https://doc.rust-lang.org/book/ch07-05-separating-modules-into-different-files.html) and [it's tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html) according to the official guidelines.
+- Do not forget to [add comments](https://doc.rust-lang.org/book/ch03-04-comments.html).
+- Maybe also try [Documentation testing](https://doc.rust-lang.org/rust-by-example/testing/doc_testing.html).
 
 ### References
 

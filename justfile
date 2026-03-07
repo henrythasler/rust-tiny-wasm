@@ -4,7 +4,8 @@ build:
 
 # Run all tests
 test:
-    cargo llvm-cov --target aarch64-unknown-linux-gnu --html
+    cargo llvm-cov clean --workspace
+    cargo llvm-cov --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(webassembly|base128)'
 
 # Run executable
 run +arguments:

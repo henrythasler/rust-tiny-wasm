@@ -52,6 +52,14 @@ pub fn dump_module_info(filename: &str) {
     }
 }
 
+/// Instantiates a simple runtime and executes JIT-code to add two numbers (i32)
+///
+/// Uses two ARM64 instructions (`add` and `ret`).
+///
+/// ```
+/// let result = tiny_wasm::add_i32(2, 3);
+/// assert_eq!(result, 5);
+/// ```
 pub fn add_i32(first: i32, second: i32) -> i32 {
     let jit_code: Vec<u32> = vec![0x0b000020, 0xd65f03c0];
     let instance = runtime::get_jit_instance(&jit_code);
