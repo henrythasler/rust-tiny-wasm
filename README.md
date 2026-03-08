@@ -87,7 +87,7 @@ add:
 - [x] Create a basic runtime that copies the JIT code into an executable memory region on the heap.
 - [x] Ensure that the instruction cache on ARM64 is cleared before executing the JIT code.
 - [x] Call the JIT code from the main function using the parsed arguments and print the result (sum).
-- [x] Write some unit- and integration-tests to verify the correct execution.
+- [x] Write some unit- and integration-tests. Ensure the test coverage for your own code is above 85%.
 
 ### Detailled Description
 
@@ -100,3 +100,28 @@ add:
 
 - [Just Programmer's Manual](https://just.systems/man/en/)
 - [clap Command Line Argument Parser for Rust](https://github.com/clap-rs/clap)
+
+## Chapter 4 - AArch64 Instruction Set Architecture
+
+Picking up our simple example from the previous chapter:
+
+```assembly
+add:
+    add w0, w1, w0
+    ret
+```
+
+This time, we will start with an empty vector `let mut jit_code: Vec<u32> = Vec::new();` and emit the JIT-code using a very simple assembler.
+
+### Goals
+
+- [ ] Make yourself familiar with the [AArch64 Instruction Set Architecture](https://developer.arm.com/documentation/102374/0103?lang=en) in general.
+- [ ] Learn how the `add` and `ret` instructions are [encoded](https://developer.arm.com/documentation/ddi0602/2025-09/Base-Instructions/ADD--shifted-register---Add-optionally-shifted-register-?lang=en)Data-processing---arithmetic-and-logic-operations?lang=en).
+- [ ] Implement a basic assembler that encodes these two instructions.
+- [ ] Encode `add w0, w1, w0` and `ret` into the `jit_code` vector.
+- [ ] Call the JIT code generated with this new method from the main function using the parsed arguments and print the result (sum).
+- [ ] Ensure code coverage is 100% for the assembler module.
+
+## Chapter 5 - The First Assembler
+
+In this chapter, we will compile and run our first WebAssembly function.

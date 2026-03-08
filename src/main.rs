@@ -1,7 +1,7 @@
 use clap::Parser;
 use current_platform::{COMPILED_ON, CURRENT_PLATFORM};
 use owo_colors::OwoColorize;
-use tiny_wasm::{add_i32, dump_module_info};
+use tiny_wasm::{add_i32, asm_add_i32, dump_module_info};
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -21,14 +21,19 @@ pub struct Args {
 }
 
 fn main() -> Result<(), String> {
-    println!("Compiled on '{}' for '{}'\n", COMPILED_ON, CURRENT_PLATFORM);
-    let args = Args::parse();
-
     // Chapter 1
-    dump_module_info(&args.module);
+    println!("Compiled on '{}' for '{}'\n", COMPILED_ON, CURRENT_PLATFORM);
 
     // Chapter 2
+    let args = Args::parse();
+    dump_module_info(&args.module);
+
+    // Chapter 3
     let res = add_i32(args.first, args.second);
+    println!("{} + {} = {}", args.first, args.second, res.bright_green());
+
+    // Chapter 4
+    let res = asm_add_i32(args.first, args.second);
     println!("{} + {} = {}", args.first, args.second, res.bright_green());
 
     Ok(())

@@ -1,5 +1,6 @@
 use owo_colors::OwoColorize;
 
+mod assembler;
 pub mod loader;
 pub mod runtime;
 
@@ -61,7 +62,14 @@ pub fn dump_module_info(filename: &str) {
 /// assert_eq!(result, 5);
 /// ```
 pub fn add_i32(first: i32, second: i32) -> i32 {
-    let jit_code: Vec<u32> = vec![0x0b000020, 0xd65f03c0];
+    let jit_code: Vec<u32> = assembler::get_add();
+    let instance = runtime::get_jit_instance(&jit_code);
+    let add = unsafe { instance.get_function::<fn(i32, i32) -> i32>() };
+    add(first, second)
+}
+
+pub fn asm_add_i32(first: i32, second: i32) -> i32 {
+    let jit_code = assembler::assemble_add();
     let instance = runtime::get_jit_instance(&jit_code);
     let add = unsafe { instance.get_function::<fn(i32, i32) -> i32>() };
     add(first, second)
