@@ -1,4 +1,7 @@
-#![allow(dead_code)]
+// #![allow(dead_code)]
+
+
+
 
 use std::ops::BitAnd;
 pub mod arithmetics;

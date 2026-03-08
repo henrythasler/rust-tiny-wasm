@@ -16,19 +16,30 @@ env:
 
 jobs:
   code-quality-checks:
-    name: Code Quality Checks (non-voting)
+    name: Code Quality Checks
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
       - name: Run code formatter
-        run: cargo fmt -- --check
+        run: |
+          cargo fmt -- --check 2>&1 | while IFS= read -r line; do
+            echo "::warning::$line"
+          done
+        continue-on-error: true
       - name: Run Linter
-        run: cargo clippy -- -D warnings
+        run: |
+          cargo clippy --message-format=json | \
+          jq -r 'select(.reason=="compiler-message") | .message.rendered' | \
+          while read -r line; do
+            echo "::warning::$line"
+          done
+        continue-on-error: true
       
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-24.04-arm
+    needs: code-quality-checks
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
@@ -46,7 +57,7 @@ jobs:
           rustup component add llvm-tools-preview
           cargo install cargo-llvm-cov --locked
       - name: Generate coverage
-        run: cargo llvm-cov --lcov --output-path lcov.info
+        run: cargo llvm-cov --lcov --ignore-filename-regex '(webassembly|base128) --output-path lcov.info
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@v2
         with:

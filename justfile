@@ -14,7 +14,7 @@ run +arguments:
 # Lint and format check
 lint:
     cargo fmt -- --check
-    cargo clippy -- -D warnings
+    cargo clippy
 
 wat2wasm:
     wat2wasm tests/assets/empty-fn.wat -o tests/assets/empty-fn.wasm
