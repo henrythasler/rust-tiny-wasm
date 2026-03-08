@@ -126,3 +126,16 @@ This time, we will start with an empty vector `let mut jit_code: Vec<u32> = Vec:
 ## Chapter 5 - The First Assembler
 
 In this chapter, we will compile and run our first WebAssembly function.
+
+### Detailled Description
+
+WebAssembly modules usually provide a predefined entry-function called `_start`. 
+
+### Goals
+
+- [ ] Make yoursef familiar with the [Binary Format](https://www.w3.org/TR/wasm-core-1/#binary-format) of a WebAssembly module.
+- [ ] Inspect the binary structure of the module `tests/assets/skeleton.wasm` using [WebAssembly Code Explorer ](https://wasdk.github.io/wasmcodeexplorer/) or a similar tool.
+- [ ] Load and parse the Webassembly module `tests/assets/skeleton.wasm` using a command line parameter.
+- [ ] Compile the exported `_start` function to JIT code for ARM64.
+- [ ] Run the JIT code using your existing runtime.
+- [ ] Complete the chapter by adding unit-tests and documentation

@@ -1,6 +1,8 @@
 use memmap2::{Mmap, MmapMut};
 use std::mem;
 
+use super::module::*;
+
 #[cfg(target_arch = "aarch64")]
 unsafe fn clear_cache(addr: *mut u8, len: usize) {
     // Use libc function
@@ -21,7 +23,7 @@ impl Runtime {
     ///
     /// This function casts the memory address to a function. The user **MUST** ensure that the signature used for the
     /// generic matches the actual function that is called.
-    pub unsafe fn get_function<F>(&self) -> F
+    pub unsafe fn get_function<F>(&self, _name: &str) -> F
     where
         F: Sized,
     {
@@ -34,6 +36,24 @@ impl Runtime {
 
         unsafe { mem::transmute_copy(&ptr) }
     }
+}
+
+pub fn instantiate_module(module: &LinkedModule) -> Runtime {
+    // Allocate executable memory and copy JIT code into that region
+    let bytes = bytemuck::cast_slice(module.get_machinecode());
+    assert!(!bytes.is_empty());
+    let mut mmap = MmapMut::map_anon(bytes.len()).expect("map_anon() failed");
+    mmap.copy_from_slice(bytes);
+
+    // clear instruction cache on aarch64 target
+    #[cfg(target_arch = "aarch64")]
+    unsafe {
+        clear_cache(mmap.as_mut_ptr(), mmap.len());
+    }
+
+    // set execution permissions
+    let machinecode = mmap.make_exec().expect("make_exec() failed");
+    Runtime { machinecode }
 }
 
 pub fn get_jit_instance(jit_code: &[u32]) -> Runtime {

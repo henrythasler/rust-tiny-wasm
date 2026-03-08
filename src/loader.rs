@@ -53,14 +53,27 @@ impl ExportSection {
     }
 }
 
-pub enum Sections {
+pub enum Section {
     Export(ExportSection),
     Code(CodeSection),
 }
 
 pub struct WasmModule {
     file_path: String,
-    pub sections: Vec<Sections>,
+    sections: Vec<Section>,
+}
+
+impl WasmModule {
+    pub fn code_section(&self) -> Option<&CodeSection> {
+        self.sections.iter().find_map(|x| match x {
+            Section::Code(v) => Some(v),
+            _ => None,
+        })
+    }
+
+    pub fn sections(&self) -> &Vec<Section> {
+        &self.sections
+    }
 }
 
 fn kaitai_parser(file_path: &str) -> OptRc<Webassembly> {
@@ -103,7 +116,7 @@ pub fn load_wasm_module(file_path: &str) -> WasmModule {
                 }
                 wasm_module
                     .sections
-                    .push(Sections::Export(new_export_section));
+                    .push(Section::Export(new_export_section));
             }
             Some(webassembly::Webassembly_Section_Content::Webassembly_CodeSection(section)) => {
                 let code_section = section.get();
@@ -130,7 +143,7 @@ pub fn load_wasm_module(file_path: &str) -> WasmModule {
                     });
                 }
 
-                wasm_module.sections.push(Sections::Code(new_code_section));
+                wasm_module.sections.push(Section::Code(new_code_section));
             }
             _ => (),
         }
@@ -161,7 +174,7 @@ mod tests {
 
         for section in &wasm_module.sections {
             match section {
-                Sections::Export(export_section) => {
+                Section::Export(export_section) => {
                     assert_eq!(export_section.name(), "export_section");
                     assert_eq!(export_section.exports.len(), 2);
                     for export in &export_section.exports {
@@ -169,7 +182,7 @@ mod tests {
                         assert_eq!(export.r#type, Webassembly_ExportTypes::FuncType);
                     }
                 }
-                Sections::Code(code_section) => {
+                Section::Code(code_section) => {
                     assert_eq!(code_section.name(), "code_section");
                     assert_eq!(code_section.entries.len(), 2);
                     for entry in &code_section.entries {

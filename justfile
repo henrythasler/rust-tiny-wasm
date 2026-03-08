@@ -17,4 +17,8 @@ lint:
     cargo clippy
 
 wat2wasm:
-    wat2wasm tests/assets/empty-fn.wat -o tests/assets/empty-fn.wasm
+    for file in ./tests/assets/*.wat; do \
+        echo $file; \
+        wat2wasm $file -o ${file%.wat}.wasm; \
+    done
+    
