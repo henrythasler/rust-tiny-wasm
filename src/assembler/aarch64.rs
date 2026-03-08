@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::ops::{Add, BitAnd};
+use std::ops::BitAnd;
 pub mod arithmetics;
 pub mod branch;
 
@@ -83,14 +83,6 @@ impl Reg {
 
     pub const FP: Reg = Reg::X29; // Frame Pointer (X29)
     pub const LR: Reg = Reg::X30; // Link Register (X30)
-}
-
-impl Add<u32> for Reg {
-    type Output = u32;
-
-    fn add(self, rhs: u32) -> Self::Output {
-        (self as u32) + rhs
-    }
 }
 
 impl BitAnd<u32> for Reg {

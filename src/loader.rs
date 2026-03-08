@@ -64,10 +64,11 @@ pub struct WasmModule {
 }
 
 fn kaitai_parser(file_path: &str) -> OptRc<Webassembly> {
-    let bytes = fs::read(file_path).expect("Could not load file");
+    let bytes = fs::read(file_path)
+        .expect("fs::read() should be able to load the file in `kaitai_parser()`");
     let io = BytesReader::from(bytes);
     Webassembly::read_into::<BytesReader, Webassembly>(&io, None, None)
-        .expect("Failed to parse WebAssembly module")
+        .expect("Webassembly::read_into() should be able to parse the WebAssembly module in `kaitai_parser()`")
 }
 
 pub fn load_wasm_module(file_path: &str) -> WasmModule {
@@ -142,13 +143,13 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic(expected = "Could not load file")]
+    #[should_panic(expected = "should be able to load the file")]
     fn file_error() {
         let _ = load_wasm_module(&String::from("does_not.exist"));
     }
 
     #[test]
-    #[should_panic(expected = "Failed to parse WebAssembly module")]
+    #[should_panic(expected = "should be able to parse the WebAssembly module")]
     fn invalid_module() {
         let _ = load_wasm_module(&String::from("tests/assets/invalid-module.wasm"));
     }

@@ -115,12 +115,13 @@ This time, we will start with an empty vector `let mut jit_code: Vec<u32> = Vec:
 
 ### Goals
 
-- [ ] Make yourself familiar with the [AArch64 Instruction Set Architecture](https://developer.arm.com/documentation/102374/0103?lang=en) in general.
-- [ ] Learn how the `add` and `ret` instructions are [encoded](https://developer.arm.com/documentation/ddi0602/2025-09/Base-Instructions/ADD--shifted-register---Add-optionally-shifted-register-?lang=en)Data-processing---arithmetic-and-logic-operations?lang=en).
-- [ ] Implement a basic assembler that encodes these two instructions.
-- [ ] Encode `add w0, w1, w0` and `ret` into the `jit_code` vector.
-- [ ] Call the JIT code generated with this new method from the main function using the parsed arguments and print the result (sum).
-- [ ] Ensure code coverage is 100% for the assembler module.
+- [x] Make yourself familiar with the [AArch64 Instruction Set Architecture](https://developer.arm.com/documentation/102374/0103?lang=en) in general.
+- [x] Learn how the `add` and `ret` instructions are [encoded](https://developer.arm.com/documentation/ddi0602/2025-09/Base-Instructions/ADD--shifted-register---Add-optionally-shifted-register-?lang=en).
+- [x] Implement a basic assembler that encodes these two instructions.
+- [x] Encode `add w0, w1, w0` and `ret` into the `jit_code` vector.
+- [x] Call the JIT code generated with this new method from the main function using the parsed arguments and print the result (sum).
+- [x] Ensure the code coverage is 100% for the assembler module and it's submodules.
+- [ ] Ensure all assembler-related functions are properly documented.
 
 ## Chapter 5 - The First Assembler
 
