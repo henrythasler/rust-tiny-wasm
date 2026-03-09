@@ -1,14 +1,12 @@
 use aarch64::*;
 mod aarch64;
 
-pub fn get_add() -> Vec<u32> {
-    vec![0x0b000020, 0xd65f03c0]
+pub fn emit_prologue(machinecode: &mut Vec<u32>) {
+    machinecode.push(0xA9BF7BFD); // stp fp, lr, [sp, #-16]!  ; create a new stack frame
+    machinecode.push(0x910003FD); // mov fp, sp
 }
 
-/// This function assembles
-pub fn assemble_add() -> Vec<u32> {
-    vec![
-        arithmetics::add_shifted_reg(Reg::W0, Reg::W1, Reg::W0, Shift::Lsl, 0, RegSize::Reg32bit),
-        branch::ret(Reg::X30),
-    ]
+pub fn emit_epilogue(machinecode: &mut Vec<u32>) {
+    machinecode.push(0xA8C17BFD); // ldp fp, lr, [sp], #16  ; destroy stack frame and restore FP, LR and SP
+    machinecode.push(branch::ret(Reg::LR)); // ret
 }

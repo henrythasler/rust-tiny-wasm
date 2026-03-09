@@ -1,7 +1,7 @@
 use memmap2::{Mmap, MmapMut};
 use std::mem;
 
-use super::module::*;
+use super::compiler::*;
 
 #[cfg(target_arch = "aarch64")]
 unsafe fn clear_cache(addr: *mut u8, len: usize) {

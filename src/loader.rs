@@ -71,6 +71,13 @@ impl WasmModule {
         })
     }
 
+    pub fn export_section(&self) -> Option<&ExportSection> {
+        self.sections.iter().find_map(|x| match x {
+            Section::Export(v) => Some(v),
+            _ => None,
+        })
+    }
+
     pub fn sections(&self) -> &Vec<Section> {
         &self.sections
     }

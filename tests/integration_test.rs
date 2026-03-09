@@ -1,27 +1,7 @@
-use tiny_wasm::{add_i32, asm_add_i32, dump_module_info};
+use tiny_wasm::dump_module_info;
 
 #[test]
 fn test_dump_module_info() {
     // just making sure it does not panic
     dump_module_info("tests/assets/empty-fn.wasm");
-}
-
-#[test]
-fn test_add_i32() {
-    assert_eq!(add_i32(3, 4), 7);
-    assert_eq!(add_i32(-3, -4), -7);
-    assert_eq!(
-        add_i32(i32::pow(2, 10), i32::pow(2, 10)),
-        2 * i32::pow(2, 10)
-    );
-}
-
-#[test]
-fn test_asm_add_i32() {
-    assert_eq!(asm_add_i32(3, 4), 7);
-    assert_eq!(asm_add_i32(-3, -4), -7);
-    assert_eq!(
-        asm_add_i32(i32::pow(2, 10), i32::pow(2, 10)),
-        2 * i32::pow(2, 10)
-    );
 }
