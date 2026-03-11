@@ -31,6 +31,7 @@ mod tests {
     #[test]
     fn test_ret() {
         assert_eq!(ret(Reg::X30), 0xd65f03c0);
+        assert_eq!(ret(Reg::LR), 0xd65f03c0);
         assert_eq!(ret(Reg::X0), 0xd65f0000);
     }
 }

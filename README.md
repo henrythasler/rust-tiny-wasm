@@ -6,6 +6,15 @@ A [WebAssembly](https://webassembly.org/) Compiler and Runtime for ARM64 (aarch6
 
 My goal is to split this into small chapters with very specific goals, additional documentation and a detailled solution description along the way. It can eventually be a good learing experience for others that want to start working with Rust and WebAssembly compilers.
 
+## About Gen-AI Tools
+
+Here are some guidelines about how to use Gen-AI tools in the context of this tutorial. It's you who wants to learn something new after all.
+
+1. Gen-AI makes mistakes. It will sell you false statements wrapped in fancy (technical) language. Keep in mind that the compiler is always correct :-).
+2. Have Gen-AI explain concepts and architecture. Ask for detailled explanations and why something is "the recommended" solution.
+3. Ask for options how to solve a specific problem to make an informed decision about which option to use or ask again if you are not fully satisfied.
+4. Use code snippets or generated code sparsely. Make sure you understand the generated code and could explain most of it to a peer programmer.
+
 ## Chapter 1 - Toolchain Setup
 
 The very first chapter is about installing and setting up the Rust toolchain locally and in the CI.
@@ -136,6 +145,12 @@ WebAssembly modules usually provide a predefined entry-function called `_start`.
 - [x] Make yoursef familiar with the [Binary Format](https://www.w3.org/TR/wasm-core-1/#binary-format) of a WebAssembly module.
 - [x] Inspect the binary structure of the module `tests/assets/skeleton.wasm` using [WebAssembly Code Explorer ](https://wasdk.github.io/wasmcodeexplorer/) or a similar tool.
 - [x] Load and parse the Webassembly module `tests/assets/skeleton.wasm` using a command line parameter.
-- [ ] Compile the exported `_start` function to JIT code for ARM64.
-- [ ] Run the JIT code using your existing runtime.
-- [ ] Complete the chapter by adding unit-tests and documentation
+- [x] Compile the exported `_start` function to JIT code for ARM64.
+- [x] Ensure the function has a proper [prologue and epilogue](https://mariokartwii.com/arm64/ch25.html).
+- [x] Run the JIT code using your existing runtime.
+- [x] Complete the chapter by adding unit-tests and documentation
+- [ ] Optional: Implement and use a control stack structure and related instructions to track entering and leaving a function.
+
+### Detailled Description
+
+Strictly following the WebAssembly specification, even this empty function would require branch-instructions and address backpatching. It is up to you to already implement this or simplify the compiler and wait for later chapters that explicitly explain and require these techniques.

@@ -59,5 +59,6 @@ pub fn load_and_run(filename: &str, function: &str) {
     let linked_module = compiler::compile(&wasm_module);
     let instance = runtime::instantiate_module(&linked_module);
     let _start = unsafe { instance.get_function::<fn()>(function) };
-    _start();
+    print!("{:X?}", linked_module.get_machinecode());
+    // _start();
 }

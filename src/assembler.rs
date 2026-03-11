@@ -1,5 +1,5 @@
 use aarch64::*;
-mod aarch64;
+pub mod aarch64;
 
 pub fn emit_prologue(machinecode: &mut Vec<u32>) {
     machinecode.push(0xA9BF7BFD); // stp fp, lr, [sp, #-16]!  ; create a new stack frame
