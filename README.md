@@ -149,8 +149,20 @@ WebAssembly modules usually provide a predefined entry-function called `_start`.
 - [x] Ensure the function has a proper [prologue and epilogue](https://mariokartwii.com/arm64/ch25.html).
 - [x] Run the JIT code using your existing runtime.
 - [x] Complete the chapter by adding unit-tests and documentation
-- [ ] Optional: Implement and use a control stack structure and related instructions to track entering and leaving a function.
+- [x] Optional: Implement and use a control stack structure and related instructions to track entering and leaving a function.
 
 ### Detailled Description
 
 Strictly following the WebAssembly specification, even this empty function would require branch-instructions and address backpatching. It is up to you to already implement this or simplify the compiler and wait for later chapters that explicitly explain and require these techniques.
+
+## Chapter 6 - Disassembler
+
+As we progress, the assembler output (our JIT code) will become longer and more complex. To simplify debugging, we will dump the assembler mnemonics for the machine instructions (aka disassembly) to a text file.
+
+### Goals
+
+- [ ] Dump the assembler mnemonics for the compiled JIT-code of the Webassembly module `tests/assets/skeleton.wasm` to a text file.
+
+### Detailled Description
+
+- It is recommended to use an existing disassembler solution and just generate the appropriate input format.

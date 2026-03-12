@@ -2,6 +2,7 @@
 
 use super::loader::*;
 use function::*;
+mod control_instructions;
 mod function;
 
 pub struct LinkedModule {

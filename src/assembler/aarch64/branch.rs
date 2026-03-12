@@ -24,6 +24,14 @@ pub fn ret(rn: Reg) -> u32 {
     0xD65F0000 | ((rn & 0x1F) << 5)
 }
 
+pub fn branch(offset: i32) -> u32 {
+    0x14000000 | (offset & 0x3FFFFFF) as u32 // imm26 offset
+}
+
+pub fn patch_branch(offset: i32, location: &mut u32) {
+    *location = 0x14000000 | (offset & 0x3FFFFFF) as u32 // imm26 offset
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

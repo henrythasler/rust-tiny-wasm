@@ -1,10 +1,11 @@
-use super::*;
 use crate::assembler::aarch64::*;
 use crate::assembler::{emit_epilogue, emit_prologue};
+use crate::compiler::control_instructions::{compile_end, compile_return};
 use crate::loader::Code;
 use crate::loader::webassembly::Webassembly_ValTypes;
 
-enum Opcode {
+#[derive(Debug)]
+pub enum Opcode {
     Func,
     Block,
     Loop,
@@ -12,14 +13,27 @@ enum Opcode {
     Else,
 }
 
-struct ControlFrame {
-    opcode: Opcode,
-    start_types: Vec<Webassembly_ValTypes>,
-    end_types: Vec<Webassembly_ValTypes>,
-    stack_height: usize,
+#[derive(Debug)]
+pub enum Instruction {
+    Br,
 }
 
-struct StackElement {
+#[derive(Debug)]
+pub struct Patch {
+    pub location: usize,
+    pub instruction: Instruction,
+}
+
+#[derive(Debug)]
+pub struct ControlFrame {
+    pub opcode: Opcode,
+    start_types: Vec<Webassembly_ValTypes>,
+    pub end_types: Vec<Webassembly_ValTypes>,
+    pub stack_height: usize,
+    pub patches: Vec<Patch>,
+}
+
+pub struct StackElement {
     location: Reg,
     val_type: Webassembly_ValTypes,
 }
@@ -34,6 +48,7 @@ pub fn compile_function(entry: &Code, machinecode: &mut Vec<u32>) {
         start_types: vec![], // FIXME: insert function parameters
         end_types: vec![],   // FIXME: insert result types
         stack_height: 0,
+        patches: vec![],
     }];
 
     // Value stack starts empty
@@ -42,49 +57,10 @@ pub fn compile_function(entry: &Code, machinecode: &mut Vec<u32>) {
     // iterate over WebAssembly opcodes and emit machinecode instructions
     let mut iter = entry.code.iter();
     'expression: while let Some(&opcode) = iter.next() {
-        print!("{:02X?} ", opcode);
-
-        // ret
         if opcode == 0x0f {
-            // FIXME: Manage Control Stack and add jump entry to backpatch list
-        }
-        // end
-        else if opcode == 0x0b {
-            let frame = control_stack
-                .pop()
-                .expect("control stack should contain at least one element on 'end' opcode");
-
-            assert_eq!(
-                value_stack.len(),
-                frame.stack_height + frame.end_types.len()
-            );
-            let mut results = value_stack.split_off(frame.end_types.len());
-            value_stack.truncate(frame.stack_height);
-            value_stack.append(&mut results);
-
-            match frame.opcode {
-                Opcode::Func => {
-                    // FIXME: validate control frame vs. stack
-                    // FIXME: backpatch ret instructions here
-                    // FIXME: if FrameOpcode::Func, exit while-loop and end function
-                    break 'expression;
-                }
-                _ => {}
-            }
-            /*
-               // Validate return values match expected types
-               assert value_stack.height == frame.height + frame.end_types.length
-               assert value_stack.top(frame.end_types.length) == frame.end_types
-
-               // Clean up value stack
-               results = value_stack.pop(frame.end_types.length)
-               value_stack.truncate(frame.height)
-               value_stack.push(results)
-
-               if frame.opcode == func:
-                   // Function exit: results stay on stack for caller
-                   return results
-            */
+            compile_return(machinecode, &mut control_stack);
+        } else if opcode == 0x0b && compile_end(machinecode, &mut control_stack, &mut value_stack) {
+            break 'expression;
         }
     }
     println!();
