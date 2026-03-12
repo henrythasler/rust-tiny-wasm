@@ -6,6 +6,11 @@ build:
 test:
     cargo llvm-cov clean --workspace
     cargo llvm-cov --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(webassembly|base128)'
+    for file in ./tests/assets/jit/*.o; do \
+        echo $file; \
+        aarch64-linux-gnu-objdump -D -b binary -m aarch64 $file > ${file%.o}.asm; \
+        rm ${file}; \
+    done    
 
 # Run executable
 run +arguments:
