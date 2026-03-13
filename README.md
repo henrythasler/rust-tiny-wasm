@@ -166,3 +166,10 @@ As we progress, the assembler output (our JIT code) will become longer and more 
 ### Detailled Description
 
 - It is recommended to use an existing disassembler solution and just generate the appropriate input format.
+
+## Chapter 7 - Basic Arithmetics
+
+### Goals
+
+- [ ] Load and parse the WebAssembly module `tests/assets/arithmetics-basic.wat`.
+- [ ] Compile and run all exported functions.

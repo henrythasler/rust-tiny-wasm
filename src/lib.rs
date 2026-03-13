@@ -1,12 +1,13 @@
 use owo_colors::OwoColorize;
+use std::path::Path;
 
 mod assembler;
 pub mod compiler;
 pub mod loader;
 pub mod runtime;
 
-pub fn dump_module_info(filename: &str) {
-    println!("Loading '{}'...", filename.bright_blue());
+pub fn dump_module_info(filename: &Path) {
+    println!("Loading '{}'...", filename.display().bright_blue());
     let wasm_module = loader::load_wasm_module(filename);
 
     println!(
@@ -44,9 +45,9 @@ pub fn dump_module_info(filename: &str) {
                         entry.locals
                     );
                     println!(
-                        "      Content ({:#?} Bytes): {}\n",
+                        "      Content ({:#?} Bytes): {:02X?}\n",
                         entry.get_code().len(),
-                        entry.get_code().escape_ascii().bright_yellow()
+                        entry.get_code().bright_yellow()
                     )
                 }
             }
@@ -54,7 +55,7 @@ pub fn dump_module_info(filename: &str) {
     }
 }
 
-pub fn load_and_run(filename: &str, function: &str) {
+pub fn load_and_run(filename: &Path, function: &str) {
     let wasm_module = loader::load_wasm_module(filename);
     let linked_module = compiler::compile(&wasm_module);
     let instance = runtime::instantiate_module(&linked_module);

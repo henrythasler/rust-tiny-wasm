@@ -1,3 +1,4 @@
+use owo_colors::OwoColorize;
 use crate::assembler::aarch64::*;
 use crate::assembler::{emit_epilogue, emit_prologue};
 use crate::compiler::control_instructions::{compile_end, compile_return};
@@ -55,12 +56,16 @@ pub fn compile_function(entry: &Code, machinecode: &mut Vec<u32>) {
     let mut value_stack: Vec<StackElement> = vec![];
 
     // iterate over WebAssembly opcodes and emit machinecode instructions
-    let mut iter = entry.code.iter();
-    'expression: while let Some(&opcode) = iter.next() {
+    let mut iter = entry.code.iter().enumerate();
+    'expression: while let Some((index, &opcode)) = iter.next() {
         if opcode == 0x0f {
             compile_return(machinecode, &mut control_stack);
-        } else if opcode == 0x0b && compile_end(machinecode, &mut control_stack, &mut value_stack) {
-            break 'expression;
+        } else if opcode == 0x0b {
+            if compile_end(machinecode, &mut control_stack, &mut value_stack) {
+                break 'expression;
+            }
+        } else {
+            panic!("{}", format!("unsupported instruction 0x{opcode:02X} at position {index}").red());
         }
     }
     println!();

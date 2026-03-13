@@ -12,6 +12,19 @@ pub fn compile_return(machinecode: &mut Vec<u32>, control_stack: &mut[ControlFra
     machinecode.push(branch::branch(0));
 }
 
+/// Compiles the opcode `end`
+/// 
+/// Handles control- and value-stack operations depending on the current block type
+/// 
+/// # Arguments
+///
+/// * `machinecode` - mutable reference to the current JIT-code vector
+/// * `control_stack` - mutable reference to the control stack
+/// * `value_stack` - mutable reference to the value stack
+/// 
+/// # Returns
+///
+/// `true` if the function should return; otherwise `false`
 pub fn compile_end(
     machinecode: &mut Vec<u32>,
     control_stack: &mut Vec<ControlFrame>,

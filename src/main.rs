@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::path::Path;
 use tiny_wasm::*;
 
 /// Simple program to greet a person
@@ -17,10 +18,10 @@ pub struct Args {
 fn main() -> Result<(), String> {
     // Chapter 2
     let args = Args::parse();
-    dump_module_info(&args.module);
+    dump_module_info(Path::new(&args.module));
 
     // Chapter 5
-    load_and_run(&args.module, &args.function);
+    load_and_run(Path::new(&args.module), &args.function);
 
     Ok(())
 }

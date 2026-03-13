@@ -2,6 +2,7 @@
 
 use kaitai::{BytesReader, KStruct, OptRc};
 use std::fs;
+use std::path::{Path, PathBuf};
 
 mod vlq_base128_le;
 pub mod webassembly;
@@ -59,7 +60,7 @@ pub enum Section {
 }
 
 pub struct WasmModule {
-    file_path: String,
+    file_path: PathBuf,
     sections: Vec<Section>,
 }
 
@@ -83,7 +84,7 @@ impl WasmModule {
     }
 }
 
-fn kaitai_parser(file_path: &str) -> OptRc<Webassembly> {
+fn kaitai_parser(file_path: &Path) -> OptRc<Webassembly> {
     let bytes = fs::read(file_path)
         .expect("fs::read() should be able to load the file in `kaitai_parser()`");
     let io = BytesReader::from(bytes);
@@ -91,12 +92,12 @@ fn kaitai_parser(file_path: &str) -> OptRc<Webassembly> {
         .expect("Webassembly::read_into() should be able to parse the WebAssembly module in `kaitai_parser()`")
 }
 
-pub fn load_wasm_module(file_path: &str) -> WasmModule {
+pub fn load_wasm_module(file_path: &Path) -> WasmModule {
     let wasm = kaitai_parser(file_path);
 
     // we simplify the rather complex parser result and move the content to our own structure
     let mut wasm_module = WasmModule {
-        file_path: String::from(file_path),
+        file_path: PathBuf::from(file_path),
         sections: Vec::new(),
     };
 
@@ -165,18 +166,18 @@ mod tests {
     #[test]
     #[should_panic(expected = "should be able to load the file")]
     fn file_error() {
-        let _ = load_wasm_module(&String::from("does_not.exist"));
+        let _ = load_wasm_module(Path::new("does_not.exist"));
     }
 
     #[test]
     #[should_panic(expected = "should be able to parse the WebAssembly module")]
     fn invalid_module() {
-        let _ = load_wasm_module(&String::from("tests/assets/invalid-module.wasm"));
+        let _ = load_wasm_module(Path::new("tests/assets/invalid-module.wasm"));
     }
 
     #[test]
     fn test_get_name() {
-        let wasm_module = load_wasm_module(&String::from("tests/assets/empty-fn.wasm"));
+        let wasm_module = load_wasm_module(Path::new("tests/assets/empty-fn.wasm"));
         assert!(wasm_module.sections.len() == 2);
 
         for section in &wasm_module.sections {
