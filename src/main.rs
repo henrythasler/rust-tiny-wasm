@@ -4,7 +4,7 @@ use tiny_wasm::*;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
+#[command(version, about, long_about = None, trailing_var_arg = true)]
 pub struct Args {
     /// Path to wasm-module
     #[arg(short, long)]

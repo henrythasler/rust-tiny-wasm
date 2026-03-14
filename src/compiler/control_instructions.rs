@@ -1,7 +1,7 @@
 use super::function::*;
 use crate::assembler::aarch64::*;
 
-pub fn compile_return(machinecode: &mut Vec<u32>, control_stack: &mut[ControlFrame]) {
+pub fn compile_return(control_stack: &mut[ControlFrame], machinecode: &mut Vec<u32>) {
     let frame = control_stack
         .get_mut(0)
         .expect("control stack should contain at least one element on 'return' opcode");
@@ -26,9 +26,9 @@ pub fn compile_return(machinecode: &mut Vec<u32>, control_stack: &mut[ControlFra
 ///
 /// `true` if the function should return; otherwise `false`
 pub fn compile_end(
-    machinecode: &mut Vec<u32>,
     control_stack: &mut Vec<ControlFrame>,
     value_stack: &mut Vec<StackElement>,
+    machinecode: &mut Vec<u32>,
 ) -> bool {
     let frame = control_stack
         .pop()

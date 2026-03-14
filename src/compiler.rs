@@ -5,6 +5,7 @@ use super::loader::*;
 use function::*;
 use owo_colors::OwoColorize;
 mod control_instructions;
+mod numeric_instructions;
 mod function;
 
 pub struct LinkedModule {

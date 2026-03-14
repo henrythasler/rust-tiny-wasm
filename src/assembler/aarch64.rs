@@ -116,7 +116,7 @@ fn select_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 {
     match size {
         RegSize::Reg32bit => instr_32bit,
         RegSize::Reg64bit => instr_64bit,
-        _ => panic!(),
+        _ => panic!("Instruction size should be 32 or 64 bit."),
     }
 }
 
