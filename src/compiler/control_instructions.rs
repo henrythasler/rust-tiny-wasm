@@ -1,4 +1,4 @@
-use super::function::*;
+use super::*;
 use crate::assembler::aarch64::*;
 
 pub fn compile_return(control_stack: &mut[ControlFrame], machinecode: &mut Vec<u32>) {

@@ -14,6 +14,21 @@ pub struct Local {
     r#type: Webassembly_ValTypes,
 }
 
+pub struct FuncType {
+    pub parameters: Vec<Webassembly_ValTypes>,
+    pub results: Vec<Webassembly_ValTypes>,
+}
+
+pub struct TypeSection {
+    pub func_types: Vec<FuncType>,
+}
+
+impl TypeSection {
+    pub fn name(&self) -> String {
+        String::from("type_section")
+    }
+}
+
 pub struct Code {
     pub locals: Vec<Local>,
     pub code: Vec<u8>,
@@ -57,6 +72,7 @@ impl ExportSection {
 pub enum Section {
     Export(ExportSection),
     Code(CodeSection),
+    Types(TypeSection),
 }
 
 pub struct WasmModule {
@@ -78,6 +94,13 @@ impl WasmModule {
             _ => None,
         })
     }
+
+    pub fn type_section(&self) -> Option<&TypeSection> {
+        self.sections.iter().find_map(|x| match x {
+            Section::Types(v) => Some(v),
+            _ => None,
+        })
+    }    
 
     pub fn sections(&self) -> &Vec<Section> {
         &self.sections
@@ -196,6 +219,12 @@ mod tests {
                     for entry in &code_section.entries {
                         assert!(matches!(entry.get_locals().len(), 0 | 1));
                     }
+                }
+                Section::Types(type_section) => {
+                    assert_eq!(type_section.name(), "type_section");
+                    assert_eq!(type_section.func_types.len(), 1);
+                    assert_eq!(type_section.func_types.get(0).unwrap().parameters.len(), 0);
+                    assert_eq!(type_section.func_types.get(0).unwrap().results.len(), 0);
                 }
             }
         }

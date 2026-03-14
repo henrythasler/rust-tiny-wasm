@@ -51,6 +51,7 @@ pub fn dump_module_info(filename: &Path) {
                     )
                 }
             }
+            _ => {}
         }
     }
 }
