@@ -165,11 +165,29 @@ As we progress, the assembler output (our JIT code) will become longer and more 
 
 ### Detailled Description
 
-- It is recommended to use an existing disassembler solution and just generate the appropriate input format.
+- It is recommended to use an existing disassembler solution/crate and just generate the appropriate input format.
 
-## Chapter 7 - Basic Arithmetics
+## Chapter 7 - Parameter Passing
+
+Passing parameters to and returning values from a WebAssembly function to the caller requires both to follow the [Procedure Call Standard for ARM64](https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#parameter-passing).
 
 ### Goals
 
-- [ ] Load and parse the WebAssembly module `tests/assets/arithmetics-basic.wat`.
+- [ ] Implement the `i32.const` and `i64.const` instructions.
+- [ ] Implement the `local.get` instructions.
+- [ ] Load and parse the WebAssembly module `tests/assets/parameters.wat`.
+- [ ] Handle parameter passing.
+- [ ] Handle return values.
+
+## Chapter 8 - Local Variables
+
+### Goals
+
+
+## Chapter 9 - Basic Arithmetics
+
+### Goals
+
+- [ ] Implement the `add`, `sub` and `mul` instructions.
+- [ ] Load and parse the WebAssembly module `tests/assets/arithmetics.wat`.
 - [ ] Compile and run all exported functions.

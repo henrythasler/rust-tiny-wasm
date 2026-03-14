@@ -1,4 +1,3 @@
-use owo_colors::OwoColorize;
 use crate::assembler::aarch64::*;
 use crate::assembler::{emit_epilogue, emit_prologue};
 use crate::compiler::control_instructions::{compile_end, compile_return};
@@ -39,7 +38,7 @@ pub struct StackElement {
     val_type: Webassembly_ValTypes,
 }
 
-pub fn compile_function(entry: &Code, machinecode: &mut Vec<u32>) {
+pub fn compile_function(entry: &Code, machinecode: &mut Vec<u32>) -> Result<(), String> {
     // every functions starts with an epilogue to save the initial state and create a new stack frame
     emit_prologue(machinecode);
 
@@ -58,20 +57,28 @@ pub fn compile_function(entry: &Code, machinecode: &mut Vec<u32>) {
     // iterate over WebAssembly opcodes and emit machinecode instructions
     let mut iter = entry.code.iter().enumerate();
     'expression: while let Some((index, &opcode)) = iter.next() {
-        if opcode == 0x0f {
-            compile_return(machinecode, &mut control_stack);
-        } else if opcode == 0x0b {
+        // Control Instructions
+        if opcode == 0x0b {
             if compile_end(machinecode, &mut control_stack, &mut value_stack) {
                 break 'expression;
             }
-        } else {
-            panic!("{}", format!("unsupported instruction 0x{opcode:02X} at position {index}").red());
+        } else if opcode == 0x0f {
+            compile_return(machinecode, &mut control_stack);
+        }
+        // Numeric Instructions
+        else if opcode == 0x41 || opcode == 0x42 {
+            // compile_const(machinecode, opcode);
+        }
+        // Unsupported
+        else {
+            return Err(format!(
+                "unsupported instruction 0x{opcode:02X} at position {index}"
+            ));
         }
     }
-    println!();
-
     // FIXME: move result to r0
 
     // restore initial state before returning to the caller
     emit_epilogue(machinecode);
+    Ok(())
 }

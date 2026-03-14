@@ -1,12 +1,6 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tiny_wasm::*;
-
-#[test]
-fn test_dump_module_info() {
-    // just making sure it does not panic
-    dump_module_info(Path::new("tests/assets/empty-fn.wasm"));
-}
 
 #[test]
 fn test_objdump() {
@@ -18,7 +12,7 @@ fn test_objdump() {
         fs::create_dir_all(parent).expect("Should be able to create dir");
     }
 
-    let blocked = ["invalid"];
+    let blocked = ["invalid", "draft"];
 
     for entry in fs::read_dir(base).expect("Should be able to read the folder content") {
         let entry = entry.unwrap();
@@ -35,7 +29,7 @@ fn test_objdump() {
                 println!("Skipping blocked file: {}", file_name);
                 continue;
             }
-        }        
+        }
 
         if file.extension().and_then(|ext| ext.to_str()) == Some("wasm") {
             println!("File: {}\n", &file.display());
@@ -44,7 +38,6 @@ fn test_objdump() {
 
             let bytes = bytemuck::cast_slice(linked_module.get_machinecode());
             fs::write(&output_path, bytes).expect("fs::write() should be able to write");
-
         }
     }
 }

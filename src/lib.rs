@@ -63,3 +63,9 @@ pub fn load_and_run(filename: &Path, function: &str) {
     println!("{:X?}", linked_module.get_machinecode());
     _start();
 }
+
+pub fn get_module_instance(filename: &Path) -> runtime::Runtime {
+    let wasm_module = loader::load_wasm_module(filename);
+    let linked_module = compiler::compile(&wasm_module);
+    runtime::instantiate_module(&linked_module)
+}
