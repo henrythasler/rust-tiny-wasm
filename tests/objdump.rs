@@ -48,16 +48,18 @@ fn test_objdump() {
             object.set_section_data(text_section, bytes, 16); // 16-byte alignment            
 
             // Add a symbol for the function
-            object.add_symbol(Symbol {
-                name: b"_start".to_vec(),
-                value: 0,
-                size: bytes.len() as u64,
-                kind: SymbolKind::Text,
-                scope: SymbolScope::Compilation,
-                weak: false,
-                section: SymbolSection::Section(text_section),
-                flags: SymbolFlags::None,
-            });
+            for function in linked_module.get_functions() {
+                object.add_symbol(Symbol {
+                    name: function.name.clone().into_bytes(),
+                    value: function.offset as u64 * 4,
+                    size: function.length as u64 * 4,
+                    kind: SymbolKind::Text,
+                    scope: SymbolScope::Compilation,
+                    weak: false,
+                    section: SymbolSection::Section(text_section),
+                    flags: SymbolFlags::None,
+                });
+            }
 
             let mut output_path = base.join("jit").join(file.file_name().unwrap());
             output_path.set_extension("o");

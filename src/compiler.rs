@@ -16,13 +16,36 @@ use numeric_instructions::*;
 mod control_instructions;
 mod numeric_instructions;
 
+#[derive(Clone)]
+pub struct WasmFunction {
+    pub name: String,
+    /// offset in instructions (u32)
+    pub offset: usize,
+    /// length in instructions (u32)
+    pub length: usize,
+}
+
 pub struct LinkedModule {
     machinecode: Vec<u32>,
+    functions: Vec<WasmFunction>,
+}
+
+impl LinkedModule {
+    pub fn new(machinecode: Vec<u32>, functions: Vec<WasmFunction>) -> Self {
+        Self {
+            machinecode,
+            functions,
+        }
+    }
 }
 
 impl LinkedModule {
     pub fn get_machinecode(&self) -> &[u32] {
         &self.machinecode
+    }
+
+    pub fn get_functions(&self) -> &[WasmFunction] {
+        &self.functions
     }
 }
 
@@ -67,18 +90,30 @@ pub fn compile(module: &WasmModule) -> LinkedModule {
     let function_section = module.function_section();
 
     let mut machinecode: Vec<u32> = Vec::new();
+    let mut functions: Vec<WasmFunction> = Vec::new();
 
     if let Some(c) = code_section {
         let iter = c.entries.iter().enumerate();
         for (index, entry) in iter {
             let typeidx = function_section.unwrap().type_indices.get(index).unwrap();
+
+            let function_id = match export_section {
+                Some(val) => val.exports.get(index).unwrap().name.clone(),
+                None => format!("func{index}"),
+            };
+
+            let mut wasm_function = WasmFunction {
+                name: function_id.clone(),
+                offset: machinecode.len(),
+                length: 0,
+            };
+
             match compile_function(entry, *typeidx, module, &mut machinecode) {
-                Ok(()) => (),
+                Ok(length) => {
+                    wasm_function.length = length;
+                    functions.push(wasm_function);
+                }
                 Err(error) => {
-                    let function_id = match export_section {
-                        Some(val) => &val.exports.get(index).unwrap().name,
-                        None => &index.to_string(),
-                    };
                     let error_msg = format!("Error in function '{function_id}()': {error}");
                     panic!("{}", error_msg.red());
                 }
@@ -86,7 +121,10 @@ pub fn compile(module: &WasmModule) -> LinkedModule {
         }
     }
 
-    LinkedModule { machinecode }
+    LinkedModule {
+        machinecode,
+        functions,
+    }
 }
 
 fn compile_function(
@@ -94,9 +132,11 @@ fn compile_function(
     typeidx: usize,
     module: &WasmModule,
     machinecode: &mut Vec<u32>,
-) -> Result<(), String> {
+) -> Result<usize, String> {
     let type_section = module.type_section().unwrap();
     let func_type = type_section.func_types.get(typeidx).unwrap();
+
+    let initial_size = machinecode.len();
 
     let register_pool = RegisterPool::new();
 
@@ -151,5 +191,5 @@ fn compile_function(
 
     // restore initial state before returning to the caller
     emit_epilogue(machinecode);
-    Ok(())
+    Ok(machinecode.len() - initial_size)
 }

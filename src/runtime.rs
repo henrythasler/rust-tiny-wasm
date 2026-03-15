@@ -16,6 +16,7 @@ unsafe fn clear_cache(addr: *mut u8, len: usize) {
 
 pub struct Runtime {
     machinecode: Mmap,
+    functions: Vec<WasmFunction>,
 }
 
 impl Runtime {
@@ -23,11 +24,16 @@ impl Runtime {
     ///
     /// This function casts the memory address to a function. The user **MUST** ensure that the signature used for the
     /// generic matches the actual function that is called.
-    pub unsafe fn get_function<F>(&self, _name: &str) -> F
+    pub unsafe fn get_function<F>(&self, name: &str) -> F
     where
         F: Sized,
     {
-        let ptr = self.machinecode.as_ptr();
+        let value = self
+            .functions
+            .iter()
+            .find(|&x| x.name == name)
+            .expect("Requested function should be found");
+        let ptr = self.machinecode.as_ptr().wrapping_add(value.offset);
 
         // Ensure validity, proper alignment and size for function pointers
         assert!(!ptr.is_null());
@@ -53,25 +59,10 @@ pub fn instantiate_module(module: &LinkedModule) -> Runtime {
 
     // set execution permissions
     let machinecode = mmap.make_exec().expect("make_exec() failed");
-    Runtime { machinecode }
-}
-
-pub fn get_jit_instance(jit_code: &[u32]) -> Runtime {
-    // Allocate executable memory and copy JIT code into that region
-    let bytes = bytemuck::cast_slice(jit_code);
-    assert!(!bytes.is_empty());
-    let mut mmap = MmapMut::map_anon(bytes.len()).expect("map_anon() failed");
-    mmap.copy_from_slice(bytes);
-
-    // clear instruction cache on aarch64 target
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        clear_cache(mmap.as_mut_ptr(), mmap.len());
+    Runtime {
+        machinecode,
+        functions: module.get_functions().to_vec(),
     }
-
-    // set execution permissions
-    let machinecode = mmap.make_exec().expect("make_exec() failed");
-    Runtime { machinecode }
 }
 
 #[cfg(test)]
@@ -80,14 +71,44 @@ mod tests {
 
     #[test]
     fn simple_jit_code() {
-        let jit_code: Vec<u32> = vec![0x0b000020, 0xd65f03c0];
-        get_jit_instance(&jit_code);
+        let module = LinkedModule::new(
+            vec![0x0b000020, 0xd65f03c0],
+            vec![WasmFunction {
+                name: String::from("test"),
+                offset: 0,
+                length: 2,
+            }],
+        );
+        let instance = instantiate_module(&module);
+        let _ = unsafe { instance.get_function::<fn()>("test") };
     }
 
     #[test]
     #[should_panic(expected = "!bytes.is_empty()")]
     fn invalid_jit_code() {
-        let jit_code: Vec<u32> = vec![];
-        get_jit_instance(&jit_code);
+        let module = LinkedModule::new(
+            vec![],
+            vec![WasmFunction {
+                name: String::from("empty"),
+                offset: 0,
+                length: 2,
+            }],
+        );
+        let _ = instantiate_module(&module);
+    }
+
+    #[test]
+    #[should_panic(expected = "should be found")]
+    fn unknown_function() {
+        let module = LinkedModule::new(
+            vec![0x0b000020, 0xd65f03c0],
+            vec![WasmFunction {
+                name: String::from("test"),
+                offset: 0,
+                length: 2,
+            }],
+        );
+        let instance = instantiate_module(&module);
+        let _ = unsafe { instance.get_function::<fn()>("unknown") };
     }
 }

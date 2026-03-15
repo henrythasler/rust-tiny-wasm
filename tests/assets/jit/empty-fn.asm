@@ -2,7 +2,8 @@
 ./tests/assets/jit/empty-fn.o:     file format elf64-littleaarch64
 
 SYMBOL TABLE:
-0000000000000000 l     F .text	0000000000000028 _start
+0000000000000000 l     F .text	0000000000000014 foo
+0000000000000014 l     F .text	0000000000000014 bar
 
 
 Contents of section .text:
@@ -12,14 +13,16 @@ Contents of section .text:
 
 Disassembly of section .text:
 
-0000000000000000 <_start>:
+0000000000000000 <foo>:
    0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
    4:	910003fd 	mov	x29, sp
-   8:	14000001 	b	c <_start+0xc>
+   8:	14000001 	b	c <foo+0xc>
    c:	a8c17bfd 	ldp	x29, x30, [sp], #16
   10:	d65f03c0 	ret
+
+0000000000000014 <bar>:
   14:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
   18:	910003fd 	mov	x29, sp
-  1c:	14000001 	b	20 <_start+0x20>
+  1c:	14000001 	b	20 <bar+0xc>
   20:	a8c17bfd 	ldp	x29, x30, [sp], #16
   24:	d65f03c0 	ret
