@@ -11,3 +11,4 @@ memmap2 = "0.9.10"
 bytemuck = "1.25.0"
 clap = { version = "4.5.60", features = ["derive"] }
 leb128 = "0.2.5"
+object = { version = "0.38.1", features = ["write"] }

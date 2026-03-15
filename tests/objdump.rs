@@ -1,3 +1,8 @@
+use object::write::{Object, Symbol, SymbolSection};
+use object::{
+    Architecture, BinaryFormat, Endianness, SectionKind, SymbolFlags, SymbolKind, SymbolScope,
+};
+
 use std::fs;
 use std::path::Path;
 use tiny_wasm::*;
@@ -30,6 +35,30 @@ fn test_objdump() {
             let wasm_module = loader::load_wasm_module(&file);
             let linked_module = compiler::compile(&wasm_module);
 
+            let mut object =
+                Object::new(BinaryFormat::Elf, Architecture::Aarch64, Endianness::Little);
+
+            let text_section = object.add_section(
+                vec![],            // segment
+                b".text".to_vec(), // section name
+                SectionKind::Text, // section kind
+            );
+
+            let bytes: &[u8] = bytemuck::cast_slice(linked_module.get_machinecode());
+            object.set_section_data(text_section, bytes, 16); // 16-byte alignment            
+
+            // Add a symbol for the function
+            object.add_symbol(Symbol {
+                name: b"_start".to_vec(),
+                value: 0,
+                size: bytes.len() as u64,
+                kind: SymbolKind::Text,
+                scope: SymbolScope::Compilation,
+                weak: false,
+                section: SymbolSection::Section(text_section),
+                flags: SymbolFlags::None,
+            });
+
             let mut output_path = base.join("jit").join(file.file_name().unwrap());
             output_path.set_extension("o");
             println!(
@@ -37,9 +66,8 @@ fn test_objdump() {
                 &file.display(),
                 output_path.display()
             );
-
-            let bytes = bytemuck::cast_slice(linked_module.get_machinecode());
-            fs::write(&output_path, bytes).expect("fs::write() should be able to write");
+            fs::write(&output_path, object.write().unwrap())
+                .expect("fs::write() should be able to write");
         }
     }
 }
