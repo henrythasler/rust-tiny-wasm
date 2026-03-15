@@ -5,12 +5,7 @@ use tiny_wasm::*;
 #[test]
 fn test_objdump() {
     let base = Path::new("tests/assets");
-    let file = "skeleton";
-
-    let output_path = base.join("jit").join(format!("{file}.o"));
-    if let Some(parent) = output_path.parent() {
-        fs::create_dir_all(parent).expect("Should be able to create dir");
-    }
+    fs::create_dir_all(base.join("jit")).expect("Should be able to create dir");
 
     let blocked = ["invalid", "draft"];
 
@@ -32,9 +27,16 @@ fn test_objdump() {
         }
 
         if file.extension().and_then(|ext| ext.to_str()) == Some("wasm") {
-            println!("File: {}\n", &file.display());
             let wasm_module = loader::load_wasm_module(&file);
             let linked_module = compiler::compile(&wasm_module);
+
+            let mut output_path = base.join("jit").join(file.file_name().unwrap());
+            output_path.set_extension("o");
+            println!(
+                "File: {}, Output: {}\n",
+                &file.display(),
+                output_path.display()
+            );
 
             let bytes = bytemuck::cast_slice(linked_module.get_machinecode());
             fs::write(&output_path, bytes).expect("fs::write() should be able to write");

@@ -1,4 +1,7 @@
+#![allow(dead_code)]
 //! Processes a Webassembly module and returns a LinkedModule for subsequent execution
+
+use std::io::Cursor;
 
 use super::loader::*;
 use crate::loader::webassembly::Webassembly_ValTypes;
@@ -24,7 +27,7 @@ impl LinkedModule {
 }
 
 #[derive(Debug)]
-enum Opcode {
+pub enum Opcode {
     Func,
     Block,
     Loop,
@@ -53,29 +56,64 @@ pub struct ControlFrame {
 }
 
 pub struct StackElement {
-    location: Reg,
+    reg: Reg,
     val_type: Webassembly_ValTypes,
 }
 
-fn compile_function(entry: &Code, index: usize, module: &WasmModule, machinecode: &mut Vec<u32>) -> Result<(), String> {
-    let func_type = module.type_section().expect("Type Section should not be empty").func_types.get(index).expect("Should be able to read the func_type at index");
-    let parameters = &func_type.parameters;
-    let results = &func_type.results;
+pub fn compile(module: &WasmModule) -> LinkedModule {
+    let code_section = module.code_section();
+    let export_section = module.export_section();
 
-    // every functions starts with an epilogue to save the initial state and create a new stack frame
-    emit_prologue(machinecode);
+    let function_section = module.function_section();
+
+    let mut machinecode: Vec<u32> = Vec::new();
+
+    if let Some(c) = code_section {
+        let iter = c.entries.iter().enumerate();
+        for (index, entry) in iter {
+            let typeidx = function_section.unwrap().type_indices.get(index).unwrap();
+            match compile_function(entry, *typeidx, module, &mut machinecode) {
+                Ok(()) => (),
+                Err(error) => {
+                    let function_id = match export_section {
+                        Some(val) => &val.exports.get(index).unwrap().name,
+                        None => &index.to_string(),
+                    };
+                    let error_msg = format!("Error in function '{function_id}()': {error}");
+                    panic!("{}", error_msg.red());
+                }
+            }
+        }
+    }
+
+    LinkedModule { machinecode }
+}
+
+fn compile_function(
+    entry: &Code,
+    typeidx: usize,
+    module: &WasmModule,
+    machinecode: &mut Vec<u32>,
+) -> Result<(), String> {
+    let type_section = module.type_section().unwrap();
+    let func_type = type_section.func_types.get(typeidx).unwrap();
+
+    let register_pool = RegisterPool::new();
+
+    // Value stack starts empty
+    let mut value_stack: Vec<StackElement> = vec![];
 
     // Control stack is initialized with the (implicit) outer func-block
     let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
         opcode: Opcode::Func,
-        start_types: vec![], // FIXME: insert function parameters
-        end_types: vec![],   // FIXME: insert result types
-        stack_height: 0,
+        start_types: func_type.parameters.clone(),
+        end_types: func_type.results.clone(),
+        stack_height: value_stack.len(),
         patches: vec![],
     }];
 
-    // Value stack starts empty
-    let mut value_stack: Vec<StackElement> = vec![];
+    // every functions starts with an epilogue to save the initial state and create a new stack frame
+    emit_prologue(machinecode);
 
     // iterate over WebAssembly opcodes and emit machinecode instructions
     let bytecode = &entry.code;
@@ -92,12 +130,15 @@ fn compile_function(entry: &Code, index: usize, module: &WasmModule, machinecode
         }
         // Numeric Instructions
         else if opcode == 0x41 || opcode == 0x42 {
-            // iter.nth(compile_const(
-            //     &opcode,
-            //     &mut Cursor::new(&bytecode[index..]),
-            //     &mut value_stack,
-            //     machinecode,
-            // ));
+            iter.nth(
+                compile_const(
+                    &opcode,
+                    &mut Cursor::new(&bytecode[index + 1..]),
+                    &mut value_stack,
+                    &register_pool,
+                    machinecode,
+                ) - 1,
+            );
         }
         // Unsupported
         else {
@@ -111,30 +152,4 @@ fn compile_function(entry: &Code, index: usize, module: &WasmModule, machinecode
     // restore initial state before returning to the caller
     emit_epilogue(machinecode);
     Ok(())
-}
-
-pub fn compile(module: &WasmModule) -> LinkedModule {
-    let code_section = module.code_section();
-    let export_section = module.export_section();
-
-    let mut machinecode: Vec<u32> = Vec::new();
-
-    if let Some(c) = code_section {
-        let mut iter = c.entries.iter().enumerate();
-        while let Some((index, entry)) = iter.next() {
-            match compile_function(entry, index, module, &mut machinecode) {
-                Ok(()) => (),
-                Err(error) => {
-                    let function_id = match export_section {
-                        Some(val) => &val.exports.get(index).unwrap().name,
-                        None => &index.to_string(),
-                    };
-                    let error_msg = format!("Error in function '{function_id}()': {error}");
-                    panic!("{}", error_msg.red());
-                }
-            }
-        }
-    }
-
-    LinkedModule { machinecode }
 }

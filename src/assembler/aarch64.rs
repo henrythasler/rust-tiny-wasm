@@ -1,11 +1,14 @@
 #![allow(dead_code)]
 
+use std::collections::BTreeMap;
 use std::ops::BitAnd;
-pub mod arithmetics;
+pub mod arithmetic;
 pub mod branch;
+pub mod compound;
+pub mod register;
 
 #[repr(u32)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum Reg {
     X0 = 0,
@@ -93,6 +96,9 @@ impl BitAnd<u32> for Reg {
     }
 }
 
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+
 pub enum RegSize {
     Reg8bit,
     Reg16bit,
@@ -105,6 +111,8 @@ pub enum MemSize {
     Mem32bit,
     Mem64bit,
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Shift {
     Lsl,
     Lsr,
@@ -112,11 +120,42 @@ pub enum Shift {
     Ror,
 }
 
+pub struct RegisterPool {
+    registers: BTreeMap<Reg, bool>,
+}
+
+impl RegisterPool {
+    pub fn new() -> Self {
+        Self {
+            registers: BTreeMap::from([
+                (Reg::X8, true),
+                (Reg::X9, true),
+                (Reg::X10, true),
+                (Reg::X11, true),
+                (Reg::X12, true),
+                (Reg::X13, true),
+                (Reg::X14, true),
+                (Reg::X15, true),
+            ]),
+        }
+    }
+
+    pub fn allocate_register(&self) -> Reg {
+        let mut available = self
+            .registers
+            .iter()
+            .find(|(_, free)| **free)
+            .expect("Register pool should not be exhausted");
+        available.1 = &false;
+        *available.0
+    }
+}
+
 fn select_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 {
     match size {
         RegSize::Reg32bit => instr_32bit,
         RegSize::Reg64bit => instr_64bit,
-        _ => panic!("Instruction size should be 32 or 64 bit."),
+        _ => panic!("Instruction size should be 32 or 64 bit"),
     }
 }
 

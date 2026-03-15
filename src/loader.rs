@@ -14,11 +14,13 @@ pub struct Local {
     r#type: Webassembly_ValTypes,
 }
 
+#[derive(Debug)]
 pub struct FuncType {
     pub parameters: Vec<Webassembly_ValTypes>,
     pub results: Vec<Webassembly_ValTypes>,
 }
 
+#[derive(Debug)]
 pub struct TypeSection {
     pub func_types: Vec<FuncType>,
 }
@@ -29,6 +31,18 @@ impl TypeSection {
     }
 }
 
+#[derive(Debug)]
+pub struct FunctionSection {
+    pub type_indices: Vec<usize>,
+}
+
+impl FunctionSection {
+    pub fn name(&self) -> String {
+        String::from("function_section")
+    }
+}
+
+#[derive(Debug)]
 pub struct Code {
     pub locals: Vec<Local>,
     pub code: Vec<u8>,
@@ -43,6 +57,7 @@ impl Code {
     }
 }
 
+#[derive(Debug)]
 pub struct CodeSection {
     pub entries: Vec<Code>,
 }
@@ -53,12 +68,14 @@ impl CodeSection {
     }
 }
 
+#[derive(Debug)]
 pub struct Export {
     pub name: String,
     pub r#type: Webassembly_ExportTypes,
     pub index: i32,
 }
 
+#[derive(Debug)]
 pub struct ExportSection {
     pub exports: Vec<Export>,
 }
@@ -69,10 +86,12 @@ impl ExportSection {
     }
 }
 
+#[derive(Debug)]
 pub enum Section {
+    Types(TypeSection),
+    Function(FunctionSection),
     Export(ExportSection),
     Code(CodeSection),
-    Types(TypeSection),
 }
 
 pub struct WasmModule {
@@ -81,9 +100,16 @@ pub struct WasmModule {
 }
 
 impl WasmModule {
-    pub fn code_section(&self) -> Option<&CodeSection> {
+    pub fn type_section(&self) -> Option<&TypeSection> {
         self.sections.iter().find_map(|x| match x {
-            Section::Code(v) => Some(v),
+            Section::Types(v) => Some(v),
+            _ => None,
+        })
+    }
+
+    pub fn function_section(&self) -> Option<&FunctionSection> {
+        self.sections.iter().find_map(|x| match x {
+            Section::Function(v) => Some(v),
             _ => None,
         })
     }
@@ -95,12 +121,12 @@ impl WasmModule {
         })
     }
 
-    pub fn type_section(&self) -> Option<&TypeSection> {
+    pub fn code_section(&self) -> Option<&CodeSection> {
         self.sections.iter().find_map(|x| match x {
-            Section::Types(v) => Some(v),
+            Section::Code(v) => Some(v),
             _ => None,
         })
-    }    
+    }
 
     pub fn sections(&self) -> &Vec<Section> {
         &self.sections
@@ -176,9 +202,50 @@ pub fn load_wasm_module(file_path: &Path) -> WasmModule {
 
                 wasm_module.sections.push(Section::Code(new_code_section));
             }
+            Some(webassembly::Webassembly_Section_Content::Webassembly_TypeSection(section)) => {
+                let section_content = section.get();
+                let mut new_section = TypeSection {
+                    func_types: Vec::new(),
+                };
+
+                for item in section_content.functypes().iter() {
+                    new_section.func_types.push(FuncType {
+                        parameters: item
+                            .parameters()
+                            .get_value()
+                            .as_ref()
+                            .unwrap()
+                            .valtype()
+                            .clone(),
+                        results: item
+                            .results()
+                            .get_value()
+                            .as_ref()
+                            .unwrap()
+                            .valtype()
+                            .clone(),
+                    })
+                }
+                wasm_module.sections.push(Section::Types(new_section));
+            }
+            Some(webassembly::Webassembly_Section_Content::Webassembly_FunctionSection(
+                section,
+            )) => {
+                let section_content = section.get();
+                let mut new_section = FunctionSection {
+                    type_indices: Vec::new(),
+                };
+                for item in section_content.typeidx().iter() {
+                    let value = *item.get().value().unwrap();
+                    new_section.type_indices.push(value as usize);
+                }
+                wasm_module.sections.push(Section::Function(new_section));
+            }
             _ => (),
         }
     }
+    // println!("{:#?}", wasm_module.sections);
+
     wasm_module
 }
 
@@ -201,10 +268,25 @@ mod tests {
     #[test]
     fn test_get_name() {
         let wasm_module = load_wasm_module(Path::new("tests/assets/empty-fn.wasm"));
-        assert!(wasm_module.sections.len() == 2);
+        assert_eq!(
+            wasm_module.sections.len(),
+            4,
+            "Section length is {}",
+            wasm_module.sections.len()
+        );
 
         for section in &wasm_module.sections {
             match section {
+                Section::Function(type_section) => {
+                    assert_eq!(type_section.name(), "function_section");
+                    assert_eq!(type_section.type_indices.len(), 2);
+                }
+                Section::Types(type_section) => {
+                    assert_eq!(type_section.name(), "type_section");
+                    assert_eq!(type_section.func_types.len(), 1);
+                    assert_eq!(type_section.func_types.get(0).unwrap().parameters.len(), 0);
+                    assert_eq!(type_section.func_types.get(0).unwrap().results.len(), 0);
+                }
                 Section::Export(export_section) => {
                     assert_eq!(export_section.name(), "export_section");
                     assert_eq!(export_section.exports.len(), 2);
@@ -219,12 +301,6 @@ mod tests {
                     for entry in &code_section.entries {
                         assert!(matches!(entry.get_locals().len(), 0 | 1));
                     }
-                }
-                Section::Types(type_section) => {
-                    assert_eq!(type_section.name(), "type_section");
-                    assert_eq!(type_section.func_types.len(), 1);
-                    assert_eq!(type_section.func_types.get(0).unwrap().parameters.len(), 0);
-                    assert_eq!(type_section.func_types.get(0).unwrap().results.len(), 0);
                 }
             }
         }
