@@ -1,3 +1,5 @@
+use gen_elf::{Arch, ObjectWriter, SymbolDesc};
+
 use std::fs;
 use std::path::Path;
 use tiny_wasm::*;
@@ -30,6 +32,8 @@ fn test_objdump() {
             let wasm_module = loader::load_wasm_module(&file);
             let linked_module = compiler::compile(&wasm_module);
 
+            let writer = ObjectWriter::new(Arch::Aarch64);            
+
             let mut output_path = base.join("jit").join(file.file_name().unwrap());
             output_path.set_extension("o");
             println!(
@@ -39,7 +43,17 @@ fn test_objdump() {
             );
 
             let bytes = bytemuck::cast_slice(linked_module.get_machinecode());
-            fs::write(&output_path, bytes).expect("fs::write() should be able to write");
+
+            let symbols = vec![
+                SymbolDesc::global_func("_start", bytes),
+                SymbolDesc::global_object("globals", &[0xaa, 0x55, 0xaa, 0x55]),
+                SymbolDesc::global_tls("function_table", &[0x00; 32]),
+            ];            
+
+            writer.write_file(&output_path, &symbols, &[]).expect("objectfile should have been written");
+
+            // let bytes = bytemuck::cast_slice(linked_module.get_machinecode());
+            // fs::write(&output_path, bytes).expect("fs::write() should be able to write");
         }
     }
 }
