@@ -1,5 +1,19 @@
 use super::*;
 
+pub fn mov_reg(rd: Reg, rm: Reg, size: RegSize) -> u32 {
+    orr_reg(rd, Reg::XZR, rm, Shift::Lsl, 0, size)
+}
+
+pub fn orr_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x2A0003E0, 0xAA0003E0, size);
+    instr |= ((shift as u32) & 0x03) << 22; // shift operator on rm
+    instr |= (amount & 0x3F) << 10; // shift amount in imm6 field
+    instr |= (rm & 0x1F) << 16; // Rm (second source register)
+    instr |= (rn & 0x1F) << 5; // Rn (source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
 pub fn movz(rd: Reg, imm16: u32, shift: u32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x52800000, 0xD2800000, size);
     instr |= ((shift >> 4) & 0x3) << 21; // hw field (0-3 for 64-bit, 0-1 for 32-bit)
@@ -28,11 +42,12 @@ mod tests {
         assert_eq!(movz(Reg::X7, 0xabcd, 48, RegSize::Reg64bit), 0xD2F579A7);
     }
 
+    #[test]
     fn test_movk() {
         // MOVK X15, #0xffff, LSL #32
-        assert_eq!(movz(Reg::X15, 0xffff, 32, RegSize::Reg64bit), 0xF2DFFFEF);
+        assert_eq!(movk(Reg::X15, 0xffff, 32, RegSize::Reg64bit), 0xF2DFFFEF);
         // MOVK W0, #0x80, LSL #16
-        assert_eq!(movz(Reg::W0, 0x80, 16, RegSize::Reg32bit), 0x72A01000);
+        assert_eq!(movk(Reg::W0, 0x80, 16, RegSize::Reg32bit), 0x72A01000);
         //   EXPECT_THROW(encode_movk(X15, 0xFFFF, 32, reg_size_t::SIZE_8BIT), std::runtime_error);
     }
 }

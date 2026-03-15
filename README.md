@@ -167,17 +167,20 @@ As we progress, the assembler output (our JIT code) will become longer and more 
 
 - It is recommended to use an existing disassembler solution/crate and just generate the appropriate input format.
 
-## Chapter 7 - Parameter Passing
+## Chapter 7 - Result Values
 
-Passing parameters to and returning values from a WebAssembly function to the caller requires both to follow the [Procedure Call Standard for ARM64](https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#parameter-passing).
+Passing parameters to and returning values from a WebAssembly function to the caller requires both to follow the [Procedure Call Standard for ARM64](https://developer.arm.com/documentation/102374/0103/Procedure-Call-Standard?lang=en).
 
 ### Goals
 
 - [ ] Implement the `i32.const` and `i64.const` instructions.
-- [ ] Implement the `local.get` instructions.
-- [ ] Load and parse the WebAssembly module `tests/assets/parameters.wat`.
-- [ ] Handle parameter passing.
-- [ ] Handle return values.
+- [ ] Load and parse the WebAssembly module `tests/assets/constants.wat`.
+- [ ] Handover the result values to the caller.
+- [ ] Make sure your JIT-functions can return multiple values.
+ 
+### Detailled Description
+
+- Unlike C/C++, Rust functions can return multiple values.
 
 ## Chapter 8 - Local Variables
 

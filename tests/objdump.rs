@@ -51,8 +51,8 @@ fn test_objdump() {
             for function in linked_module.get_functions() {
                 object.add_symbol(Symbol {
                     name: function.name.clone().into_bytes(),
-                    value: function.offset as u64 * 4,
-                    size: function.length as u64 * 4,
+                    value: (function.offset * assembler::aarch64::INSTRUCTION_SIZE) as u64,
+                    size: (function.length * assembler::aarch64::INSTRUCTION_SIZE) as u64,
                     kind: SymbolKind::Text,
                     scope: SymbolScope::Compilation,
                     weak: false,

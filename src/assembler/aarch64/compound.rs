@@ -5,9 +5,9 @@ pub fn mov_large_immediate(rd: Reg, value: i64, size: RegSize, machinecode: &mut
     for i in 0..chunk_limit {
         let chunk = ((value >> (i << 4)) & 0xFFFF) as u32;
         if i == 0 {
-            machinecode.push(register::movz(rd, chunk, 0, size));
+            machinecode.push(processing::movz(rd, chunk, 0, size));
         } else if chunk != 0 {
-            machinecode.push(register::movk(rd, chunk, i << 4, size));
+            machinecode.push(processing::movk(rd, chunk, i << 4, size));
         }
     }
 }

@@ -2,10 +2,15 @@
 
 use std::collections::BTreeMap;
 use std::ops::BitAnd;
+
+use crate::loader::webassembly::Webassembly_ValTypes;
 pub mod arithmetic;
 pub mod branch;
 pub mod compound;
-pub mod register;
+pub mod hint;
+pub mod processing;
+
+pub const INSTRUCTION_SIZE: usize = std::mem::size_of::<u32>();
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
@@ -124,6 +129,12 @@ pub struct RegisterPool {
     registers: BTreeMap<Reg, bool>,
 }
 
+impl Default for RegisterPool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RegisterPool {
     pub fn new() -> Self {
         Self {
@@ -156,6 +167,14 @@ fn select_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 {
         RegSize::Reg32bit => instr_32bit,
         RegSize::Reg64bit => instr_64bit,
         _ => panic!("Instruction size should be 32 or 64 bit"),
+    }
+}
+
+pub fn map_valtype_to_regsize(item: Webassembly_ValTypes) -> RegSize {
+    if item == Webassembly_ValTypes::I32 {
+        RegSize::Reg32bit
+    } else {
+        RegSize::Reg64bit
     }
 }
 

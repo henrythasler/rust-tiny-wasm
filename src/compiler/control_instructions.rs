@@ -40,7 +40,8 @@ pub fn compile_end(
         value_stack.len(),
         frame.stack_height + frame.end_types.len()
     );
-    let mut results = value_stack.split_off(frame.end_types.len());
+
+    let mut results = value_stack.split_off(value_stack.len() - frame.end_types.len());
     value_stack.truncate(frame.stack_height);
     value_stack.append(&mut results);
 

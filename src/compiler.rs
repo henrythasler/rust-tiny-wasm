@@ -2,6 +2,7 @@
 //! Processes a Webassembly module and returns a LinkedModule for subsequent execution
 
 use std::io::Cursor;
+use std::mem;
 
 use super::loader::*;
 use crate::loader::webassembly::Webassembly_ValTypes;
@@ -12,16 +13,18 @@ use crate::assembler::{emit_epilogue, emit_prologue};
 
 use control_instructions::*;
 use numeric_instructions::*;
+use procedure_call::*;
 
 mod control_instructions;
 mod numeric_instructions;
+mod procedure_call;
 
 #[derive(Clone)]
 pub struct WasmFunction {
     pub name: String,
-    /// offset in instructions (u32)
+    /// offset in INSTRUCTION_SIZE units
     pub offset: usize,
-    /// length in instructions (u32)
+    /// length in INSTRUCTION_SIZE units
     pub length: usize,
 }
 
@@ -78,6 +81,7 @@ pub struct ControlFrame {
     pub patches: Vec<Patch>,
 }
 
+#[derive(Debug)]
 pub struct StackElement {
     reg: Reg,
     val_type: Webassembly_ValTypes,
@@ -187,9 +191,21 @@ fn compile_function(
             ));
         }
     }
-    // FIXME: move result to r0
+
+    // move result values to result registers according to Aarch64 Procedure Call Standard (X0..X7)
+    if !func_type.results.is_empty() {
+        load_results(&mut value_stack, func_type.results.len(), machinecode)?;
+    }
 
     // restore initial state before returning to the caller
     emit_epilogue(machinecode);
+
+    // add padding to INSTRUCTION_SIZE to align subsequent functions to the correct size
+    let padding_instructions =
+        ((machinecode.len() * INSTRUCTION_SIZE) % mem::align_of::<fn()>()) / INSTRUCTION_SIZE;
+    for _ in 0..padding_instructions {
+        machinecode.push(hint::nop());
+    }
+
     Ok(machinecode.len() - initial_size)
 }

@@ -1,6 +1,7 @@
 use memmap2::{Mmap, MmapMut};
 use std::mem;
 
+use super::assembler::*;
 use super::compiler::*;
 
 #[cfg(target_arch = "aarch64")]
@@ -33,7 +34,10 @@ impl Runtime {
             .iter()
             .find(|&x| x.name == name)
             .expect("Requested function should be found");
-        let ptr = self.machinecode.as_ptr().wrapping_add(value.offset);
+        let ptr = self
+            .machinecode
+            .as_ptr()
+            .wrapping_add(value.offset * aarch64::INSTRUCTION_SIZE);
 
         // Ensure validity, proper alignment and size for function pointers
         assert!(!ptr.is_null());

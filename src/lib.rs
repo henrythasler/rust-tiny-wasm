@@ -1,7 +1,7 @@
 use owo_colors::OwoColorize;
 use std::path::Path;
 
-mod assembler;
+pub mod assembler;
 pub mod compiler;
 pub mod loader;
 pub mod runtime;
@@ -60,9 +60,9 @@ pub fn load_and_run(filename: &Path, function: &str) {
     let wasm_module = loader::load_wasm_module(filename);
     let linked_module = compiler::compile(&wasm_module);
     let instance = runtime::instantiate_module(&linked_module);
-    let _start = unsafe { instance.get_function::<fn()>(function) };
+    let _start = unsafe { instance.get_function::<fn() -> i32>(function) };
     println!("{:X?}", linked_module.get_machinecode());
-    _start();
+    println!("{}", _start());
 }
 
 pub fn get_module_instance(filename: &Path) -> runtime::Runtime {
