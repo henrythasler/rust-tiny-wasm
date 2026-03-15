@@ -63,4 +63,4 @@ jobs:
         with:
           files: lcov.info
       - name: Run executable
-        run: ./target/debug/tiny-wasm -m tests/assets/empty-fn.wasm
+        run: ./target/debug/tiny-wasm -m tests/assets/empty-fn.wasm -f foo
