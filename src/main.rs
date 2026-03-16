@@ -18,10 +18,13 @@ pub struct Args {
 fn main() -> Result<(), String> {
     // Chapter 2
     let args = Args::parse();
-    dump_module_info(Path::new(&args.module));
+    // dump_module_info(Path::new(&args.module));
 
     // Chapter 5
-    load_and_run(Path::new(&args.module), &args.function);
+    // load_and_run(Path::new(&args.module), &args.function);
+
+    let module = loader::wasmparser(Path::new(&args.module)).unwrap();
+    println!("{:#?}", module);
 
     Ok(())
 }
