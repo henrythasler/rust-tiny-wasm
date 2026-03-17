@@ -1,10 +1,10 @@
-use owo_colors::OwoColorize;
-use std::path::Path;
+// use owo_colors::OwoColorize;
+// use std::path::Path;
 
-// pub mod assembler;
-// pub mod compiler;
-pub mod loader;
-// pub mod runtime;
+pub mod assembler;
+pub mod compiler;
+// pub mod loader;
+pub mod runtime;
 
 // pub fn dump_module_info(filename: &Path) {
 //     println!("Loading '{}'...", filename.display().bright_blue());
@@ -65,8 +65,8 @@ pub mod loader;
 //     println!("{}", _start());
 // }
 
-// pub fn get_module_instance(filename: &Path) -> runtime::Runtime {
-//     let wasm_module = loader::wasmparser(filename).unwrap();
-//     let linked_module = compiler::compile(&wasm_module);
-//     runtime::instantiate_module(&linked_module)
-// }
+pub fn get_module_instance(module: &[u8]) -> runtime::Runtime {
+    // let wasm_module = loader::wasmparser(filename).unwrap();
+    let linked_module = compiler::compile(module);
+    runtime::instantiate_module(&linked_module)
+}

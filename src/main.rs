@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::fs;
 use std::path::Path;
 use tiny_wasm::*;
 
@@ -16,15 +17,15 @@ pub struct Args {
 }
 
 fn main() -> Result<(), String> {
-    // Chapter 2
+    // parse command line arguments
     let args = Args::parse();
-    // dump_module_info(Path::new(&args.module));
 
-    // Chapter 5
-    // load_and_run(Path::new(&args.module), &args.function);
+    // load, compile and instantiate WebAssembly module
+    let module = fs::read(Path::new(&args.module)).unwrap();
+    let instance = get_module_instance(&module);
 
-    let module = loader::wasmparser(Path::new(&args.module)).unwrap();
-    println!("{:#?}", module);
-
+    // get the function pointer and call the function
+    let entrypoint = unsafe { instance.get_function::<fn() -> i32>(&args.function) };
+    println!("{}", entrypoint());    
     Ok(())
 }

@@ -50,7 +50,7 @@ impl Runtime {
 
 pub fn instantiate_module(module: &LinkedModule) -> Runtime {
     // Allocate executable memory and copy JIT code into that region
-    let bytes = bytemuck::cast_slice(module.get_machinecode());
+    let bytes = bytemuck::cast_slice(&module.machinecode);
     assert!(!bytes.is_empty());
     let mut mmap = MmapMut::map_anon(bytes.len()).expect("map_anon() failed");
     mmap.copy_from_slice(bytes);
@@ -65,7 +65,7 @@ pub fn instantiate_module(module: &LinkedModule) -> Runtime {
     let machinecode = mmap.make_exec().expect("make_exec() failed");
     Runtime {
         machinecode,
-        functions: module.get_functions().to_vec(),
+        functions: module.functions.to_vec(),
     }
 }
 

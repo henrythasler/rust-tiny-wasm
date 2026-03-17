@@ -1,5 +1,6 @@
 use super::*;
 use std::io::Cursor;
+use wasmparser::ValType;
 
 pub fn compile_const(
     opcode: &u8,
@@ -14,15 +15,15 @@ pub fn compile_const(
         RegSize::Reg64bit
     };
 
-    let val_type = if *opcode == 0x41 {
-        Webassembly_ValTypes::I32
+    let valtype = if *opcode == 0x41 {
+        ValType::I32
     } else {
-        Webassembly_ValTypes::I64
+        ValType::I64
     };
 
     let value = leb128::read::signed(cursor).expect("Should read number");
     let reg = register_pool.allocate_register();
-    value_stack.push(StackElement { reg, val_type });
+    value_stack.push(StackElement { reg, valtype });
     compound::mov_large_immediate(reg, value, register_size, machinecode);
 
     cursor.position() as usize
