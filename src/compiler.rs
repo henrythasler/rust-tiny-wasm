@@ -84,13 +84,16 @@ pub struct Export {
 
 pub fn compile(module: &[u8]) -> LinkedModule {
     let mut machinecode: Vec<u32> = Vec::new();
-    let mut functions: Vec<WasmFunction> = Vec::new();
+    let mut wasm_functions: Vec<WasmFunction> = Vec::new();
 
     let parser = Parser::new(0);
 
     // temporary module sections for lookup
     let mut types: Vec<wasmparser::FuncType> = Vec::new();
     let mut exports: Vec<Export> = Vec::new();
+    let mut functions: Vec<u32> = Vec::new();
+
+    let mut function_index = 0;
 
     for payload in parser.parse_all(&module) {
         match payload.unwrap() {
@@ -110,7 +113,11 @@ pub fn compile(module: &[u8]) -> LinkedModule {
                 }
             }
             ImportSection(_) => { /* ... */ }
-            FunctionSection(reader) => {}
+            FunctionSection(reader) => {
+                for func in reader {
+                    functions.push(func.unwrap());
+                }
+            }
             TableSection(_) => { /* ... */ }
             MemorySection(_) => { /* ... */ }
             TagSection(_) => { /* ... */ }
@@ -134,13 +141,12 @@ pub fn compile(module: &[u8]) -> LinkedModule {
             // `CodeSectionEntry`, so we can prepare for that, and
             // afterwards we can parse and handle each function
             // individually.
-            CodeSectionStart { .. } => { /* ... */ }
+            CodeSectionStart { .. } => {}
             CodeSectionEntry(body) => {
                 let mut reader = body.get_operators_reader().unwrap();
-                while !reader.eof() {
-                    let op = reader.read().unwrap();
-                    // code.push((op & 0xff) as u8);
-                }
+                let fn_idx = *functions.get(function_index).unwrap() as usize;
+                let _ = compile_function(&mut reader, types.get(fn_idx).unwrap(), &mut machinecode);
+                function_index += 1;
                 // here we can iterate over `body` to parse the function
                 // and its locals
             }
@@ -167,12 +173,7 @@ pub fn compile(module: &[u8]) -> LinkedModule {
 
             // most likely you'd return an error here, but if you want
             // you can also inspect the raw contents of unknown sections
-            other => {
-                match other.as_section() {
-                    Some((id, range)) => { /* ... */ }
-                    None => { /* ... */ }
-                }
-            }
+            _ => {}
         }
     }
 
@@ -207,38 +208,72 @@ pub fn compile(module: &[u8]) -> LinkedModule {
 
     LinkedModule {
         machinecode,
-        functions,
+        functions: wasm_functions,
     }
 }
 
 fn compile_function(
-    // entry: &Code,
-    // typeidx: usize,
-    // module: &WasmModule,
-    reader: wasmparser::OperatorsReader<'_>,
+    reader: &mut wasmparser::OperatorsReader<'_>,
+    func_type: &wasmparser::FuncType,
     machinecode: &mut Vec<u32>,
 ) -> Result<usize, String> {
-    // let type_section = module.type_section().unwrap();
-    // let func_type = type_section.func_types.get(typeidx).unwrap();
+    // Value stack starts empty
+    let mut value_stack: Vec<StackElement> = vec![];
+
+    // Control stack is initialized with the (implicit) outer func-block
+    let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
+        opcode: Opcode::Func,
+        start_types: func_type.params().to_vec(),
+        end_types: func_type.results().to_vec(),
+        stack_height: value_stack.len(),
+        patches: vec![],
+    }];
 
     let initial_size = machinecode.len();
 
     let register_pool = RegisterPool::new();
 
-    // Value stack starts empty
-    let mut value_stack: Vec<StackElement> = vec![];
+    // every functions starts with an epilogue to save the initial state and create a new stack frame
+    emit_prologue(machinecode);
 
-    // // Control stack is initialized with the (implicit) outer func-block
-    // let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
-    //     opcode: Opcode::Func,
-    //     start_types: func_type.parameters.clone(),
-    //     end_types: func_type.results.clone(),
-    //     stack_height: value_stack.len(),
-    //     patches: vec![],
-    // }];
+    'expression: while !reader.eof() {
+        let index = reader.original_position();
+        let op = reader.read().unwrap();
+        match op {
+            wasmparser::Operator::End => {
+                if compile_end(&mut control_stack, &mut value_stack, machinecode) {
+                    break 'expression;
+                }
+            }
+            wasmparser::Operator::Return => {
+                compile_return(&mut control_stack, machinecode);
+            }
+            wasmparser::Operator::LocalGet { local_index } => {
+                println!("Opcode Local get: {:?} ({:?})", local_index, op);
+            }
+            _ => {
+                return Err(format!(
+                    "unsupported instruction: {:?} at position {}",
+                    op, index
+                ));
+            }
+        }
+    }
 
-    // // every functions starts with an epilogue to save the initial state and create a new stack frame
-    // emit_prologue(machinecode);
+    // move result values to result registers according to Aarch64 Procedure Call Standard (X0..X7)
+    if !func_type.results().is_empty() {
+        load_results(&mut value_stack, func_type.results().len(), machinecode)?;
+    }
+
+    // restore initial state before returning to the caller
+    emit_epilogue(machinecode);
+
+    // add padding to INSTRUCTION_SIZE to align subsequent functions to the correct size
+    let padding_instructions =
+        ((machinecode.len() * INSTRUCTION_SIZE) % mem::align_of::<fn()>()) / INSTRUCTION_SIZE;
+    for _ in 0..padding_instructions {
+        machinecode.push(hint::nop());
+    }
 
     // // iterate over WebAssembly opcodes and emit machinecode instructions
     // let bytecode = &entry.code;
@@ -271,21 +306,6 @@ fn compile_function(
     //             "unsupported instruction 0x{opcode:02X} at position {index}"
     //         ));
     //     }
-    // }
-
-    // // move result values to result registers according to Aarch64 Procedure Call Standard (X0..X7)
-    // if !func_type.results.is_empty() {
-    //     load_results(&mut value_stack, func_type.results.len(), machinecode)?;
-    // }
-
-    // // restore initial state before returning to the caller
-    // emit_epilogue(machinecode);
-
-    // // add padding to INSTRUCTION_SIZE to align subsequent functions to the correct size
-    // let padding_instructions =
-    //     ((machinecode.len() * INSTRUCTION_SIZE) % mem::align_of::<fn()>()) / INSTRUCTION_SIZE;
-    // for _ in 0..padding_instructions {
-    //     machinecode.push(hint::nop());
     // }
 
     Ok(machinecode.len() - initial_size)
