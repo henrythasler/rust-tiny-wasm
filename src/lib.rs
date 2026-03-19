@@ -1,9 +1,8 @@
-// use owo_colors::OwoColorize;
-// use std::path::Path;
+use std::fs;
+use std::path::Path;
 
 pub mod assembler;
 pub mod compiler;
-// pub mod loader;
 pub mod runtime;
 
 // pub fn dump_module_info(filename: &Path) {
@@ -56,16 +55,15 @@ pub mod runtime;
 //     }
 // }
 
-// pub fn load_and_run(filename: &Path, function: &str) {
-//     let wasm_module = loader::wasmparser(filename).unwrap();
-//     let linked_module = compiler::compile(&wasm_module);
-//     let instance = runtime::instantiate_module(&linked_module);
-//     let _start = unsafe { instance.get_function::<fn() -> i32>(function) };
-//     println!("{:X?}", linked_module.get_machinecode());
-//     println!("{}", _start());
-// }
-
 pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime, String> {
     let linked_module = compiler::compile(module)?;
     Ok(runtime::instantiate_module(&linked_module))
+}
+
+pub fn load_and_run(filename: &Path, function: &str) -> Result<i32, String> {
+    let module = fs::read(filename).unwrap();
+    let linked_module = compiler::compile(&module)?;
+    let instance = runtime::instantiate_module(&linked_module);
+    let _start = unsafe { instance.get_function::<fn() -> i32>(function) };
+    Ok(_start())
 }

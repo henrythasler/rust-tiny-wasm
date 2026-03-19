@@ -2,7 +2,7 @@
 //! Processes a Webassembly module and returns a LinkedModule for subsequent execution
 use std::mem;
 
-use wasmparser::{Parser, Payload::*, ValType};
+use wasmparser::{Operator, Parser, Payload::*, ValType};
 
 use crate::assembler::aarch64::*;
 use crate::assembler::{emit_epilogue, emit_prologue};
@@ -60,8 +60,8 @@ pub struct Patch {
 #[derive(Debug)]
 pub struct ControlFrame {
     pub opcode: Opcode,
-    pub start_types: Vec<wasmparser::ValType>,
-    pub end_types: Vec<wasmparser::ValType>,
+    pub start_types: Vec<ValType>,
+    pub end_types: Vec<ValType>,
     pub stack_height: usize,
     pub patches: Vec<Patch>,
 }
@@ -214,15 +214,15 @@ fn compile_function(
         let index = reader.original_position();
         let op = reader.read().unwrap();
         match op {
-            wasmparser::Operator::End => {
+            Operator::End => {
                 if compile_end(&mut control_stack, &mut value_stack, machinecode) {
                     break 'expression;
                 }
             }
-            wasmparser::Operator::Return => {
+            Operator::Return => {
                 compile_return(&mut control_stack, machinecode);
             }
-            wasmparser::Operator::I32Const { value } => {
+            Operator::I32Const { value } => {
                 let reg = register_pool.allocate_register();
                 value_stack.push(StackElement {
                     reg,
@@ -230,7 +230,7 @@ fn compile_function(
                 });
                 compound::mov_large_immediate(reg, value as i64, RegSize::Reg32bit, machinecode);
             }
-            wasmparser::Operator::I64Const { value } => {
+            Operator::I64Const { value } => {
                 let reg = register_pool.allocate_register();
                 value_stack.push(StackElement {
                     reg,
@@ -261,39 +261,6 @@ fn compile_function(
     for _ in 0..padding_instructions {
         machinecode.push(hint::nop());
     }
-
-    // // iterate over WebAssembly opcodes and emit machinecode instructions
-    // let bytecode = &entry.code;
-    // let mut iter = bytecode.iter().enumerate();
-    // 'expression: while let Some((index, &opcode)) = iter.next() {
-    //     println!("Opcode: 0x{:02X}", opcode);
-    //     // Control Instructions
-    //     if opcode == 0x0b {
-    //         if compile_end(&mut control_stack, &mut value_stack, machinecode) {
-    //             break 'expression;
-    //         }
-    //     } else if opcode == 0x0f {
-    //         compile_return(&mut control_stack, machinecode);
-    //     }
-    //     // Numeric Instructions
-    //     else if opcode == 0x41 || opcode == 0x42 {
-    //         iter.nth(
-    //             compile_const(
-    //                 &opcode,
-    //                 &mut Cursor::new(&bytecode[index + 1..]),
-    //                 &mut value_stack,
-    //                 &register_pool,
-    //                 machinecode,
-    //             ) - 1,
-    //         );
-    //     }
-    //     // Unsupported
-    //     else {
-    //         return Err(format!(
-    //             "unsupported instruction 0x{opcode:02X} at position {index}"
-    //         ));
-    //     }
-    // }
 
     Ok(machinecode.len() - initial_size)
 }
