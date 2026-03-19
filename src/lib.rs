@@ -65,8 +65,7 @@ pub mod runtime;
 //     println!("{}", _start());
 // }
 
-pub fn get_module_instance(module: &[u8]) -> runtime::Runtime {
-    // let wasm_module = loader::wasmparser(filename).unwrap();
-    let linked_module = compiler::compile(module);
-    runtime::instantiate_module(&linked_module)
+pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime, String> {
+    let linked_module = compiler::compile(module)?;
+    Ok(runtime::instantiate_module(&linked_module))
 }

@@ -22,10 +22,10 @@ fn main() -> Result<(), String> {
 
     // load, compile and instantiate WebAssembly module
     let module = fs::read(Path::new(&args.module)).unwrap();
-    let instance = get_module_instance(&module);
+    let instance = get_module_instance(&module)?;
 
     // get the function pointer and call the function
     let entrypoint = unsafe { instance.get_function::<fn() -> i32>(&args.function) };
-    println!("{}", entrypoint());    
+    println!("{}", entrypoint());
     Ok(())
 }

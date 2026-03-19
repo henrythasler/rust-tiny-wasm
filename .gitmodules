@@ -1,3 +1,0 @@
-[submodule "vendor/wasm-kaitai-struct"]
-	path = vendor/wasm-kaitai-struct
-	url = https://github.com/henrythasler/wasm-kaitai-struct.git

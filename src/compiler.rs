@@ -1,16 +1,13 @@
 #![allow(dead_code)]
 //! Processes a Webassembly module and returns a LinkedModule for subsequent execution
-use std::io::Cursor;
 use std::mem;
 
-use wasmparser::types::TypeData;
-use wasmparser::{BinaryReaderError, Chunk, Parser, Payload::*, SubType};
+use wasmparser::{Parser, Payload::*, ValType};
 
 use crate::assembler::aarch64::*;
 use crate::assembler::{emit_epilogue, emit_prologue};
 
 use control_instructions::*;
-use numeric_instructions::*;
 use procedure_call::*;
 
 mod control_instructions;
@@ -82,7 +79,7 @@ pub struct Export {
     pub index: u32,
 }
 
-pub fn compile(module: &[u8]) -> LinkedModule {
+pub fn compile(module: &[u8]) -> Result<LinkedModule, String> {
     let mut machinecode: Vec<u32> = Vec::new();
     let mut wasm_functions: Vec<WasmFunction> = Vec::new();
 
@@ -95,19 +92,18 @@ pub fn compile(module: &[u8]) -> LinkedModule {
 
     let mut function_index = 0;
 
-    for payload in parser.parse_all(&module) {
+    for payload in parser.parse_all(module) {
         match payload.unwrap() {
             // Sections for WebAssembly modules
             Version { .. } => { /* ... */ }
             TypeSection(reader) => {
-                for (_, ty) in reader.into_iter().enumerate() {
+                for ty in reader.into_iter() {
                     for (_, item) in ty.unwrap().into_types_and_offsets() {
-                        match item.composite_type.inner {
-                            wasmparser::CompositeInnerType::Func(func) => {
-                                println!("{}", func);
-                                types.push(func);
-                            }
-                            _ => {}
+                        if let wasmparser::CompositeInnerType::Func(func) =
+                            item.composite_type.inner
+                        {
+                            println!("{}", func);
+                            types.push(func);
                         }
                     }
                 }
@@ -143,12 +139,19 @@ pub fn compile(module: &[u8]) -> LinkedModule {
             // individually.
             CodeSectionStart { .. } => {}
             CodeSectionEntry(body) => {
-                let mut reader = body.get_operators_reader().unwrap();
-                let fn_idx = *functions.get(function_index).unwrap() as usize;
-                let _ = compile_function(&mut reader, types.get(fn_idx).unwrap(), &mut machinecode);
-                function_index += 1;
                 // here we can iterate over `body` to parse the function
                 // and its locals
+                let offset = machinecode.len();
+                let mut reader = body.get_operators_reader().unwrap();
+                let fn_idx = *functions.get(function_index).unwrap() as usize;
+                compile_function(&mut reader, types.get(fn_idx).unwrap(), &mut machinecode)?;
+
+                wasm_functions.push(WasmFunction {
+                    name: exports.get(function_index).unwrap().name.clone(),
+                    offset,
+                    length: machinecode.len() - offset,
+                });
+                function_index += 1;
             }
 
             // Sections for WebAssembly components
@@ -177,39 +180,10 @@ pub fn compile(module: &[u8]) -> LinkedModule {
         }
     }
 
-    // if let Some(c) = code_section {
-    //     let iter = c.entries.iter().enumerate();
-    //     for (index, entry) in iter {
-    //         let typeidx = function_section.unwrap().type_indices.get(index).unwrap();
-
-    //         let function_id = match export_section {
-    //             Some(val) => val.exports.get(index).unwrap().name.clone(),
-    //             None => format!("func{index}"),
-    //         };
-
-    //         let mut wasm_function = WasmFunction {
-    //             name: function_id.clone(),
-    //             offset: machinecode.len(),
-    //             length: 0,
-    //         };
-
-    //         match compile_function(entry, *typeidx, module, &mut machinecode) {
-    //             Ok(length) => {
-    //                 wasm_function.length = length;
-    //                 functions.push(wasm_function);
-    //             }
-    //             Err(error) => {
-    //                 let error_msg = format!("Error in function '{function_id}()': {error}");
-    //                 panic!("{}", error_msg.red());
-    //             }
-    //         }
-    //     }
-    // }
-
-    LinkedModule {
+    Ok(LinkedModule {
         machinecode,
         functions: wasm_functions,
-    }
+    })
 }
 
 fn compile_function(
@@ -248,8 +222,21 @@ fn compile_function(
             wasmparser::Operator::Return => {
                 compile_return(&mut control_stack, machinecode);
             }
-            wasmparser::Operator::LocalGet { local_index } => {
-                println!("Opcode Local get: {:?} ({:?})", local_index, op);
+            wasmparser::Operator::I32Const { value } => {
+                let reg = register_pool.allocate_register();
+                value_stack.push(StackElement {
+                    reg,
+                    valtype: ValType::I32,
+                });
+                compound::mov_large_immediate(reg, value as i64, RegSize::Reg32bit, machinecode);
+            }
+            wasmparser::Operator::I64Const { value } => {
+                let reg = register_pool.allocate_register();
+                value_stack.push(StackElement {
+                    reg,
+                    valtype: ValType::I64,
+                });
+                compound::mov_large_immediate(reg, value, RegSize::Reg64bit, machinecode);
             }
             _ => {
                 return Err(format!(

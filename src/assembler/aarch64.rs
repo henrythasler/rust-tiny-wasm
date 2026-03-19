@@ -3,7 +3,6 @@
 use std::collections::BTreeMap;
 use std::ops::BitAnd;
 
-use wasmparser::ValType;
 pub mod arithmetic;
 pub mod branch;
 pub mod compound;
