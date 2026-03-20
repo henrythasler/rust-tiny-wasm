@@ -16,7 +16,7 @@ pub struct Args {
     function: String,
 }
 
-fn main() -> Result<(), String> {
+fn main() -> Result<()> {
     // parse command line arguments
     let args = Args::parse();
 

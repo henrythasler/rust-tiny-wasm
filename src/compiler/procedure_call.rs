@@ -1,12 +1,10 @@
-use crate::assembler::aarch64::*;
-
 use super::*;
 
 pub fn load_results(
     value_stack: &mut Vec<StackElement>,
     num_results: usize,
     machinecode: &mut Vec<u32>,
-) -> Result<(), String> {
+) -> Result<()> {
     assert!(
         !value_stack.is_empty(),
         "[{}:{}]: Wasm stack underflow when loading result",

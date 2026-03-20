@@ -4,6 +4,7 @@ use std::mem;
 
 use wasmparser::{Operator, Parser, Payload::*, ValType};
 
+use super::*;
 use crate::assembler::aarch64::*;
 use crate::assembler::{emit_epilogue, emit_prologue};
 
@@ -79,7 +80,7 @@ pub struct Export {
     pub index: u32,
 }
 
-pub fn compile(module: &[u8]) -> Result<LinkedModule, String> {
+pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     let mut machinecode: Vec<u32> = Vec::new();
     let mut wasm_functions: Vec<WasmFunction> = Vec::new();
 
@@ -93,12 +94,12 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule, String> {
     let mut function_index = 0;
 
     for payload in parser.parse_all(module) {
-        match payload.unwrap() {
+        match payload? {
             // Sections for WebAssembly modules
             Version { .. } => { /* ... */ }
             TypeSection(reader) => {
                 for ty in reader.into_iter() {
-                    for (_, item) in ty.unwrap().into_types_and_offsets() {
+                    for (_, item) in ty?.into_types_and_offsets() {
                         if let wasmparser::CompositeInnerType::Func(func) =
                             item.composite_type.inner
                         {
@@ -111,7 +112,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule, String> {
             ImportSection(_) => { /* ... */ }
             FunctionSection(reader) => {
                 for func in reader {
-                    functions.push(func.unwrap());
+                    functions.push(func?);
                 }
             }
             TableSection(_) => { /* ... */ }
@@ -120,7 +121,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule, String> {
             GlobalSection(_) => { /* ... */ }
             ExportSection(reader) => {
                 for export in reader {
-                    let export = export.unwrap();
+                    let export = export?;
                     exports.push(Export {
                         name: export.name.to_string(),
                         r#type: export.kind,
@@ -142,7 +143,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule, String> {
                 // here we can iterate over `body` to parse the function
                 // and its locals
                 let offset = machinecode.len();
-                let mut reader = body.get_operators_reader().unwrap();
+                let mut reader = body.get_operators_reader()?;
                 let fn_idx = *functions.get(function_index).unwrap() as usize;
                 compile_function(&mut reader, types.get(fn_idx).unwrap(), &mut machinecode)?;
 
@@ -190,7 +191,7 @@ fn compile_function(
     reader: &mut wasmparser::OperatorsReader<'_>,
     func_type: &wasmparser::FuncType,
     machinecode: &mut Vec<u32>,
-) -> Result<usize, String> {
+) -> Result<usize> {
     // Value stack starts empty
     let mut value_stack: Vec<StackElement> = vec![];
 
@@ -239,10 +240,10 @@ fn compile_function(
                 compound::mov_large_immediate(reg, value, RegSize::Reg64bit, machinecode);
             }
             _ => {
-                return Err(format!(
+                return Err(TinyWasmError::Compiler(format!(
                     "unsupported instruction: {:?} at position {}",
                     op, index
-                ));
+                )));
             }
         }
     }

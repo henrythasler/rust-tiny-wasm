@@ -177,6 +177,7 @@ Passing parameters to and returning values from a WebAssembly function to the ca
 - [ ] Load and parse the WebAssembly module `tests/assets/constants.wat`.
 - [ ] Handover the result values to the caller.
 - [ ] Make sure your JIT-functions can return multiple values.
+- [ ] Investigate how error handling is done in Rust and implement the best-practice solutions for your functions/library.
  
 ### Detailled Description
 
