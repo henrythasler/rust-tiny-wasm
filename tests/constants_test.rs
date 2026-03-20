@@ -3,9 +3,9 @@ use std::path::Path;
 use tiny_wasm::*;
 
 #[test]
-fn test_constants() {
-    let module = fs::read(Path::new(Path::new("tests/assets/constants.wasm"))).unwrap();
-    let instance = get_module_instance(&module).unwrap();
+fn test_constants() -> Result<()> {
+    let module = fs::read(Path::new(Path::new("tests/assets/constants.wasm")))?;
+    let instance = get_module_instance(&module)?;
 
     let get_42 = unsafe { instance.get_function::<fn() -> i32>("get_42") };
     let get_minus_1 = unsafe { instance.get_function::<fn() -> i32>("get_minus_1") };
@@ -16,4 +16,5 @@ fn test_constants() {
     assert_eq!(get_minus_1(), -1);
     assert_eq!(get_large_num(), 0x1234567890aabbcc);
     assert_eq!(get_i64_min(), -9223372036854775808);
+    Ok(())
 }

@@ -1,4 +1,5 @@
 use clap::Parser;
+use owo_colors::OwoColorize;
 use std::fs;
 use std::path::Path;
 use tiny_wasm::*;
@@ -19,13 +20,17 @@ pub struct Args {
 fn main() -> Result<()> {
     // parse command line arguments
     let args = Args::parse();
+    let file_path = Path::new(&args.module);
+    let func_name = &args.function;
 
     // load, compile and instantiate WebAssembly module
-    let module = fs::read(Path::new(&args.module)).unwrap();
+    println!("Loading '{}'", file_path.display().bright_blue());
+    let module = fs::read(file_path).unwrap();
+    print_module(&module)?;
     let instance = get_module_instance(&module)?;
 
     // get the function pointer and call the function
-    let entrypoint = unsafe { instance.get_function::<fn() -> i32>(&args.function) };
+    let entrypoint = unsafe { instance.get_function::<fn() -> i32>(func_name) };
     println!("{}", entrypoint());
     Ok(())
 }

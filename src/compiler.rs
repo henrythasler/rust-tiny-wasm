@@ -103,7 +103,6 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                         if let wasmparser::CompositeInnerType::Func(func) =
                             item.composite_type.inner
                         {
-                            println!("{}", func);
                             types.push(func);
                         }
                     }
@@ -140,15 +139,18 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             // individually.
             CodeSectionStart { .. } => {}
             CodeSectionEntry(body) => {
-                // here we can iterate over `body` to parse the function
-                // and its locals
+                // here we can iterate over `body` to parse the function and its locals
                 let offset = machinecode.len();
                 let mut reader = body.get_operators_reader()?;
                 let fn_idx = *functions.get(function_index).unwrap() as usize;
                 compile_function(&mut reader, types.get(fn_idx).unwrap(), &mut machinecode)?;
 
+                let function_id = exports
+                    .get(function_index)
+                    .map_or(format!("$func{function_index}"), |v| v.name.clone());
+
                 wasm_functions.push(WasmFunction {
-                    name: exports.get(function_index).unwrap().name.clone(),
+                    name: function_id,
                     offset,
                     length: machinecode.len() - offset,
                 });
@@ -205,7 +207,6 @@ fn compile_function(
     }];
 
     let initial_size = machinecode.len();
-
     let register_pool = RegisterPool::new();
 
     // every functions starts with an epilogue to save the initial state and create a new stack frame

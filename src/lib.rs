@@ -1,5 +1,7 @@
+use owo_colors::OwoColorize;
 use std::fs;
 use std::path::Path;
+use wasmparser::{Parser, Payload::*, ValType};
 
 pub mod assembler;
 pub mod compiler;
@@ -26,57 +28,82 @@ impl From<wasmparser::BinaryReaderError> for TinyWasmError {
     }
 }
 
-// pub fn dump_module_info(filename: &Path) {
-//     println!("Loading '{}'...", filename.display().bright_blue());
-//     let wasm_module = loader::wasmparser(filename).unwrap();
+/// Prints the structure of a WebAssembly module in a human-readable format, including its sections, exports, and code entries.
+///
+/// This function takes a byte slice representing a WebAssembly module and uses the `wasmparser` crate
+/// to parse its contents. It prints the type section, export section, and code section of the module, along with
+/// relevant details such as function signatures, export names, and local variable information.
+///
+/// # Arguments
+/// * `module` - A byte slice containing the WebAssembly module to be printed
+///
+/// # Returns
+/// * `Result<()>` - An empty result if the module is successfully printed, or an error message if the parsing fails
+///
+/// # Errors
+/// This function will return an error if the module cannot be parsed correctly.
+pub fn print_module(module: &[u8]) -> Result<()> {
+    let parser = Parser::new(0);
+    let mut exports: Vec<&str> = Vec::new();
+    let mut function_index = 0;
 
-//     println!(
-//         "Found {} section(s)",
-//         wasm_module.sections().len().bright_green()
-//     );
-//     for section in wasm_module.sections() {
-//         match section {
-//             loader::Section::Export(export_section) => {
-//                 println!("  Section ID: {}", export_section.name().bright_blue());
-//                 println!(
-//                     "  Number of Exports: {}",
-//                     export_section.exports.len().bright_green()
-//                 );
+    for payload in parser.parse_all(module) {
+        match payload? {
+            // Sections for WebAssembly modules
+            TypeSection(reader) => {
+                println!("  {}", "Type Section".bright_blue());
+                for ty in reader.into_iter() {
+                    for (_, item) in ty?.into_types_and_offsets() {
+                        if let wasmparser::CompositeInnerType::Func(func) =
+                            item.composite_type.inner
+                        {
+                            println!("    - {}", func.bright_yellow());
+                        }
+                    }
+                }
+            }
+            ExportSection(reader) => {
+                println!("  {}", "Export Section".bright_blue());
+                for export in reader {
+                    let export = export?;
+                    println!(
+                        "    - {} ({:#?}, {})",
+                        export.name.white().bold(),
+                        export.kind.bright_yellow(),
+                        export.index.bright_yellow()
+                    );
+                    exports.push(export.name);
+                }
+            }
+            CodeSectionStart { count, .. } => {
+                println!("  {}", "Code Section".bright_blue());
+                println!("    Entries: {}", count.bright_green());
+                function_index = 0;
+            }
+            CodeSectionEntry(body) => {
+                let function_id = exports
+                    .get(function_index)
+                    .map_or(format!("$func{function_index}"), |v| v.to_string());
 
-//                 for export in &export_section.exports {
-//                     println!(
-//                         "    - {} ({:#?}, {})",
-//                         export.name.bright_yellow(),
-//                         export.r#type.white(),
-//                         export.index.white()
-//                     );
-//                 }
-//             }
-//             loader::Section::Code(code_section) => {
-//                 println!("  Section ID: {}", code_section.name().bright_blue());
-//                 println!(
-//                     "  Number of Entries: {}",
-//                     code_section.entries.len().bright_green()
-//                 );
-//                 for entry in &code_section.entries {
-//                     println!(
-//                         "    - Locals: {} ({:?})",
-//                         entry.get_locals().len().bright_green(),
-//                         entry.locals
-//                     );
-//                     println!(
-//                         "      Content ({:#?} Bytes): {:02X?}\n",
-//                         entry.get_code().len(),
-//                         entry.get_code().bright_yellow()
-//                     )
-//                 }
-//             }
-//             _ => {}
-//         }
-//     }
-// }
+                let mut locals: Vec<(u32, ValType)> = Vec::new();
+                let locals_reader = body.get_locals_reader()?;
+                for local in locals_reader {
+                    locals.push(local.unwrap());
+                }
 
-pub fn print_module(_filename: &Path) -> Result<()> {
+                println!("    - {}", function_id.white().bold());
+                println!("      Locals: {:?}", locals.bright_yellow());
+                println!(
+                    "      Code ({:#?} Bytes): {:02X?}",
+                    body.as_bytes().len(),
+                    body.as_bytes().bright_yellow()
+                );
+                function_index += 1;
+            }
+            End(_) => {}
+            _ => {}
+        }
+    }
     Ok(())
 }
 
@@ -88,8 +115,10 @@ pub fn print_module(_filename: &Path) -> Result<()> {
 ///
 /// # Arguments
 /// * `module` - A byte slice containing the WebAssembly module to be compiled and instantiated
+///
 /// # Returns
 /// * `Result<runtime::Runtime, String>` - The instantiated module or an error message if the compilation or instantiation fails
+///
 /// # Errors
 /// This function will return an error if the module cannot be compiled or instantiated.
 pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
