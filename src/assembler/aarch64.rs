@@ -3,7 +3,6 @@
 use std::collections::BTreeMap;
 use std::ops::BitAnd;
 
-use crate::loader::webassembly::Webassembly_ValTypes;
 pub mod arithmetic;
 pub mod branch;
 pub mod compound;
@@ -170,8 +169,8 @@ fn select_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 {
     }
 }
 
-pub fn map_valtype_to_regsize(item: Webassembly_ValTypes) -> RegSize {
-    if item == Webassembly_ValTypes::I32 {
+pub fn map_valtype_to_regsize(item: wasmparser::ValType) -> RegSize {
+    if item == wasmparser::ValType::I32 {
         RegSize::Reg32bit
     } else {
         RegSize::Reg64bit

@@ -32,8 +32,9 @@ fn test_objdump() {
         }
 
         if file.extension().and_then(|ext| ext.to_str()) == Some("wasm") {
-            let wasm_module = loader::load_wasm_module(&file);
-            let linked_module = compiler::compile(&wasm_module);
+            println!("dumping {:?}", &file);
+            let wasm_module = fs::read(Path::new(&file)).unwrap();
+            let linked_module = compiler::compile(&wasm_module).unwrap();
 
             let mut object =
                 Object::new(BinaryFormat::Elf, Architecture::Aarch64, Endianness::Little);
@@ -44,11 +45,11 @@ fn test_objdump() {
                 SectionKind::Text, // section kind
             );
 
-            let bytes: &[u8] = bytemuck::cast_slice(linked_module.get_machinecode());
+            let bytes: &[u8] = bytemuck::cast_slice(&linked_module.machinecode);
             object.set_section_data(text_section, bytes, 16); // 16-byte alignment            
 
             // Add a symbol for the function
-            for function in linked_module.get_functions() {
+            for function in &linked_module.functions {
                 object.add_symbol(Symbol {
                     name: function.name.clone().into_bytes(),
                     value: (function.offset * assembler::aarch64::INSTRUCTION_SIZE) as u64,

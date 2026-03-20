@@ -1,9 +1,11 @@
+use std::fs;
 use std::path::Path;
 use tiny_wasm::*;
 
 #[test]
 fn test_constants() {
-    let instance = get_module_instance(Path::new("tests/assets/constants.wasm"));
+    let module = fs::read(Path::new(Path::new("tests/assets/constants.wasm"))).unwrap();
+    let instance = get_module_instance(&module).unwrap();
 
     let get_42 = unsafe { instance.get_function::<fn() -> i32>("get_42") };
     let get_minus_1 = unsafe { instance.get_function::<fn() -> i32>("get_minus_1") };
