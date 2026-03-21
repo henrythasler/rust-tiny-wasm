@@ -10,10 +10,12 @@ use crate::assembler::{emit_epilogue, emit_prologue};
 
 use control_instructions::*;
 use procedure_call::*;
+use stack::*;
 
 mod control_instructions;
 mod numeric_instructions;
 mod procedure_call;
+mod stack;
 
 #[derive(Debug, Clone)]
 pub struct WasmFunction {
@@ -141,10 +143,17 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             CodeSectionStart { .. } => {}
             CodeSectionEntry(body) => {
                 // here we can iterate over `body` to parse the function and its locals
+
+                let mut locals: Vec<(u32, ValType)> = Vec::new();
+                let locals_reader = body.get_locals_reader()?;
+                for local in locals_reader {
+                    locals.push(local.unwrap());
+                }
+
                 let offset = machinecode.len();
                 let mut reader = body.get_operators_reader()?;
                 let fn_idx = *functions.get(function_index).unwrap() as usize;
-                compile_function(&mut reader, types.get(fn_idx).unwrap(), &mut machinecode)?;
+                compile_function(&mut reader, types.get(fn_idx).unwrap(), &locals, &mut machinecode)?;
 
                 let function_id = exports
                     .get(function_index)
@@ -182,6 +191,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 fn compile_function(
     reader: &mut wasmparser::OperatorsReader<'_>,
     func_type: &wasmparser::FuncType,
+    locals: &[(u32, ValType)],
     machinecode: &mut Vec<u32>,
 ) -> Result<usize> {
     // Value stack starts empty
@@ -199,8 +209,13 @@ fn compile_function(
     let initial_size = machinecode.len();
     let register_pool = RegisterPool::default();
 
+    // calculate initial stack size from all parameters and locals
+    let mut stack_size = func_type.params().iter().fold(0, |acc, x| acc + valtype_to_usize(*x));
+    stack_size += locals.iter().fold(0, |acc, x| acc + x.0 as usize * valtype_to_usize(x.1));
+    println!("{}", stack_size);
+
     // every functions starts with an epilogue to save the initial state and create a new stack frame
-    emit_prologue(machinecode);
+    emit_prologue(stack_size, machinecode);
 
     'expression: while !reader.eof() {
         let index = reader.original_position();
@@ -230,6 +245,12 @@ fn compile_function(
                 });
                 compound::mov_large_immediate(reg, value, RegSize::Reg64bit, machinecode);
             }
+            Operator::LocalGet { local_index } => {
+
+            }
+            Operator::LocalSet { local_index } => {
+
+            }
             _ => {
                 return Err(TinyWasmError::Compiler(format!(
                     "unsupported instruction: {:?} at position {}",
@@ -251,7 +272,7 @@ fn compile_function(
     }
 
     // restore initial state before returning to the caller
-    emit_epilogue(machinecode);
+    emit_epilogue(stack_size, machinecode);
 
     // add padding to INSTRUCTION_SIZE to align subsequent functions to the correct size
     let padding_instructions =

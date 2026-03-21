@@ -11,6 +11,13 @@ pub mod processing;
 
 pub const INSTRUCTION_SIZE: usize = std::mem::size_of::<u32>();
 
+pub const INT32_SIZE: usize = std::mem::size_of::<i32>();
+pub const INT64_SIZE: usize = std::mem::size_of::<i64>();
+pub const FLOAT32_SIZE: usize = std::mem::size_of::<f32>();
+pub const FLOAT64_SIZE: usize = std::mem::size_of::<f64>();
+
+pub const STACK_ALIGNMENT: usize = 16;
+
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[allow(clippy::upper_case_acronyms)]
