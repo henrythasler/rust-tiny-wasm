@@ -22,7 +22,9 @@ pub fn load_results(
     for _ in 0..num_results {
         let item = value_stack.pop().unwrap();
         let reg_size = map_valtype_to_regsize(item.valtype);
+        // emits a
         machinecode.push(processing::mov_reg(Reg::X0, item.reg, reg_size));
+        machinecode.push(processing::mov_reg(Reg::X1, Reg::XZR, reg_size));
         // the source register should be released but since the function returns anyway, we skip this here
     }
 

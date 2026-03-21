@@ -24,6 +24,7 @@ pub struct WasmFunction {
     pub length: usize,
 }
 
+#[derive(Debug)]
 pub struct LinkedModule {
     pub machinecode: Vec<u32>,
     pub functions: Vec<WasmFunction>,
@@ -97,6 +98,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         match payload? {
             // Sections for WebAssembly modules
             Version { .. } => { /* ... */ }
+            CustomSection(_) => { /* ... */ }
             TypeSection(reader) => {
                 for ty in reader.into_iter() {
                     for (_, item) in ty?.into_types_and_offsets() {
@@ -116,7 +118,6 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             }
             TableSection(_) => { /* ... */ }
             MemorySection(_) => { /* ... */ }
-            TagSection(_) => { /* ... */ }
             GlobalSection(_) => { /* ... */ }
             ExportSection(reader) => {
                 for export in reader {
@@ -157,21 +158,6 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                 function_index += 1;
             }
 
-            // Sections for WebAssembly components
-            ModuleSection { .. } => { /* ... */ }
-            InstanceSection(_) => { /* ... */ }
-            CoreTypeSection(_) => { /* ... */ }
-            ComponentSection { .. } => { /* ... */ }
-            ComponentInstanceSection(_) => { /* ... */ }
-            ComponentAliasSection(_) => { /* ... */ }
-            ComponentTypeSection(_) => { /* ... */ }
-            ComponentCanonicalSection(_) => { /* ... */ }
-            ComponentStartSection { .. } => { /* ... */ }
-            ComponentImportSection(_) => { /* ... */ }
-            ComponentExportSection(_) => { /* ... */ }
-
-            CustomSection(_) => { /* ... */ }
-
             // Once we've reached the end of a parser we either resume
             // at the parent parser or the payload iterator is at its
             // end and we're done.
@@ -179,7 +165,11 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
             // most likely you'd return an error here, but if you want
             // you can also inspect the raw contents of unknown sections
-            _ => {}
+            _ => {
+                return Err(TinyWasmError::Parser(String::from(
+                    "Found unknown section identifier",
+                )));
+            }
         }
     }
 
@@ -207,7 +197,7 @@ fn compile_function(
     }];
 
     let initial_size = machinecode.len();
-    let register_pool = RegisterPool::new();
+    let register_pool = RegisterPool::default();
 
     // every functions starts with an epilogue to save the initial state and create a new stack frame
     emit_prologue(machinecode);
@@ -250,8 +240,14 @@ fn compile_function(
     }
 
     // move result values to result registers according to Aarch64 Procedure Call Standard (X0..X7)
+    // X0: Result, X1: Tag (0=Ok, 1=Trap)
     if !func_type.results().is_empty() {
         load_results(&mut value_stack, func_type.results().len(), machinecode)?;
+    } else {
+        // Result=0
+        machinecode.push(processing::mov_reg(Reg::X0, Reg::XZR, RegSize::Reg64bit));
+        // Tag=Ok (0)
+        machinecode.push(processing::mov_reg(Reg::X1, Reg::XZR, RegSize::Reg64bit));
     }
 
     // restore initial state before returning to the caller
@@ -265,4 +261,50 @@ fn compile_function(
     }
 
     Ok(machinecode.len() - initial_size)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_module() -> Result<()> {
+        let module = vec![0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00];
+        compile(&module)?;
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_module() -> Result<()> {
+        let module = vec![0x00, 0x61, 0x73, 0xFF, 0x01, 0x00, 0x00, 0x00];
+        let res = compile(&module).unwrap_err();
+        assert!(matches!(res, TinyWasmError::Parser(msg) if msg.contains("bad magic number")));
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_section() -> Result<()> {
+        let module = vec![
+            0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00, 0x10, 0x01, 0x00,
+        ];
+        let res = compile(&module).unwrap_err();
+        assert!(matches!(res, TinyWasmError::Parser(msg) if msg.contains("unknown section")));
+        Ok(())
+    }
+
+    #[test]
+    fn unsupported_instruction() -> Result<()> {
+        // hexdump -v -e '1/1 "%02x "' tests/assets/dummy-empty.wasm
+        // contains unreachable
+        let module = vec![
+            0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x04, 0x01, 0x60, 0x00, 0x00,
+            0x03, 0x02, 0x01, 0x00, 0x07, 0x07, 0x01, 0x03, 0x66, 0x6f, 0x6f, 0x00, 0x00, 0x0a,
+            0x05, 0x01, 0x03, 0x00, 0x00, 0x0b,
+        ];
+        let res = compile(&module).unwrap_err();
+        assert!(
+            matches!(res, TinyWasmError::Compiler(msg) if msg.contains("unsupported instruction"))
+        );
+        Ok(())
+    }
 }

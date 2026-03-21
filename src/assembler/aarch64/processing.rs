@@ -14,6 +14,10 @@ pub fn orr_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSi
     instr
 }
 
+pub fn mov_imm(rd: Reg, imm16: u32, size: RegSize) -> u32 {
+    movz(rd, imm16, 0, size)
+}
+
 pub fn movz(rd: Reg, imm16: u32, shift: u32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x52800000, 0xD2800000, size);
     instr |= ((shift >> 4) & 0x3) << 21; // hw field (0-3 for 64-bit, 0-1 for 32-bit)
@@ -40,6 +44,8 @@ mod tests {
         assert_eq!(movz(Reg::X3, 0x1234, 16, RegSize::Reg64bit), 0xD2A24683);
         // MOVZ X7, 0xABCD, LSL #48
         assert_eq!(movz(Reg::X7, 0xabcd, 48, RegSize::Reg64bit), 0xD2F579A7);
+        // MOV X8, #0xdef0
+        assert_eq!(mov_imm(Reg::X8, 0xdef0, RegSize::Reg64bit), 0xD29BDE08);
     }
 
     #[test]

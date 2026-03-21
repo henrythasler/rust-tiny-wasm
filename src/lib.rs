@@ -10,11 +10,26 @@ pub mod runtime;
 pub type Result<T> = std::result::Result<T, TinyWasmError>;
 
 #[derive(Debug, PartialEq, Eq)]
+pub enum TrapCode {
+    None,
+}
+
+impl TrapCode {
+    pub fn from_code(code: i64) -> Self {
+        match code {
+            0 => TrapCode::None,
+            _ => panic!("Unknown error code: {}", code),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub enum TinyWasmError {
     Io(std::io::ErrorKind),
     Parser(String),
     Compiler(String),
     Runtime(String),
+    Trap(TrapCode),
 }
 
 impl From<std::io::Error> for TinyWasmError {

@@ -12,7 +12,7 @@ fn test_objdump() {
     let base = Path::new("tests/assets");
     fs::create_dir_all(base.join("jit")).expect("Should be able to create dir");
 
-    let blocked = ["invalid", "draft"];
+    let blocked = ["invalid", "draft", "dummy"];
 
     for entry in fs::read_dir(base).expect("Should be able to read the folder content") {
         let entry = entry.unwrap();
