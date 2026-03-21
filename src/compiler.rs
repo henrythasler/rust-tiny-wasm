@@ -15,7 +15,7 @@ mod control_instructions;
 mod numeric_instructions;
 mod procedure_call;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct WasmFunction {
     pub name: String,
     /// offset in INSTRUCTION_SIZE units

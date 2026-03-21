@@ -3,6 +3,7 @@ use std::mem;
 
 use super::assembler::*;
 use super::compiler::*;
+use super::*;
 
 #[cfg(target_arch = "aarch64")]
 unsafe fn clear_cache(addr: *mut u8, len: usize) {
@@ -15,6 +16,7 @@ unsafe fn clear_cache(addr: *mut u8, len: usize) {
     }
 }
 
+#[derive(Debug)]
 pub struct Runtime {
     machinecode: Mmap,
     functions: Vec<WasmFunction>,
@@ -25,33 +27,38 @@ impl Runtime {
     ///
     /// This function casts the memory address to a function. The user **MUST** ensure that the signature used for the
     /// generic matches the actual function that is called.
-    pub unsafe fn get_function<F>(&self, name: &str) -> F
+    pub unsafe fn get_function<F>(&self, name: &str) -> Result<F>
     where
         F: Sized,
     {
-        let value = self
-            .functions
-            .iter()
-            .find(|&x| x.name == name)
-            .expect("Requested function should be found");
+        let function =
+            self.functions
+                .iter()
+                .find(|&x| x.name == name)
+                .ok_or(TinyWasmError::Runtime(format!(
+                    "Function '{}' not found in module exports",
+                    name
+                )))?;
         let ptr = self
             .machinecode
             .as_ptr()
-            .wrapping_add(value.offset * aarch64::INSTRUCTION_SIZE);
+            .wrapping_add(function.offset * aarch64::INSTRUCTION_SIZE);
 
         // Ensure validity, proper alignment and size for function pointers
         assert!(!ptr.is_null());
         assert_eq!((ptr as usize) % mem::align_of::<F>(), 0);
         assert_eq!(mem::size_of::<F>(), mem::size_of::<*const u8>());
 
-        unsafe { mem::transmute_copy(&ptr) }
+        Ok(unsafe { mem::transmute_copy(&ptr) })
     }
 }
 
-pub fn instantiate_module(module: &LinkedModule) -> Runtime {
+pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
     // Allocate executable memory and copy JIT code into that region
     let bytes = bytemuck::cast_slice(&module.machinecode);
-    assert!(!bytes.is_empty());
+    if bytes.is_empty() {
+        return Err(TinyWasmError::Runtime(String::from("JIT code is empty")));
+    }
     let mut mmap = MmapMut::map_anon(bytes.len()).expect("map_anon() failed");
     mmap.copy_from_slice(bytes);
 
@@ -63,10 +70,10 @@ pub fn instantiate_module(module: &LinkedModule) -> Runtime {
 
     // set execution permissions
     let machinecode = mmap.make_exec().expect("make_exec() failed");
-    Runtime {
+    Ok(Runtime {
         machinecode,
         functions: module.functions.to_vec(),
-    }
+    })
 }
 
 #[cfg(test)]
@@ -74,7 +81,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn simple_jit_code() {
+    fn simple_jit_code() -> Result<()> {
         let module = LinkedModule::new(
             vec![0x0b000020, 0xd65f03c0],
             vec![WasmFunction {
@@ -83,13 +90,13 @@ mod tests {
                 length: 2,
             }],
         );
-        let instance = instantiate_module(&module);
-        let _ = unsafe { instance.get_function::<fn()>("test") };
+        let instance = instantiate_module(&module)?;
+        let _ = unsafe { instance.get_function::<fn()>("test")? };
+        Ok(())
     }
 
     #[test]
-    #[should_panic(expected = "!bytes.is_empty()")]
-    fn invalid_jit_code() {
+    fn invalid_jit_code() -> Result<()> {
         let module = LinkedModule::new(
             vec![],
             vec![WasmFunction {
@@ -98,12 +105,15 @@ mod tests {
                 length: 2,
             }],
         );
-        let _ = instantiate_module(&module);
+        assert_eq!(
+            instantiate_module(&module).unwrap_err(),
+            TinyWasmError::Runtime(String::from("JIT code is empty"))
+        );
+        Ok(())
     }
 
     #[test]
-    #[should_panic(expected = "should be found")]
-    fn unknown_function() {
+    fn unknown_function() -> Result<()> {
         let module = LinkedModule::new(
             vec![0x0b000020, 0xd65f03c0],
             vec![WasmFunction {
@@ -112,7 +122,13 @@ mod tests {
                 length: 2,
             }],
         );
-        let instance = instantiate_module(&module);
-        let _ = unsafe { instance.get_function::<fn()>("unknown") };
+        let instance = instantiate_module(&module)?;
+        assert_eq!(
+            unsafe { instance.get_function::<fn()>("unknown") }.unwrap_err(),
+            TinyWasmError::Runtime(String::from(
+                "Function 'unknown' not found in module exports"
+            ))
+        );
+        Ok(())
     }
 }

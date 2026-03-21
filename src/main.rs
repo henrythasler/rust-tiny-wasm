@@ -30,7 +30,8 @@ fn main() -> Result<()> {
     let instance = get_module_instance(&module)?;
 
     // get the function pointer and call the function
-    let entrypoint = unsafe { instance.get_function::<fn() -> i32>(func_name) };
-    println!("{}", entrypoint());
+    println!("Calling {}()", func_name.bright_blue());
+    let entrypoint = unsafe { instance.get_function::<fn() -> i32>(func_name) }?;
+    println!("Return value: {}", entrypoint().bright_green().bold());
     Ok(())
 }

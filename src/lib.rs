@@ -9,16 +9,17 @@ pub mod runtime;
 
 pub type Result<T> = std::result::Result<T, TinyWasmError>;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TinyWasmError {
-    Io(std::io::Error),
+    Io(std::io::ErrorKind),
     Parser(String),
     Compiler(String),
+    Runtime(String),
 }
 
 impl From<std::io::Error> for TinyWasmError {
     fn from(err: std::io::Error) -> Self {
-        TinyWasmError::Io(err)
+        TinyWasmError::Io(err.kind())
     }
 }
 
@@ -123,7 +124,7 @@ pub fn print_module(module: &[u8]) -> Result<()> {
 /// This function will return an error if the module cannot be compiled or instantiated.
 pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
     let linked_module = compiler::compile(module)?;
-    Ok(runtime::instantiate_module(&linked_module))
+    runtime::instantiate_module(&linked_module)
 }
 
 /// This function load a WebAssembly module, compiles and executes the given function
@@ -149,7 +150,7 @@ pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
 pub fn execute(filename: &Path, function: &str) -> Result<i32> {
     let module = fs::read(filename)?;
     let instance = get_module_instance(&module)?;
-    let _start = unsafe { instance.get_function::<fn() -> i32>(function) };
+    let _start = unsafe { instance.get_function::<fn() -> i32>(function)? };
     Ok(_start())
 }
 
