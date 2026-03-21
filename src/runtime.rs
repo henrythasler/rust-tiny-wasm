@@ -137,6 +137,24 @@ mod tests {
     }
 
     #[test]
+    fn trap_code() -> Result<()> {
+        let module = LinkedModule::new(
+            // Tag in X1 is 1, which indicates a trap
+            // Value in X0 is 0, which is TrapCode::None
+            vec![0xAA1F03E0, 0xD2800021, 0xd65f03c0], // [MOV X0, XZR; MOV X1, 1; RET]
+            vec![WasmFunction {
+                name: String::from("trap_code"),
+                offset: 0,
+                length: 2,
+            }],
+        );
+        let instance = instantiate_module(&module)?;
+        let res = unsafe { instance.call_function::<(), i32>("trap_code", ()) };
+        assert!(matches!(res.unwrap_err(), TinyWasmError::Trap(value) if value==TrapCode::None));
+        Ok(())
+    }
+
+    #[test]
     fn invalid_jit_code() -> Result<()> {
         let module = LinkedModule::new(
             vec![],

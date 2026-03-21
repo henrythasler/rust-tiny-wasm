@@ -6,7 +6,7 @@ build:
 test:
     #!/bin/bash
     cargo llvm-cov clean --workspace
-    RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(webassembly|base128)'
+    RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)'
     for file in ./tests/assets/jit/*.o; do \
         echo $file; \
         # aarch64-linux-gnu-objdump -D -b binary -m aarch64 $file > ${file%.o}.asm; \
