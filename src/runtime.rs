@@ -27,7 +27,7 @@ impl Runtime {
     ///
     /// This function casts the memory address to a function. The user **MUST** ensure that the signature used for the
     /// generic matches the actual function that is called.
-    pub unsafe fn get_function<F>(&self, name: &str) -> Result<F>
+    unsafe fn get_function<F>(&self, name: &str) -> Result<F>
     where
         F: Sized,
     {
@@ -50,6 +50,28 @@ impl Runtime {
         assert_eq!(mem::size_of::<F>(), mem::size_of::<*const u8>());
 
         Ok(unsafe { mem::transmute_copy(&ptr) })
+    }
+
+    /// Calls a WebAssembly function by name with the given argument and returns the result.
+    ///
+    /// The function is expected to return a tuple of (value, tag), where 'value' is the actual return value and 'tag' indicates whether the call was successful (0) or resulted in a trap (1). The result is returned as a `Result<R>`, where `R` is the expected return type of the WebAssembly function.
+    ///
+    /// # Safety
+    ///
+    /// This function calls a WebAssembly function by name
+    pub unsafe fn call_function<P, R: Into<i64>>(&self, name: &str, arg: P) -> Result<R> {
+        let entrypoint = unsafe { self.get_function::<unsafe extern "C" fn(P) -> (R, i64)>(name) }?;
+
+        let (value, tag) = unsafe { entrypoint(arg) };
+        let result: Result<R> = match tag {
+            0 => Ok(value),
+            1 => Err(TinyWasmError::Trap(TrapCode::from_code(value.into()))),
+            _ => Err(TinyWasmError::Runtime(format!(
+                "Invalid result tag: {}",
+                tag
+            ))),
+        };
+        result
     }
 }
 
@@ -92,6 +114,25 @@ mod tests {
         );
         let instance = instantiate_module(&module)?;
         let _ = unsafe { instance.get_function::<fn()>("test")? };
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_result_tag() -> Result<()> {
+        let module = LinkedModule::new(
+            // result tag in X1 is 255, which is invalid
+            vec![0xAA1F03E0, 0xD2801FE1, 0xd65f03c0], // [MOV X0, XZR; MOV X1, 0xFF; RET]
+            vec![WasmFunction {
+                name: String::from("invalid_result"),
+                offset: 0,
+                length: 2,
+            }],
+        );
+        let instance = instantiate_module(&module)?;
+        let res = unsafe { instance.call_function::<(), i32>("invalid_result", ()) };
+        assert!(
+            matches!(res.unwrap_err(), TinyWasmError::Runtime(msg) if msg.contains("result tag"))
+        );
         Ok(())
     }
 

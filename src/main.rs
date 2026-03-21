@@ -63,19 +63,7 @@ fn main() -> Result<()> {
     );
 
     // Call the function
-    let entrypoint =
-        unsafe { instance.get_function::<unsafe extern "C" fn(i32) -> (i64, i64)>(func_name) }?;
-
-    let (value, tag) = unsafe { entrypoint(func_arg) };
-    let result: Result<i64> = match tag {
-        0 => Ok(value),
-        1 => Err(TinyWasmError::Trap(TrapCode::from_code(value))),
-        _ => Err(TinyWasmError::Runtime(format!(
-            "Invalid discriminant: {}",
-            tag
-        ))),
-    };
-
-    println!("Return value: {}", result?.bright_green().bold());
+    let result = unsafe { instance.call_function::<i32, i32>(func_name, func_arg) }?;
+    println!("Return value: {}", result.bright_green().bold());
     Ok(())
 }

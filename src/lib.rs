@@ -152,7 +152,7 @@ pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
 /// * `filename` - Path to the WebAssembly module
 /// * `function` - Name of the function to execute
 /// # Returns
-/// * `Result<i32, Box<dyn std::error::Error>>` - The i32-result of the function execution or an error
+/// * `Result<i32>` - The i32-result of the function execution or an error
 /// # Errors
 /// This function will return an error if the module cannot be loaded, compiled, instantiated, or if the specified function cannot be found or executed.
 /// # Example
@@ -165,8 +165,7 @@ pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
 pub fn execute(filename: &Path, function: &str) -> Result<i32> {
     let module = fs::read(filename)?;
     let instance = get_module_instance(&module)?;
-    let _start = unsafe { instance.get_function::<fn() -> i32>(function)? };
-    Ok(_start())
+    unsafe { instance.call_function::<(), i32>(function, ()) }
 }
 
 /// This function is a convenience wrapper around the `execute` function to run the `_start` function
