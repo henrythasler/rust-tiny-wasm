@@ -218,8 +218,7 @@ fn compile_function(
 
     // calculate initial stack size from all parameters and locals
     // let variables = expand_locals(&func_type, &locals);
-    let stack_size = get_aligned_stack_size(func_type, locals);
-    let mut stack_offset = stack_size;
+    let (variables_size, stack_size) = get_aligned_stack_size(func_type, locals);
     // let variables_size = get_aligned_stack_size(&variables);
     // let variables_offset = 0;
     // println!("{} {:?}", variables_size, variables);
@@ -228,6 +227,7 @@ fn compile_function(
     emit_prologue(stack_size, machinecode);
 
     let mut variables: Vec<LocalVar> = vec![];
+    let mut stack_offset = stack_size - variables_size;
     // save parameters to stack
     if !func_type.params().is_empty() {
         variables.extend(save_parameters_to_stack(

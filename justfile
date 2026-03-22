@@ -18,6 +18,13 @@ test:
 run +arguments:
     qemu-aarch64 -L /usr/aarch64-linux-gnu/ target/aarch64-unknown-linux-gnu/debug/tiny-wasm {{arguments}}
 
+# Run executable and 
+debug +arguments:
+    qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 target/aarch64-unknown-linux-gnu/debug/tiny-wasm {{arguments}}
+
+gdb:
+    gdb-multiarch -q --nh -ex 'set architecture aarch64' -ex 'file target/aarch64-unknown-linux-gnu/debug/tiny-wasm' -ex 'target remote localhost:1234' -ex 'layout split' -ex 'layout regs'
+
 # Lint and format check
 lint:
     cargo fmt -- --check

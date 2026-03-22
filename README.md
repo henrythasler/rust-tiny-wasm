@@ -190,6 +190,7 @@ Local variable instructions in WebAssembly are needed to use function parameters
 ### Goals
 
 - [ ] Investigate how the stack can be used to store registers or local variables.
+- [ ] Investigate how rust executables can be used with a debugger.
 - [ ] Implement the `local.get` and `local.set` instructions.
 - [ ] Make parameters available to the function at runtime.
 - [ ] Manage local variables at runtime.
