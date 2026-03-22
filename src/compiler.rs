@@ -8,14 +8,16 @@ use super::*;
 use crate::assembler::aarch64::*;
 use crate::assembler::{emit_epilogue, emit_prologue};
 
-use control_instructions::*;
+use control_instr::*;
 use procedure_call::*;
 use stack::*;
+use variable_instr::*;
 
-mod control_instructions;
-mod numeric_instructions;
+mod control_instr;
+mod numeric_instr;
 mod procedure_call;
 mod stack;
+mod variable_instr;
 
 #[derive(Debug, Clone)]
 pub struct WasmFunction {
@@ -153,7 +155,12 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                 let offset = machinecode.len();
                 let mut reader = body.get_operators_reader()?;
                 let fn_idx = *functions.get(function_index).unwrap() as usize;
-                compile_function(&mut reader, types.get(fn_idx).unwrap(), &locals, &mut machinecode)?;
+                compile_function(
+                    &mut reader,
+                    types.get(fn_idx).unwrap(),
+                    &locals,
+                    &mut machinecode,
+                )?;
 
                 let function_id = exports
                     .get(function_index)
@@ -207,15 +214,32 @@ fn compile_function(
     }];
 
     let initial_size = machinecode.len();
-    let register_pool = RegisterPool::default();
+    let mut register_pool = RegisterPool::default();
 
     // calculate initial stack size from all parameters and locals
-    let mut stack_size = func_type.params().iter().fold(0, |acc, x| acc + valtype_to_usize(*x));
-    stack_size += locals.iter().fold(0, |acc, x| acc + x.0 as usize * valtype_to_usize(x.1));
-    println!("{}", stack_size);
+    // let variables = expand_locals(&func_type, &locals);
+    let stack_size = get_aligned_stack_size(func_type, locals);
+    let mut stack_offset = stack_size;
+    // let variables_size = get_aligned_stack_size(&variables);
+    // let variables_offset = 0;
+    // println!("{} {:?}", variables_size, variables);
 
     // every functions starts with an epilogue to save the initial state and create a new stack frame
     emit_prologue(stack_size, machinecode);
+
+    let mut variables: Vec<LocalVar> = vec![];
+    // save parameters to stack
+    if !func_type.params().is_empty() {
+        variables.extend(save_parameters_to_stack(
+            &mut stack_offset,
+            func_type.params(),
+            machinecode,
+        ));
+    }
+
+    if !locals.is_empty() {
+        variables.extend(save_locals_to_stack(&mut stack_offset, locals, machinecode));
+    }
 
     'expression: while !reader.eof() {
         let index = reader.original_position();
@@ -246,10 +270,24 @@ fn compile_function(
                 compound::mov_large_immediate(reg, value, RegSize::Reg64bit, machinecode);
             }
             Operator::LocalGet { local_index } => {
-
+                let var = variables.get(local_index as usize).unwrap();
+                compile_local_get(
+                    var,
+                    var.offset,
+                    &mut value_stack,
+                    &register_pool,
+                    machinecode,
+                );
             }
             Operator::LocalSet { local_index } => {
-
+                let var = variables.get(local_index as usize).unwrap();
+                compile_local_set(
+                    var,
+                    var.offset,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
             }
             _ => {
                 return Err(TinyWasmError::Compiler(format!(

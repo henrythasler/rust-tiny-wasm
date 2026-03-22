@@ -6,22 +6,18 @@ pub fn emit_prologue(stack_size: usize, machinecode: &mut Vec<u32>) {
     machinecode.push(0x910003FD); // mov fp, sp
 
     if stack_size > 0 {
-        let stack_size = ((stack_size + (STACK_ALIGNMENT - 1)) / STACK_ALIGNMENT) * STACK_ALIGNMENT;
-        assert!(
-            stack_size % STACK_ALIGNMENT == 0,
-            "stack size not aligned properly"
-        );
-        assert!(
-            stack_size < 65536,
-            "stack size too large to encode in a single instruction"
-        );
-        machinecode.push(arithmetic::sub_imm(
-            Reg::SP,
-            Reg::SP,
-            stack_size as u32,
-            false,
-            RegSize::Reg64bit,
-        ));
+        if stack_size < 0x10000 {
+            machinecode.push(arithmetic::sub_imm(
+                Reg::SP,
+                Reg::SP,
+                stack_size as u32,
+                false,
+                RegSize::Reg64bit,
+            ));
+        } else {
+            // FIXME: encode with movk and sub_shifted_reg
+            panic!("stack_size exceeds 64KiB");
+        }
     }
 }
 

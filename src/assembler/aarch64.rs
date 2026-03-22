@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use num_enum::TryFromPrimitive;
 use std::collections::BTreeMap;
 use std::ops::BitAnd;
 
@@ -7,6 +8,7 @@ pub mod arithmetic;
 pub mod branch;
 pub mod compound;
 pub mod hint;
+pub mod memory;
 pub mod processing;
 
 pub const INSTRUCTION_SIZE: usize = std::mem::size_of::<u32>();
@@ -19,7 +21,7 @@ pub const FLOAT64_SIZE: usize = std::mem::size_of::<f64>();
 pub const STACK_ALIGNMENT: usize = 16;
 
 #[repr(u32)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(TryFromPrimitive, Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum Reg {
     X0 = 0,
@@ -111,11 +113,12 @@ impl BitAnd<u32> for Reg {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 
 pub enum RegSize {
-    Reg8bit,
-    Reg16bit,
     Reg32bit,
     Reg64bit,
 }
+
+#[repr(u32)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum MemSize {
     Mem8bit,
     Mem16bit,
@@ -123,6 +126,16 @@ pub enum MemSize {
     Mem64bit,
 }
 
+#[repr(u32)]
+#[derive(Debug, PartialEq, Eq)]
+pub enum AddressingMode {
+    Simple,
+    Offset,
+    PreIndex,
+    PostIndex,
+}
+
+#[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Shift {
     Lsl,
@@ -166,21 +179,32 @@ impl RegisterPool {
         available.1 = &false;
         *available.0
     }
+
+    pub fn free_register(&mut self, reg: &Reg) {
+        self.registers.insert(*reg, true);
+    }
 }
 
 fn select_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 {
     match size {
         RegSize::Reg32bit => instr_32bit,
         RegSize::Reg64bit => instr_64bit,
-        _ => panic!("Instruction size should be 32 or 64 bit"),
     }
 }
 
-pub fn map_valtype_to_regsize(item: wasmparser::ValType) -> RegSize {
-    if item == wasmparser::ValType::I32 {
+pub fn map_valtype_to_regsize(item: &wasmparser::ValType) -> RegSize {
+    if *item == wasmparser::ValType::I32 {
         RegSize::Reg32bit
     } else {
         RegSize::Reg64bit
+    }
+}
+
+pub fn map_valtype_to_memsize(item: &wasmparser::ValType) -> MemSize {
+    if *item == wasmparser::ValType::I32 || *item == wasmparser::ValType::F32 {
+        MemSize::Mem32bit
+    } else {
+        MemSize::Mem64bit
     }
 }
 
@@ -192,11 +216,5 @@ mod tests {
     fn test_select_instr() {
         assert_eq!(select_instr(32, 64, RegSize::Reg32bit), 32);
         assert_eq!(select_instr(32, 64, RegSize::Reg64bit), 64);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_select_wrong_instr() {
-        select_instr(32, 64, RegSize::Reg8bit);
     }
 }
