@@ -27,7 +27,7 @@ impl Runtime {
     ///
     /// This function casts the memory address to a function. The user **MUST** ensure that the signature used for the
     /// generic matches the actual function that is called.
-    unsafe fn get_function<F>(&self, name: &str) -> Result<F>
+    pub unsafe fn get_function<F>(&self, name: &str) -> Result<F>
     where
         F: Sized,
     {
@@ -52,28 +52,63 @@ impl Runtime {
         Ok(unsafe { mem::transmute_copy(&ptr) })
     }
 
-    /// Calls a WebAssembly function by name with the given argument and returns the result.
-    ///
-    /// The function is expected to return a tuple of (value, tag), where 'value' is the actual return value and 'tag' indicates whether the call was successful (0) or resulted in a trap (1). The result is returned as a `Result<R>`, where `R` is the expected return type of the WebAssembly function.
-    ///
-    /// # Safety
-    ///
-    /// This function calls a WebAssembly function by name
-    pub unsafe fn call_function<P, R: Into<i64>>(&self, name: &str, arg: P) -> Result<R> {
-        let entrypoint = unsafe { self.get_function::<unsafe extern "C" fn(P) -> (R, i64)>(name) }?;
+    // /// Calls a WebAssembly function by name with the given argument and returns the result.
+    // ///
+    // /// The function is expected to return a tuple of (value, tag), where 'value' is the actual return value and 'tag' indicates whether the call was successful (0) or resulted in a trap (1). The result is returned as a `Result<R>`, where `R` is the expected return type of the WebAssembly function.
+    // ///
+    // /// # Safety
+    // ///
+    // /// This function calls a WebAssembly function by name
+    // pub unsafe fn call_function<P, R: Into<i64>>(&self, name: &str, arg: P) -> Result<R> {
+    //     let entrypoint = unsafe { self.get_function::<unsafe extern "C" fn(P) -> (R, i64)>(name) }?;
 
-        let (value, tag) = unsafe { entrypoint(arg) };
-        let result: Result<R> = match tag {
-            0 => Ok(value),
-            1 => Err(TinyWasmError::Trap(TrapCode::from_code(value.into()))),
-            _ => Err(TinyWasmError::Runtime(format!(
-                "Invalid result tag: {}",
-                tag
-            ))),
-        };
-        result
-    }
+    //     let (value, tag) = unsafe { entrypoint(arg) };
+    //     let result: Result<R> = match tag {
+    //         0 => Ok(value),
+    //         1 => Err(TinyWasmError::Trap(TrapCode::from_code(value.into()))),
+    //         _ => Err(TinyWasmError::Runtime(format!(
+    //             "Invalid result tag: {}",
+    //             tag
+    //         ))),
+    //     };
+    //     result
+    // }
 }
+
+pub fn wrap_result<R: Into<i64>>(res: (R, i64)) -> Result<R> {
+    let result: Result<R> = match res.1 {
+        0 => Ok(res.0),
+        1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.0.into()))),
+        _ => Err(TinyWasmError::Runtime(format!(
+            "Invalid result tag: {}",
+            res.1
+        ))),
+    };
+    result
+}
+
+// macro_rules! call_function {
+//     ($func:expr, $result:expr, $($param:expr),*) => {
+//         impl Runtime<$type> {
+//             let entrypoint = unsafe { self.get_function::<unsafe extern "C" fn(P) -> (R, i64)>(func) }?;
+//             let (value, tag) = unsafe { entrypoint(arg) };
+
+//         let (value, tag) = unsafe { entrypoint(arg) };
+//         let result: Result<R> = match tag {
+//             0 => Ok(value),
+//             1 => Err(TinyWasmError::Trap(TrapCode::from_code(value.into()))),
+//             _ => Err(TinyWasmError::Runtime(format!(
+//                 "Invalid result tag: {}",
+//                 tag
+//             ))),
+//         };
+//         result
+//             // fn call_function(&self, func: unsafe extern "C" fn($type, i32) -> (i32, i64), param: i32) -> (i32, i64) {
+//             //     unsafe { func(self.data, param) }
+//             // }
+//         }
+//     };
+// }
 
 pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
     // Allocate executable memory and copy JIT code into that region
@@ -129,7 +164,8 @@ mod tests {
             }],
         );
         let instance = instantiate_module(&module)?;
-        let res = unsafe { instance.call_function::<(), i32>("invalid_result", ()) };
+        let func = unsafe { instance.get_function::<fn() -> (i32, i64)>("invalid_result") }?;
+        let res = wrap_result::<i32>(func());
         assert!(
             matches!(res.unwrap_err(), TinyWasmError::Runtime(msg) if msg.contains("result tag"))
         );
@@ -149,7 +185,8 @@ mod tests {
             }],
         );
         let instance = instantiate_module(&module)?;
-        let res = unsafe { instance.call_function::<(), i32>("trap_code", ()) };
+        let func = unsafe { instance.get_function::<fn() -> (i32, i64)>("trap_code") }?;
+        let res = wrap_result::<i32>(func());
         assert!(matches!(res.unwrap_err(), TinyWasmError::Trap(value) if value==TrapCode::None));
         Ok(())
     }

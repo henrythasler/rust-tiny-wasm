@@ -22,13 +22,27 @@ pub fn get_aligned_stack_size(
     func_type: &wasmparser::FuncType,
     locals: &[(u32, ValType)],
 ) -> (usize, usize) {
-    let mut variables_size = func_type
-        .params()
-        .iter()
-        .fold(0, |acc, x| acc + valtype_to_usize(x));
-    variables_size += locals
-        .iter()
-        .fold(0, |acc, x| acc + x.0 as usize * valtype_to_usize(&x.1));
+    let mut variables_size: usize = 0;
+    for item in func_type.params() {
+        let size = valtype_to_usize(item);
+        // insert padding depending on size of type
+        variables_size = variables_size.div_ceil(size) * size;
+        variables_size += size;
+    }
+
+    for (count, valtype) in locals {
+        let size = valtype_to_usize(valtype);
+        variables_size = variables_size.div_ceil(size) * size;
+        variables_size += *count as usize * size;
+    }
+
+    // let mut variables_size = func_type
+    //     .params()
+    //     .iter()
+    //     .fold(0, |acc, x| acc + valtype_to_usize(x));
+    // variables_size += locals
+    //     .iter()
+    //     .fold(0, |acc, x| acc + x.0 as usize * valtype_to_usize(&x.1));
     let stack_size = variables_size.div_ceil(STACK_ALIGNMENT) * STACK_ALIGNMENT;
     assert!(
         stack_size.is_multiple_of(STACK_ALIGNMENT),
@@ -45,21 +59,23 @@ pub fn save_locals_to_stack(
 ) -> Vec<LocalVar> {
     let mut variables = vec![];
 
-    for item in locals {
-        for _ in 0..item.0 {
+    for (count, valtype) in locals {
+        let size = valtype_to_usize(valtype);
+        *offset = offset.div_ceil(size) * size;
+        for _ in 0..*count {
             variables.push(LocalVar {
                 offset: *offset,
-                valtype: item.1,
+                valtype: *valtype,
             });
 
             machinecode.push(memory::str_imm_unsigned_offset(
                 Reg::XZR,
                 Reg::SP,
                 *offset as u32,
-                map_valtype_to_memsize(&item.1),
-                map_valtype_to_regsize(&item.1),
+                map_valtype_to_memsize(valtype),
+                map_valtype_to_regsize(valtype),
             ));
-            *offset += valtype_to_usize(&item.1);
+            *offset += size;
         }
     }
     variables
@@ -72,6 +88,8 @@ pub fn save_parameters_to_stack(
 ) -> Vec<LocalVar> {
     let mut variables = vec![];
     for (i, valtype) in values.iter().enumerate() {
+        let size = valtype_to_usize(valtype);
+        *offset = offset.div_ceil(size) * size;
         variables.push(LocalVar {
             offset: *offset,
             valtype: *valtype,
@@ -83,7 +101,7 @@ pub fn save_parameters_to_stack(
             map_valtype_to_memsize(valtype),
             map_valtype_to_regsize(valtype),
         ));
-        *offset += valtype_to_usize(valtype);
+        *offset += size;
     }
     variables
 }
