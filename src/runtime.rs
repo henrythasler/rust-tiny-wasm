@@ -87,27 +87,29 @@ pub fn wrap_result<R: Into<i64>>(res: (R, i64)) -> Result<R> {
     result
 }
 
-// macro_rules! call_function {
-//     ($func:expr, $result:expr, $($param:expr),*) => {
-//         impl Runtime<$type> {
-//             let entrypoint = unsafe { self.get_function::<unsafe extern "C" fn(P) -> (R, i64)>(func) }?;
-//             let (value, tag) = unsafe { entrypoint(arg) };
+#[macro_export]
+macro_rules! define_handler {
+    (
+        $(
+            fn $method_name:ident($name:expr, 
+                $($param:ident: $param_type:ty),*
+            ) -> $return_type:ty
+        );* $(;)?
+    ) => {
+        impl Runtime {
+            $(
+                pub fn $method_name(&self, $($param: $param_type),*) -> Result<$return_type> {
+                    let func = unsafe { self.get_function::<fn($($param: $param_type),*) -> ($return_type, i64)>($name) }?;
+                    let (value, tag) = func($($param),*);
+                    wrap_result((value, tag))
+                }
+            )*
+        }
+    };
+}
 
-//         let (value, tag) = unsafe { entrypoint(arg) };
-//         let result: Result<R> = match tag {
-//             0 => Ok(value),
-//             1 => Err(TinyWasmError::Trap(TrapCode::from_code(value.into()))),
-//             _ => Err(TinyWasmError::Runtime(format!(
-//                 "Invalid result tag: {}",
-//                 tag
-//             ))),
-//         };
-//         result
-//             // fn call_function(&self, func: unsafe extern "C" fn($type, i32) -> (i32, i64), param: i32) -> (i32, i64) {
-//             //     unsafe { func(self.data, param) }
-//             // }
-//         }
-//     };
+// define_handler! {
+//     fn call_get_first("get_first", a: i32, b:i32) -> i32;
 // }
 
 pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
