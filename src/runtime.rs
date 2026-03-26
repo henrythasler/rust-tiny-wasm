@@ -87,30 +87,37 @@ pub fn wrap_result<R: Into<i64>>(res: (R, i64)) -> Result<R> {
     result
 }
 
-#[macro_export]
-macro_rules! define_handler {
-    (
-        $(
-            fn $method_name:ident($name:expr, 
-                $($param:ident: $param_type:ty),*
-            ) -> $return_type:ty
-        );* $(;)?
-    ) => {
+macro_rules! impl_invoke {
+    ($name:ident, $($param:ident),*) => {
         impl Runtime {
-            $(
-                pub fn $method_name(&self, $($param: $param_type),*) -> Result<$return_type> {
-                    let func = unsafe { self.get_function::<fn($($param: $param_type),*) -> ($return_type, i64)>($name) }?;
-                    let (value, tag) = func($($param),*);
-                    wrap_result((value, tag))
+            /// Calls an exported function
+            ///
+            /// # Safety
+            ///
+            /// Verify argument types!
+            pub unsafe fn $name<F, $($param,)* R>(&self, name: &str, $($param: $param),*) -> Result<R>
+            where
+                F: Fn($($param),*) -> (R, i64),
+                R: Into<i64>,
+            {
+                let entrypoint = unsafe { self.get_function::<F>(name) }?;
+                let (value, tag) = entrypoint($($param),*);
+
+                match tag {
+                    0 => Ok(value),
+                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(value.into()))),
+                    _ => Err(TinyWasmError::Runtime(format!("Invalid result tag: {}", tag))),
                 }
-            )*
+            }
         }
     };
 }
 
-// define_handler! {
-//     fn call_get_first("get_first", a: i32, b:i32) -> i32;
-// }
+impl_invoke!(invoke_0,);
+impl_invoke!(invoke_1, P1);
+impl_invoke!(invoke_2, P1, P2);
+impl_invoke!(invoke_3, P1, P2, P3);
+impl_invoke!(invoke_4, P1, P2, P3, P4);
 
 pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
     // Allocate executable memory and copy JIT code into that region
