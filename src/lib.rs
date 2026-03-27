@@ -1,5 +1,4 @@
 use owo_colors::OwoColorize;
-use runtime::wrap_result;
 use std::fs;
 use std::path::Path;
 use wasmparser::{Parser, Payload::*, ValType};
@@ -166,9 +165,8 @@ pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
 pub fn execute(filename: &Path, function: &str) -> Result<i32> {
     let module = fs::read(filename)?;
     let instance = get_module_instance(&module)?;
-    // unsafe { instance.call_function::<(), i32>(function, ()) }
-    let entrypoint = unsafe { instance.get_function::<fn() -> (i32, i64)>(function) }?;
-    wrap_result::<i32>(entrypoint())
+    let entrypoint = instance.get_function::<(), i32>(function)?;
+    entrypoint.call()
 }
 
 /// This function is a convenience wrapper around the `execute` function to run the `_start` function

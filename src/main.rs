@@ -2,7 +2,6 @@ use clap::Parser;
 use owo_colors::OwoColorize;
 use std::fs;
 use std::path::Path;
-use tiny_wasm::runtime::wrap_result;
 use tiny_wasm::*;
 
 /// Simple program to greet a person
@@ -64,9 +63,8 @@ fn main() -> Result<()> {
     );
 
     // Call the function
-    // let result = unsafe { instance.call_function::<i32, i32>(func_name, func_arg) }?;
-    let entrypoint = unsafe { instance.get_function::<fn(i32) -> (i32, i64)>(func_name) }?;
-    let result = wrap_result::<i32>(entrypoint(func_arg))?;
+    let entrypoint = instance.get_function::<(i32,), i32>(func_name)?;
+    let result = entrypoint.call(func_arg)?;
     println!("Return value: {}", result.bright_green().bold());
     Ok(())
 }
