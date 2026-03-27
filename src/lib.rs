@@ -1,4 +1,5 @@
 use owo_colors::OwoColorize;
+use runtime::TinyWasmError;
 use std::fs;
 use std::path::Path;
 use wasmparser::{Parser, Payload::*, ValType};
@@ -8,41 +9,6 @@ pub mod compiler;
 pub mod runtime;
 
 pub type Result<T> = std::result::Result<T, TinyWasmError>;
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum TrapCode {
-    None,
-}
-
-impl TrapCode {
-    pub fn from_code(code: i64) -> Self {
-        match code {
-            0 => TrapCode::None,
-            _ => panic!("Unknown error code: {}", code),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum TinyWasmError {
-    Io(std::io::ErrorKind),
-    Parser(String),
-    Compiler(String),
-    Runtime(String),
-    Trap(TrapCode),
-}
-
-impl From<std::io::Error> for TinyWasmError {
-    fn from(err: std::io::Error) -> Self {
-        TinyWasmError::Io(err.kind())
-    }
-}
-
-impl From<wasmparser::BinaryReaderError> for TinyWasmError {
-    fn from(err: wasmparser::BinaryReaderError) -> Self {
-        TinyWasmError::Parser(err.message().to_string())
-    }
-}
 
 /// Prints the structure of a WebAssembly module in a human-readable format, including its sections, exports, and code entries.
 ///

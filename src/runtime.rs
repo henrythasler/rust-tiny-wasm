@@ -1,9 +1,44 @@
 use memmap2::{Mmap, MmapMut};
 use std::mem;
 
+use super::Result;
 use super::assembler::*;
 use super::compiler::*;
-use super::*;
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum TrapCode {
+    None,
+}
+
+impl TrapCode {
+    pub fn from_code(code: i64) -> Self {
+        match code {
+            0 => TrapCode::None,
+            _ => panic!("Unknown error code: {}", code),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum TinyWasmError {
+    Io(std::io::ErrorKind),
+    Parser(String),
+    Compiler(String),
+    Runtime(String),
+    Trap(TrapCode),
+}
+
+impl From<std::io::Error> for TinyWasmError {
+    fn from(err: std::io::Error) -> Self {
+        TinyWasmError::Io(err.kind())
+    }
+}
+
+impl From<wasmparser::BinaryReaderError> for TinyWasmError {
+    fn from(err: wasmparser::BinaryReaderError) -> Self {
+        TinyWasmError::Parser(err.message().to_string())
+    }
+}
 
 #[cfg(target_arch = "aarch64")]
 unsafe fn clear_cache(addr: *mut u8, len: usize) {
@@ -30,7 +65,7 @@ impl<P, R> Callable<P, R> {
     /// generic matches the actual function that is called.
     pub unsafe fn new(ptr: *const u8) -> Self
     where
-        R: Into<i64>,
+        R: Into64,
     {
         Self {
             ptr,
@@ -43,7 +78,7 @@ macro_rules! impl_call {
     () => {
         impl<R> Callable<(), R>
         where
-        R: Into<i64>,
+        R: Into64,
         {
             pub fn call(&self) -> Result<R> {
                 let res = unsafe {
@@ -67,9 +102,10 @@ macro_rules! impl_call {
     ($($arg:ident),+) => {
         impl<$($arg,)+ R> Callable<($($arg,)+), R>
         where
-        R: Into<i64>,
+        R: Into64,
          {
             #[allow(non_snake_case)]
+            #[allow(clippy::too_many_arguments)]
             /// This function calls the JIT-compiled WebAssembly function with the provided arguments and returns the result.
             ///
             /// The function is expected to return a tuple of (value, tag), where 'value' is the actual return value and 'tag'
@@ -108,6 +144,29 @@ impl_call!(A, B, C, D, E, F);
 impl_call!(A, B, C, D, E, F, G);
 impl_call!(A, B, C, D, E, F, G, H);
 
+pub trait Into64 {
+    fn into(self) -> i64;
+}
+
+impl Into64 for i32 {
+    fn into(self) -> i64 {
+        self as i64
+    }
+}
+
+impl Into64 for i64 {
+    fn into(self) -> i64 {
+        self
+    }
+}
+
+// For void functions:
+impl Into64 for () {
+    fn into(self) -> i64 {
+        0
+    } // or panic if you never use it
+}
+
 #[derive(Debug)]
 pub struct Runtime {
     machinecode: Mmap,
@@ -117,7 +176,7 @@ pub struct Runtime {
 impl Runtime {
     pub fn get_function<P, R>(&self, name: &str) -> Result<Callable<P, R>>
     where
-        R: Into<i64>,
+        R: Into64,
     {
         let function =
             self.functions
@@ -172,6 +231,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn into64_test() {
+        assert_eq!(Into64::into(1i64), 1);
+        assert_eq!(Into64::into(1i32), 1);
+        assert_eq!(Into64::into(()), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn unknown_trapcode() {
+        let _ = TrapCode::from_code(0xdead);
+    }
+
+    #[test]
     fn simple_jit_code() -> Result<()> {
         let module = LinkedModule::new(
             vec![0x0b000020, 0xd65f03c0],
@@ -187,6 +259,24 @@ mod tests {
     }
 
     #[test]
+    fn void_fn() -> Result<()> {
+        let module = LinkedModule::new(
+            // does not return anything
+            vec![0xAA1F03E0, 0xAA1F03E1, 0xd65f03c0], // [MOV X0, XZR; MOV X1, XZR; RET]
+            vec![WasmFunction {
+                name: String::from("void"),
+                offset: 0,
+                length: 3,
+            }],
+        );
+        let instance = instantiate_module(&module)?;
+        let func = instance.get_function::<(), ()>("void")?;
+        let res = func.call()?;
+        assert_eq!(res, ());
+        Ok(())
+    }
+
+    #[test]
     fn invalid_result_tag() -> Result<()> {
         let module = LinkedModule::new(
             // result tag in X1 is 255, which is invalid
@@ -194,7 +284,7 @@ mod tests {
             vec![WasmFunction {
                 name: String::from("invalid_result"),
                 offset: 0,
-                length: 2,
+                length: 3,
             }],
         );
         let instance = instantiate_module(&module)?;
@@ -215,7 +305,7 @@ mod tests {
             vec![WasmFunction {
                 name: String::from("trap_code"),
                 offset: 0,
-                length: 2,
+                length: 3,
             }],
         );
         let instance = instantiate_module(&module)?;
@@ -232,7 +322,7 @@ mod tests {
             vec![WasmFunction {
                 name: String::from("empty"),
                 offset: 0,
-                length: 2,
+                length: 0,
             }],
         );
         assert_eq!(

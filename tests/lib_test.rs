@@ -1,4 +1,5 @@
 use std::{fs, path::Path};
+use tiny_wasm::runtime::TinyWasmError;
 use tiny_wasm::*;
 
 #[test]
