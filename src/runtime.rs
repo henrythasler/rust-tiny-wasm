@@ -95,7 +95,7 @@ macro_rules! impl_invoke {
             /// # Safety
             ///
             /// Verify argument types!
-            pub unsafe fn $name<F, $($param,)* R>(&self, name: &str, $($param: $param),*) -> Result<R>
+            pub fn $name<F, $($param,)* R>(&self, name: &str, $($param: $param),*) -> Result<R>
             where
                 F: Fn($($param),*) -> (R, i64),
                 R: Into<i64>,
