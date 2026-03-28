@@ -210,9 +210,9 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 ### Goals
 
-- [ ] Implement the `add`, `sub` and `mul` instructions.
-- [ ] Load and parse the WebAssembly module `tests/assets/arithmetics.wasm`.
-- [ ] Pass all test-cases in ``
+- [x] Implement the `add`, `sub` and `mul` instructions.
+- [x] Load and parse the WebAssembly module `tests/assets/arithmetics.wasm`.
+- [x] Pass all test-cases in `tests/arithmetics_test.rs`.
 
 ## Extensions
 

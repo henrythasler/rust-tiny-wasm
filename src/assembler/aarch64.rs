@@ -210,8 +210,10 @@ fn select_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 {
 pub fn map_valtype_to_regsize(item: &wasmparser::ValType) -> RegSize {
     if *item == wasmparser::ValType::I32 {
         RegSize::Reg32bit
-    } else {
+    } else if *item == wasmparser::ValType::I64 {
         RegSize::Reg64bit
+    } else {
+        panic!("can't map {} to RegSize", item)
     }
 }
 

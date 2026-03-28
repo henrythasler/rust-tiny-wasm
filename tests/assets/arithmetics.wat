@@ -1,7 +1,8 @@
 (module
   (export "add" (func $add))
-  (export "sub" (func $add))
-  (export "mul" (func $add))
+  (export "sub" (func $sub))
+  (export "mul" (func $mul))
+  (export "square" (func $square))
   (func $add (param $first i32) (param $second i32) (result i32)
     local.get $first
     local.get $second
@@ -10,19 +11,19 @@
 
   (func $sub (param $first i32) (param $second i32) (result i32)
     local.get $first
-    ;; local.get $second
-    ;; i32.sub
+    local.get $second
+    i32.sub
   )
 
   (func $mul (param $first i32) (param $second i32) (result i32)
     local.get $first
-    ;; local.get $second
-    ;; i32.mul
+    local.get $second
+    i32.mul
   )
 
   (func $square (param $first i32) (result i32)
     local.get $first
-    ;; local.get $first
-    ;; i32.mul
+    local.get $first
+    i32.mul
   )
 )

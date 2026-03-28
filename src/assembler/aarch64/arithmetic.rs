@@ -79,6 +79,19 @@ pub fn sub_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u3
     instr
 }
 
+pub fn madd_reg(rd: Reg, rn: Reg, rm: Reg, ra: Reg, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x1b000000, 0x9b000000, size);
+    instr |= (rm & 0x1F) << 16; // Rm (multiplier source register)
+    instr |= (ra & 0x1F) << 10; // Ra (addend source register)
+    instr |= (rn & 0x1F) << 5; // Rn (multiplicand source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
+pub fn mul_reg(rd: Reg, rn: Reg, rm: Reg, size: RegSize) -> u32 {
+    madd_reg(rd, rn, rm, Reg::WZR, size)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

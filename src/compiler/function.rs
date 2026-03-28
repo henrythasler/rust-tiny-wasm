@@ -107,10 +107,38 @@ pub fn compile_function(
                     machinecode,
                 );
             }
-            Operator::I32Sub => {}
-            Operator::I64Sub => {}
-            Operator::I32Mul => {}
-            Operator::I64Mul => {}
+            Operator::I32Sub => {
+                compile_sub(
+                    ValType::I32,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
+            Operator::I64Sub => {
+                compile_sub(
+                    ValType::I64,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
+            Operator::I32Mul => {
+                compile_mul(
+                    ValType::I32,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
+            Operator::I64Mul => {
+                compile_mul(
+                    ValType::I64,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
             _ => {
                 return Err(TinyWasmError::Compiler(format!(
                     "unsupported instruction: {:?} at position {}",
