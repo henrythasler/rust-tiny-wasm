@@ -4,6 +4,9 @@ use std::mem;
 use super::Result;
 use super::assembler::*;
 use super::compiler::*;
+use debugger::*;
+
+mod debugger;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum TrapCode {
@@ -82,9 +85,10 @@ macro_rules! impl_call {
         {
             pub fn call(&self) -> Result<R> {
                 let res = unsafe {
-                let f: extern "C" fn() -> (R, i64) =
+                let func: extern "C" fn() -> (R, i64) =
                     std::mem::transmute(self.ptr);
-                f()
+                set_breakpoint();
+                func()
                 };
                 let result: Result<R> = match res.1 {
                     0 => Ok(res.0),
@@ -116,9 +120,10 @@ macro_rules! impl_call {
                 $($arg: $arg),+
             ) -> Result<R> {
                 let res = unsafe {
-                let f: extern "C" fn($($arg),+) -> (R, i64) =
+                let func: extern "C" fn($($arg),+) -> (R, i64) =
                     std::mem::transmute(self.ptr);
-                f($($arg),+)
+                set_breakpoint();
+                func($($arg),+)
                 };
                 let result: Result<R> = match res.1 {
                     0 => Ok(res.0),

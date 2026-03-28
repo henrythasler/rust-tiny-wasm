@@ -183,7 +183,17 @@ Passing parameters to and returning values from a WebAssembly function to the ca
 
 - Unlike C/C++, Rust functions can return multiple values (tuples). Make use of that feature where needed.
 
-## Chapter 8 - Local Variables
+## Chapter 8 - Debugger Support
+
+As the complexity of the program increases, there is eventually a need to debug the emitted JIT code. A debugger can be used to step through machinecode instructions and observe register content.
+
+### Goals
+
+- [x] Investigate how `gdb` can be used with rust executables running in `qemu-aarch64`.
+- [x] Insert a breakpoint right before the JIT-code is executed.
+- [x] Step through the JIT code and verify register content.
+
+## Chapter 9 - Local Variables
 
 Local variable instructions in WebAssembly are needed to use function parameters and store values in temporary (local) variables.
 
@@ -196,10 +206,14 @@ Local variable instructions in WebAssembly are needed to use function parameters
 - [ ] Manage local variables at runtime.
 - [ ] Load and parse the WebAssembly modulee `tests/assets/parameters.wasm` and `tests/assets/locals.wasm`.
 
-## Chapter 9 - Basic Arithmetics
+## Chapter 10 - Basic Arithmetics
 
 ### Goals
 
 - [ ] Implement the `add`, `sub` and `mul` instructions.
 - [ ] Load and parse the WebAssembly module `tests/assets/arithmetics.wasm`.
 - [ ] Compile and run all exported functions.
+
+## Extensions
+
+ - [ ] Verify signatures before calling a Wasm-Function (exports, internal).
