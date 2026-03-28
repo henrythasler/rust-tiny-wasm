@@ -199,12 +199,12 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 ### Goals
 
-- [ ] Investigate how the stack can be used to store registers or local variables.
-- [ ] Investigate how rust executables can be used with a debugger.
-- [ ] Implement the `local.get` and `local.set` instructions.
-- [ ] Make parameters available to the function at runtime.
-- [ ] Manage local variables at runtime.
-- [ ] Load and parse the WebAssembly modulee `tests/assets/parameters.wasm` and `tests/assets/locals.wasm`.
+- [x] Investigate how the stack can be used to store registers or local variables.
+- [x] Implement the `local.get` and `local.set` instructions.
+- [x] Make parameters available to the function at runtime.
+- [x] Manage local variables at runtime.
+- [x] Load and parse the WebAssembly modules `tests/assets/parameters.wasm` and `tests/assets/locals.wasm`.
+- [x] Pass all test-cases in `tests/parameters_test.rs` and `tests/locals_test.rs`
 
 ## Chapter 10 - Basic Arithmetics
 
@@ -212,7 +212,7 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 - [ ] Implement the `add`, `sub` and `mul` instructions.
 - [ ] Load and parse the WebAssembly module `tests/assets/arithmetics.wasm`.
-- [ ] Compile and run all exported functions.
+- [ ] Pass all test-cases in ``
 
 ## Extensions
 

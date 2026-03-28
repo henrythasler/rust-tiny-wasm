@@ -4,7 +4,7 @@ pub fn compile_local_get(
     variable: &LocalVar,
     offset: usize,
     value_stack: &mut Vec<StackElement>,
-    register_pool: &RegisterPool,
+    register_pool: &mut RegisterPool,
     machinecode: &mut Vec<u32>,
 ) {
     let reg = register_pool.allocate_register();

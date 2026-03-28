@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use num_enum::TryFromPrimitive;
-use std::collections::BTreeMap;
 use std::ops::BitAnd;
 
 pub mod arithmetic;
@@ -158,7 +157,7 @@ pub enum Extend {
 }
 
 pub struct RegisterPool {
-    registers: BTreeMap<Reg, bool>,
+    registers: Vec<(Reg, bool)>,
 }
 
 impl Default for RegisterPool {
@@ -170,7 +169,7 @@ impl Default for RegisterPool {
 impl RegisterPool {
     pub fn new() -> Self {
         Self {
-            registers: BTreeMap::from([
+            registers: vec![
                 (Reg::X8, true),
                 (Reg::X9, true),
                 (Reg::X10, true),
@@ -179,22 +178,25 @@ impl RegisterPool {
                 (Reg::X13, true),
                 (Reg::X14, true),
                 (Reg::X15, true),
-            ]),
+            ],
         }
     }
 
-    pub fn allocate_register(&self) -> Reg {
-        let mut available = self
-            .registers
-            .iter()
-            .find(|(_, free)| **free)
-            .expect("Register pool should not be exhausted");
-        available.1 = &false;
-        *available.0
+    pub fn allocate_register(&mut self) -> Reg {
+        if let Some(item) = self.registers.iter_mut().find(|i| i.1) {
+            item.1 = false;
+            item.0
+        } else {
+            panic!("Register pool should not be exhausted")
+        }
     }
 
     pub fn free_register(&mut self, reg: &Reg) {
-        self.registers.insert(*reg, true);
+        if let Some(item) = self.registers.iter_mut().find(|i| i.0 == *reg) {
+            item.1 = true;
+        } else {
+            panic!("Register should be found in pool")
+        }
     }
 }
 
@@ -229,5 +231,20 @@ mod tests {
     fn test_select_instr() {
         assert_eq!(select_instr(32, 64, RegSize::Reg32bit), 32);
         assert_eq!(select_instr(32, 64, RegSize::Reg64bit), 64);
+    }
+
+    #[test]
+    fn test_registerpool() {
+        let mut pool = RegisterPool::new();
+        assert_eq!(pool.allocate_register(), Reg::X8);
+        assert_eq!(pool.allocate_register(), Reg::X9);
+        assert_eq!(pool.allocate_register(), Reg::X10);
+        assert_eq!(pool.allocate_register(), Reg::X11);
+        pool.free_register(&Reg::X9);
+        pool.free_register(&Reg::X10);
+        pool.free_register(&Reg::X11);
+        assert_eq!(pool.allocate_register(), Reg::X9);
+        assert_eq!(pool.allocate_register(), Reg::X10);
+        assert_eq!(pool.allocate_register(), Reg::X11);
     }
 }
