@@ -19,7 +19,6 @@ mod tests {
     #[test]
     fn test_mov_large_immediate() {
         let mut machinecode: Vec<u32> = Vec::new();
-        // long int a = 0x123456789abcdef0;
         mov_large_immediate(
             Reg::X8,
             0x123456789abcdef0,
@@ -30,5 +29,11 @@ mod tests {
             machinecode,
             vec![0xd29bde08, 0xf2b35788, 0xf2cacf08, 0xf2e24688]
         );
+    }
+    #[test]
+    fn test_mov_large_immediate2() {
+        let mut machinecode: Vec<u32> = Vec::new();
+        mov_large_immediate(Reg::X8, 0x80000, RegSize::Reg64bit, &mut machinecode);
+        assert_eq!(machinecode, vec![0xD2800008, 0xF2A00108]);
     }
 }

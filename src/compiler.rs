@@ -221,7 +221,7 @@ fn compile_function(
     // println!("{} {:?}", _variables_size, stack_size);
 
     // every functions starts with an epilogue to save the initial state and create a new stack frame
-    emit_prologue(stack_size, machinecode);
+    emit_prologue(stack_size, &mut register_pool, machinecode);
 
     let mut variables: Vec<LocalVar> = vec![];
     let mut stack_offset = 0;

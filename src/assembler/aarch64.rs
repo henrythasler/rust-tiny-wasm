@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use std::ops::BitAnd;
 
 pub mod arithmetic;
+pub mod bit;
 pub mod branch;
 pub mod compound;
 pub mod hint;
@@ -142,6 +143,18 @@ pub enum Shift {
     Lsr,
     Asr,
     Ror,
+}
+
+#[repr(u32)]
+pub enum Extend {
+    Uxtb = 0, // Unsigned extend byte
+    Uxth = 1, // Unsigned extend halfword
+    Uxtw = 2, // Unsigned extend word
+    Uxtx = 3, // Unsigned extend doubleword
+    Sxtb = 4, // Signed extend byte
+    Sxth = 5, // Signed extend halfword
+    Sxtw = 6, // Signed extend word
+    Sxtx = 7, // Signed extend doubleword
 }
 
 pub struct RegisterPool {
