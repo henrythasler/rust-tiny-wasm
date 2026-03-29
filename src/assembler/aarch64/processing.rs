@@ -33,6 +33,12 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_mov_reg() {
+        // mov x10, x11
+        assert_eq!(mov_reg(Reg::X10, Reg::X11, RegSize::Reg64bit), 0xAA0B03EA);
+    }
+
+    #[test]
     fn test_movz() {
         // MOVZ X3, #0x1234, LSL #16
         assert_eq!(movz(Reg::X3, 0x1234, 16, RegSize::Reg64bit), 0xD2A24683);

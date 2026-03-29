@@ -111,7 +111,6 @@ impl BitAnd<u32> for Reg {
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-
 pub enum RegSize {
     Reg32bit,
     Reg64bit,
@@ -248,5 +247,29 @@ mod tests {
         assert_eq!(pool.allocate_register(), Reg::X9);
         assert_eq!(pool.allocate_register(), Reg::X10);
         assert_eq!(pool.allocate_register(), Reg::X11);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_wrong_register() {
+        let mut pool = RegisterPool::new();
+        assert_eq!(pool.allocate_register(), Reg::X8);
+        assert_eq!(pool.allocate_register(), Reg::X9);
+        pool.free_register(&Reg::X30);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_pool_exhaustion() {
+        let mut pool = RegisterPool::new();
+        for _ in 0..i32::MAX {
+            pool.allocate_register();
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_map_valtype_to_regsize_invalid() {
+        map_valtype_to_regsize(&wasmparser::ValType::V128);
     }
 }
