@@ -14,6 +14,7 @@ use numeric_instr::*;
 use procedure_call::*;
 use stack::*;
 use variable_instr::*;
+use valentblock::*;
 
 mod control_instr;
 mod function;
@@ -21,6 +22,7 @@ mod numeric_instr;
 mod procedure_call;
 mod stack;
 mod variable_instr;
+mod valentblock;
 
 #[derive(Debug, Clone)]
 pub struct WasmFunction {
@@ -158,7 +160,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                 let offset = machinecode.len();
                 let mut reader = body.get_operators_reader()?;
                 let fn_idx = *functions.get(function_index).unwrap() as usize;
-                compile_function(
+                compile_function_vb(
                     &mut reader,
                     types.get(fn_idx).unwrap(),
                     &locals,
