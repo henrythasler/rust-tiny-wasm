@@ -56,20 +56,22 @@ pub fn compile_function(
                 compile_return(&mut control_stack, machinecode);
             }
             Operator::I32Const { value } => {
-                let reg = register_pool.allocate_register();
-                value_stack.push(StackElement {
-                    reg,
-                    valtype: ValType::I32,
-                });
-                compound::mov_large_immediate(reg, value as i64, RegSize::Reg32bit, machinecode);
+                compile_const(
+                    &op,
+                    value,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
             }
             Operator::I64Const { value } => {
-                let reg = register_pool.allocate_register();
-                value_stack.push(StackElement {
-                    reg,
-                    valtype: ValType::I64,
-                });
-                compound::mov_large_immediate(reg, value, RegSize::Reg64bit, machinecode);
+                compile_const(
+                    &op,
+                    value,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
             }
             Operator::LocalGet { local_index } => {
                 let var = variables.get(local_index as usize).unwrap();
@@ -91,53 +93,13 @@ pub fn compile_function(
                     machinecode,
                 );
             }
-            Operator::I32Add => {
-                compile_add(
-                    ValType::I32,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
-            }
-            Operator::I64Add => {
-                compile_add(
-                    ValType::I64,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
-            }
-            Operator::I32Sub => {
-                compile_sub(
-                    ValType::I32,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
-            }
-            Operator::I64Sub => {
-                compile_sub(
-                    ValType::I64,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
-            }
-            Operator::I32Mul => {
-                compile_mul(
-                    ValType::I32,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
-            }
-            Operator::I64Mul => {
-                compile_mul(
-                    ValType::I64,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
+            Operator::I32Add
+            | Operator::I64Add
+            | Operator::I32Sub
+            | Operator::I64Sub
+            | Operator::I32Mul
+            | Operator::I64Mul => {
+                compile_binop(&op, &mut value_stack, &mut register_pool, machinecode);
             }
             _ => {
                 return Err(TinyWasmError::Compiler(format!(
@@ -170,4 +132,16 @@ pub fn compile_function(
     }
 
     Ok(machinecode.len() - initial_size)
+}
+
+pub fn map_op_to_valtype(op: &Operator) -> ValType {
+    match op {
+        Operator::I32Add | Operator::I32Sub | Operator::I32Mul | Operator::I32Const { .. } => {
+            ValType::I32
+        }
+        Operator::I64Add | Operator::I64Sub | Operator::I64Mul | Operator::I64Const { .. } => {
+            ValType::I64
+        }
+        _ => panic!("Operator '{:?}' not supported", op),
+    }
 }

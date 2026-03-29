@@ -1,80 +1,67 @@
 use super::*;
 
-pub fn compile_add(
-    valtype: ValType,
+pub fn compile_binop(
+    op: &Operator,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
     machinecode: &mut Vec<u32>,
 ) {
     let len = value_stack.len();
-    assert!(len >= 2, "insufficient operands on stack for add");
+    assert!(len >= 2, "insufficient operands on stack for binop");
 
-    let op1 = &value_stack[len - 2];
-    let op2 = &value_stack[len - 1];
-    assert_eq!(op1.valtype, valtype, "Operand 1 type mismatch for add");
-    assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for add");
+    let op2 = value_stack.pop().unwrap();
+    let op1 = value_stack.pop().unwrap();
 
-    machinecode.push(arithmetic::add_shifted_reg(
-        op1.reg,
-        op1.reg,
-        op2.reg,
-        Shift::Lsl,
-        0,
-        map_valtype_to_regsize(&valtype),
-    ));
+    let valtype = map_op_to_valtype(op);
+    assert_eq!(op1.valtype, valtype, "Operand 1 type mismatch for binop");
+    assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for binop");
 
+    match op {
+        Operator::I32Add | Operator::I64Add => machinecode.push(arithmetic::add_shifted_reg(
+            op1.reg,
+            op1.reg,
+            op2.reg,
+            Shift::Lsl,
+            0,
+            map_valtype_to_regsize(&valtype),
+        )),
+        Operator::I32Sub | Operator::I64Sub => machinecode.push(arithmetic::sub_shifted_reg(
+            op1.reg,
+            op1.reg,
+            op2.reg,
+            Shift::Lsl,
+            0,
+            map_valtype_to_regsize(&valtype),
+        )),
+        Operator::I32Mul | Operator::I64Mul => machinecode.push(arithmetic::mul_reg(
+            op1.reg,
+            op1.reg,
+            op2.reg,
+            map_valtype_to_regsize(&valtype),
+        )),
+        _ => panic!("Binary operator '{:?}' not supported", op),
+    }
+
+    value_stack.push(op1);
     register_pool.free_register(&op2.reg);
-    value_stack.pop();
 }
 
-pub fn compile_sub(
-    valtype: ValType,
+pub fn compile_const<T: Into<i64>>(
+    op: &Operator,
+    value: T,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
     machinecode: &mut Vec<u32>,
 ) {
-    let len = value_stack.len();
-    assert!(len >= 2, "insufficient operands on stack for sub");
+    let reg = register_pool.allocate_register();
+    let valtype = map_op_to_valtype(op);
 
-    let op1 = &value_stack[len - 2];
-    let op2 = &value_stack[len - 1];
-    assert_eq!(op1.valtype, valtype, "Operand 1 type mismatch for sub");
-    assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for sub");
+    value_stack.push(StackElement { reg, valtype });
 
-    machinecode.push(arithmetic::sub_shifted_reg(
-        op1.reg,
-        op1.reg,
-        op2.reg,
-        Shift::Lsl,
-        0,
+    compound::mov_large_immediate(
+        reg,
+        value.into(),
         map_valtype_to_regsize(&valtype),
-    ));
-
-    register_pool.free_register(&op2.reg);
-    value_stack.pop();
-}
-
-pub fn compile_mul(
-    valtype: ValType,
-    value_stack: &mut Vec<StackElement>,
-    register_pool: &mut RegisterPool,
-    machinecode: &mut Vec<u32>,
-) {
-    let len = value_stack.len();
-    assert!(len >= 2, "insufficient operands on stack for mul");
-
-    let op1 = &value_stack[len - 2];
-    let op2 = &value_stack[len - 1];
-    assert_eq!(op1.valtype, valtype, "Operand 1 type mismatch for mul");
-    assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for mul");
-
-    machinecode.push(arithmetic::mul_reg(
-        op1.reg,
-        op1.reg,
-        op2.reg,
-        map_valtype_to_regsize(&valtype),
-    ));
-
-    register_pool.free_register(&op2.reg);
-    value_stack.pop();
+        machinecode,
+    );
 }
