@@ -160,12 +160,23 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                 let offset = machinecode.len();
                 let mut reader = body.get_operators_reader()?;
                 let fn_idx = *functions.get(function_index).unwrap() as usize;
-                compile_function_vb(
-                    &mut reader,
-                    types.get(fn_idx).unwrap(),
-                    &locals,
-                    &mut machinecode,
-                )?;
+
+                if std::env::var_os("VALENT_BLOCK").is_some() {
+                    compile_function_vb(
+                        &mut reader,
+                        types.get(fn_idx).unwrap(),
+                        &locals,
+                        &mut machinecode,
+                    )?;
+                }
+                else {
+                    compile_function(
+                        &mut reader,
+                        types.get(fn_idx).unwrap(),
+                        &locals,
+                        &mut machinecode,
+                    )?;
+                }
 
                 let function_id = exports
                     .get(function_index)

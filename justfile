@@ -36,4 +36,11 @@ wat2wasm:
         echo $file; \
         wat2wasm $file -o ${file%.wat}.wasm; \
     done
-    
+
+valentblock:
+    VALENT_BLOCK=1 cargo test --target aarch64-unknown-linux-gnu --test objdump --test valent_blocks_test
+    for file in ./tests/assets/jit/*.o; do \
+        echo $file; \
+        aarch64-linux-gnu-objdump -d -s -t $file > ${file%.o}.asm; \
+        rm ${file}; \
+    done   

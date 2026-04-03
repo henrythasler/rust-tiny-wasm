@@ -20,38 +20,38 @@ impl VirtualStackEntry {
 }
 
 // Represents a block of machine code instructions
-#[derive(Debug, Clone)]
-struct MachineCodeBlock {
-    code: Vec<u32>,
-    description: String,
-}
+// #[derive(Debug, Clone)]
+// struct MachineCodeBlock {
+//     code: Vec<u32>,
+//     description: String,
+// }
 
-impl MachineCodeBlock {
-    fn new() -> Self {
-        MachineCodeBlock {
-            code: Vec::new(),
-            description: String::new(),
-        }
-    }
+// impl MachineCodeBlock {
+//     fn new() -> Self {
+//         MachineCodeBlock {
+//             code: Vec::new(),
+//             description: String::new(),
+//         }
+//     }
 
-    // fn emit(&mut self, instr: u32) {
-    //     self.code.push(instr);
-    // }
+//     // fn emit(&mut self, instr: u32) {
+//     //     self.code.push(instr);
+//     // }
 
-    // fn emit32(&mut self, value: u32) {
-    //     self.code.push((value & 0xFF) as u8);
-    //     self.code.push(((value >> 8) & 0xFF) as u8);
-    //     self.code.push(((value >> 16) & 0xFF) as u8);
-    //     self.code.push(((value >> 24) & 0xFF) as u8);
-    // }
-}
+//     // fn emit32(&mut self, value: u32) {
+//     //     self.code.push((value & 0xFF) as u8);
+//     //     self.code.push(((value >> 8) & 0xFF) as u8);
+//     //     self.code.push(((value >> 16) & 0xFF) as u8);
+//     //     self.code.push(((value >> 24) & 0xFF) as u8);
+//     // }
+// }
 
 // A Valent-Block: a logical partition of the virtual stack that can be
 // independently emitted as machine code
 #[derive(Debug)]
 struct ValentBlock {
     virtual_stack: Vec<VirtualStackEntry>,
-    delayed_instructions: Vec<MachineCodeBlock>,
+    delayed_instructions: Vec<u32>,
     is_emitted: bool,
 }
 
@@ -147,18 +147,12 @@ impl ValentBlock {
             self.delayed_instructions.len()
         );
 
-        let mut machine_code = Vec::new();
-
-        // Emit all delayed instructions in sequence
-        for (i, block) in self.delayed_instructions.iter().enumerate() {
-            println!("  [{}] {}", i, block.description);
-            machine_code.extend_from_slice(&block.code);
-        }
-
-        println!("Total machine code bytes: {}", machine_code.len());
+        println!(
+            "Total machine code bytes: {}",
+            &self.delayed_instructions.len()
+        );
         self.is_emitted = true;
-
-        machine_code
+        self.delayed_instructions.clone()
     }
 
     fn get_stack_depth(&self) -> usize {
@@ -170,55 +164,55 @@ impl ValentBlock {
     }
 }
 
-// Simple compiler demonstrating the Valent-Blocks approach
-struct ValentBlocksCompiler {
-    blocks: Vec<ValentBlock>,
-    current_block_index: usize,
-}
+// // Simple compiler demonstrating the Valent-Blocks approach
+// struct ValentBlocksCompiler {
+//     blocks: Vec<ValentBlock>,
+//     current_block_index: usize,
+// }
 
-impl ValentBlocksCompiler {
-    fn new() -> Self {
-        let mut compiler = ValentBlocksCompiler {
-            blocks: Vec::new(),
-            current_block_index: 0,
-        };
-        // Start with initial block
-        compiler.blocks.push(ValentBlock::new());
-        compiler
-    }
+// impl ValentBlocksCompiler {
+//     fn new() -> Self {
+//         let mut compiler = ValentBlocksCompiler {
+//             blocks: Vec::new(),
+//             current_block_index: 0,
+//         };
+//         // Start with initial block
+//         compiler.blocks.push(ValentBlock::new());
+//         compiler
+//     }
 
-    fn compile_instruction(&mut self, wasm_op: &Operator, position: &usize) {
-        self.blocks[self.current_block_index].process_instruction(wasm_op, position);
+//     fn compile_instruction(&mut self, wasm_op: &Operator, position: &usize) {
+//         self.blocks[self.current_block_index].process_instruction(wasm_op, position);
 
-        // Emit block if it reaches a certain complexity threshold
-        // (In real implementation, this would be based on control flow, stack depth, etc.)
-        let stack_depth = self.blocks[self.current_block_index].get_stack_depth();
-        if stack_depth > 8 || *wasm_op == Operator::End {
-            if self.blocks[self.current_block_index].needs_emission() {
-                self.blocks[self.current_block_index].emit();
-            }
+//         // Emit block if it reaches a certain complexity threshold
+//         // (In real implementation, this would be based on control flow, stack depth, etc.)
+//         let stack_depth = self.blocks[self.current_block_index].get_stack_depth();
+//         if stack_depth > 8 || *wasm_op == Operator::End {
+//             if self.blocks[self.current_block_index].needs_emission() {
+//                 self.blocks[self.current_block_index].emit();
+//             }
 
-            // Start new valent-block if needed
-            if *wasm_op == Operator::End {
-                self.blocks.push(ValentBlock::new());
-                self.current_block_index = self.blocks.len() - 1;
-            }
-        }
-    }
+//             // Start new valent-block if needed
+//             if *wasm_op == Operator::End {
+//                 self.blocks.push(ValentBlock::new());
+//                 self.current_block_index = self.blocks.len() - 1;
+//             }
+//         }
+//     }
 
-    fn finalize_compilation(&mut self) {
-        println!("\n\n=== FINALIZING COMPILATION ===");
-        println!("Total valent-blocks created: {}", self.blocks.len());
-        println!("{:?}", self.blocks);
+//     fn finalize_compilation(&mut self) {
+//         println!("\n\n=== FINALIZING COMPILATION ===");
+//         println!("Total valent-blocks created: {}", self.blocks.len());
+//         println!("{:?}, self.current_block_index: {}", self.blocks, self.current_block_index);
 
-        // Emit any remaining blocks
-        if self.blocks[self.current_block_index].needs_emission() {
-            self.blocks[self.current_block_index].emit();
-        }
+//         // Emit any remaining blocks
+//         if self.blocks[self.current_block_index].needs_emission() {
+//             self.blocks[self.current_block_index].emit();
+//         }
 
-        println!("\n✓ Compilation complete!");
-    }
-}
+//         println!("\n✓ Compilation complete!");
+//     }
+// }
 
 pub fn compile_function_vb(
     reader: &mut wasmparser::OperatorsReader<'_>,
@@ -226,23 +220,71 @@ pub fn compile_function_vb(
     locals: &[(u32, ValType)],
     machinecode: &mut Vec<u32>,
 ) -> Result<usize> {
-    let mut register_pool = RegisterPool::default();
-    let mut compiler = ValentBlocksCompiler::new();
+    let mut blocks: Vec<ValentBlock> = vec![ValentBlock::new()];
+    let block_index: usize = 0;
+
+    // Control stack is initialized with the (implicit) outer func-block
+    let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
+        opcode: Opcode::Func,
+        start_types: func_type.params().to_vec(),
+        end_types: func_type.results().to_vec(),
+        stack_height: 0,
+        patches: vec![],
+    }];
 
     let initial_size = machinecode.len();
+    let mut register_pool = RegisterPool::default();
+
     // calculate initial stack size from all parameters and locals
-    let stack_size = 0;
+    let (_variables_size, stack_size) = get_aligned_stack_size(func_type, locals);
+    // println!("{} {:?}", _variables_size, stack_size);
 
     // every functions starts with an epilogue to save the initial state and create a new stack frame
     emit_prologue(stack_size, &mut register_pool, machinecode);
 
+    let mut variables: Vec<LocalVar> = vec![];
+    let mut stack_offset = 0;
+    // save parameters to stack
+    if !func_type.params().is_empty() {
+        variables.extend(save_parameters_to_stack(
+            &mut stack_offset,
+            func_type.params(),
+            machinecode,
+        ));
+    }
+
+    if !locals.is_empty() {
+        variables.extend(save_locals_to_stack(&mut stack_offset, locals, machinecode));
+    }
+
     'expression: while !reader.eof() {
         let position = reader.original_position();
         let op = reader.read().unwrap();
-        compiler.compile_instruction(&op, &position);
-    }
 
-    compiler.finalize_compilation();
+        match op {
+            Operator::End => {}
+            Operator::Return => {}
+            Operator::I32Const { value } => {
+                let block = &mut blocks[block_index];
+                block.push_value(ValType::I32, true, value as i64);
+            }
+            Operator::I64Const { value } => {}
+            Operator::LocalGet { local_index } => {}
+            Operator::LocalSet { local_index } => {}
+            Operator::I32Add
+            | Operator::I64Add
+            | Operator::I32Sub
+            | Operator::I64Sub
+            | Operator::I32Mul
+            | Operator::I64Mul => {}
+            _ => {
+                return Err(TinyWasmError::Compiler(format!(
+                    "unsupported instruction: {:?} at position {}",
+                    op, position
+                )));
+            }
+        }
+    }
 
     // Result=0
     machinecode.push(processing::mov_reg(Reg::X0, Reg::XZR, RegSize::Reg64bit));

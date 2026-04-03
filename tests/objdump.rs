@@ -7,6 +7,8 @@ use std::fs;
 use std::path::Path;
 use tiny_wasm::*;
 
+
+
 #[test]
 fn test_objdump() {
     let base = Path::new("tests/assets");
@@ -18,7 +20,7 @@ fn test_objdump() {
         let entry = entry.unwrap();
         let file = entry.path();
 
-        // Skip if not a .txt file
+        // Skip if not a .wasm file
         if file.extension().and_then(|e| e.to_str()) != Some("wasm") {
             continue;
         }

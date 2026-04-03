@@ -3,7 +3,7 @@ use std::path::Path;
 use tiny_wasm::*;
 
 #[test]
-fn test_parameters() -> Result<()> {
+fn valent_blocks_const() -> Result<()> {
     let module = fs::read(Path::new(Path::new("tests/assets/valent-blocks.wasm")))?;
     let instance = get_module_instance(&module)?;
 
