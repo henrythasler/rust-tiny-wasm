@@ -36,7 +36,7 @@ The very first chapter is about installing and setting up the Rust toolchain loc
 
 - Use `rustup target list` or check [The rustc book - Platform Support](https://doc.rust-lang.org/nightly/rustc/platform-support.html) for a list of supported target platforms. Install additional targets with `rustup target add <target>`.
 - The hello-world application should consist at least of a main function that prints a string obtained from a helper function to stdout. The helper function will be used for the unit-test.
-- To execute ARM64 (aarch64) binaries on Ubuntu, you need to install `qemu-user and qemu-user-static` first.
+- To execute ARM64 (aarch64) binaries on Ubuntu, you need to install `qemu-user` and `qemu-user-static` first.
 - Refer to [The Rust Programming Language - Test Organization](https://doc.rust-lang.org/book/ch11-03-test-organization.html) on testing.
 - `cargo fmt` and `cargo clippy` are the basic code quality tools to be used.
 
@@ -47,6 +47,7 @@ The very first chapter is about installing and setting up the Rust toolchain loc
 - Build and run the application with `cargo run` on the native target.
 - Run the ARM64 application with `qemu-aarch64 -L /usr/aarch64-linux-gnu/ target/aarch64-unknown-linux-gnu/debug/rust-tiny-wasm`
 - To build on a native ARM64 target in the github CI, use `runs-on: ubuntu-24.04-arm`.
+- Dependency installation one-liner: `sudo apt install just qemu-user qemu-user-static && cargo +stable install cargo-llvm-cov --locked`
 
 ### References
 
