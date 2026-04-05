@@ -7,8 +7,33 @@ use wasmparser::{Parser, Payload::*, ValType};
 pub mod assembler;
 pub mod compiler;
 pub mod runtime;
+pub mod valentblock;
 
 pub type Result<T> = std::result::Result<T, TinyWasmError>;
+
+#[derive(Debug, Clone)]
+pub struct WasmFunction {
+    pub name: String,
+    /// offset in INSTRUCTION_SIZE units
+    pub offset: usize,
+    /// length in INSTRUCTION_SIZE units
+    pub length: usize,
+}
+
+#[derive(Debug)]
+pub struct LinkedModule {
+    pub machinecode: Vec<u32>,
+    pub functions: Vec<WasmFunction>,
+}
+
+impl LinkedModule {
+    pub fn new(machinecode: Vec<u32>, functions: Vec<WasmFunction>) -> Self {
+        Self {
+            machinecode,
+            functions,
+        }
+    }
+}
 
 /// Prints the structure of a WebAssembly module in a human-readable format, including its sections, exports, and code entries.
 ///
@@ -104,7 +129,13 @@ pub fn print_module(module: &[u8]) -> Result<()> {
 /// # Errors
 /// This function will return an error if the module cannot be compiled or instantiated.
 pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
-    let linked_module = compiler::compile(module)?;
+    let linked_module = {
+        if std::env::var_os("VALENT_BLOCK").is_some() {
+            valentblock::compile(module)?
+        } else {
+            compiler::compile(module)?
+        }
+    };
     runtime::instantiate_module(&linked_module)
 }
 

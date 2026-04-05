@@ -2,29 +2,34 @@
 ./tests/assets/jit/empty-fn.o:     file format elf64-littleaarch64
 
 SYMBOL TABLE:
-0000000000000000 l     F .text	0000000000000018 foo
-0000000000000018 l     F .text	0000000000000018 bar
+0000000000000000 l     F .text	0000000000000020 foo
+0000000000000020 l     F .text	0000000000000020 bar
 
 
 Contents of section .text:
- 0000 fd7bbfa9 fd030091 e0031faa e1031faa  .{..............
- 0010 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
- 0020 e0031faa e1031faa fd7bc1a8 c0035fd6  .........{...._.
+ 0000 fd7bbfa9 fd030091 01000014 e0031faa  .{..............
+ 0010 e1031faa fd7bc1a8 c0035fd6 1f2003d5  .....{...._.. ..
+ 0020 fd7bbfa9 fd030091 01000014 e0031faa  .{..............
+ 0030 e1031faa fd7bc1a8 c0035fd6 1f2003d5  .....{...._.. ..
 
 Disassembly of section .text:
 
 0000000000000000 <foo>:
    0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
    4:	910003fd 	mov	x29, sp
-   8:	aa1f03e0 	mov	x0, xzr
-   c:	aa1f03e1 	mov	x1, xzr
-  10:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  14:	d65f03c0 	ret
+   8:	14000001 	b	c <foo+0xc>
+   c:	aa1f03e0 	mov	x0, xzr
+  10:	aa1f03e1 	mov	x1, xzr
+  14:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  18:	d65f03c0 	ret
+  1c:	d503201f 	nop
 
-0000000000000018 <bar>:
-  18:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-  1c:	910003fd 	mov	x29, sp
-  20:	aa1f03e0 	mov	x0, xzr
-  24:	aa1f03e1 	mov	x1, xzr
-  28:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  2c:	d65f03c0 	ret
+0000000000000020 <bar>:
+  20:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+  24:	910003fd 	mov	x29, sp
+  28:	14000001 	b	2c <bar+0xc>
+  2c:	aa1f03e0 	mov	x0, xzr
+  30:	aa1f03e1 	mov	x1, xzr
+  34:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  38:	d65f03c0 	ret
+  3c:	d503201f 	nop
