@@ -1,5 +1,41 @@
 use super::*;
 
+#[derive(Debug)]
+enum Opcode {
+    Func,
+    Block,
+    Loop,
+    If,
+    Else,
+}
+
+#[derive(Debug)]
+enum Instruction {
+    Br,
+}
+
+#[derive(Debug)]
+struct Patch {
+    pub location: usize,
+    pub instruction: Instruction,
+}
+
+#[derive(Debug)]
+struct ControlFrame {
+    pub opcode: Opcode,
+    pub start_types: Vec<ValType>,
+    pub end_types: Vec<ValType>,
+    pub stack_height: usize,
+    pub patches: Vec<Patch>,
+}
+
+#[derive(Debug)]
+pub struct StackElement {
+    pub reg: Option<Reg>,
+    pub valtype: wasmparser::ValType,
+    pub value: i64,
+}
+
 pub fn compile_function(
     reader: &mut wasmparser::OperatorsReader<'_>,
     func_type: &wasmparser::FuncType,
@@ -10,13 +46,13 @@ pub fn compile_function(
     let mut value_stack: Vec<StackElement> = vec![];
 
     // Control stack is initialized with the (implicit) outer func-block
-    let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
-        opcode: Opcode::Func,
-        start_types: func_type.params().to_vec(),
-        end_types: func_type.results().to_vec(),
-        stack_height: value_stack.len(),
-        patches: vec![],
-    }];
+    // let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
+    //     opcode: Opcode::Func,
+    //     start_types: func_type.params().to_vec(),
+    //     end_types: func_type.results().to_vec(),
+    //     stack_height: value_stack.len(),
+    //     patches: vec![],
+    // }];
 
     let initial_size = machinecode.len();
     let mut register_pool = RegisterPool::default();
@@ -43,59 +79,56 @@ pub fn compile_function(
         variables.extend(save_locals_to_stack(&mut stack_offset, locals, machinecode));
     }
 
-    'expression: while !reader.eof() {
+    // 'expression: while !reader.eof() {
+    while !reader.eof() {
         let index = reader.original_position();
         let op = reader.read().unwrap();
         match op {
             Operator::End => {
-                if compile_end(&mut control_stack, &mut value_stack, machinecode) {
-                    break 'expression;
-                }
+                // if compile_end(&mut control_stack, &mut value_stack, machinecode) {
+                //     break 'expression;
+                // }
             }
             Operator::Return => {
-                compile_return(&mut control_stack, machinecode);
+                // compile_return(&mut control_stack, machinecode);
             }
-            Operator::I32Const { value } => {
-                compile_const(
-                    &op,
-                    value,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
+            Operator::I32Const { .. } => {
+                // compile_const(
+                //     &op,
+                //     value,
+                //     &mut value_stack,
+                //     &mut register_pool,
+                //     machinecode,
+                // );
             }
-            Operator::I64Const { value } => {
-                compile_const(
-                    &op,
-                    value,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
+            Operator::I64Const { .. } => {
+                // compile_const(
+                //     &op,
+                //     value,
+                //     &mut value_stack,
+                //     &mut register_pool,
+                //     machinecode,
+                // );
             }
-            Operator::LocalGet { local_index } => {
-                let var = variables.get(local_index as usize).unwrap();
-                compile_local_get(
-                    var,
-                    var.offset,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
+            Operator::LocalGet { .. } => {
+                // let var = variables.get(local_index as usize).unwrap();
+                // compile_local_get(
+                //     var,
+                //     var.offset,
+                //     &mut value_stack,
+                //     &mut register_pool,
+                //     machinecode,
+                // );
             }
-            Operator::LocalSet { local_index } => {
-                let var = variables.get(local_index as usize).unwrap();
-                compile_local_set(
-                    var,
-                    var.offset,
-                    &mut value_stack,
-                    &mut register_pool,
-                    machinecode,
-                );
-            }
-            Operator::LocalTee { local_index } => {
-                let var = variables.get(local_index as usize).unwrap();
-                compile_local_tee(var, var.offset, &mut value_stack, machinecode);
+            Operator::LocalSet { .. } => {
+                // let var = variables.get(local_index as usize).unwrap();
+                // compile_local_set(
+                //     var,
+                //     var.offset,
+                //     &mut value_stack,
+                //     &mut register_pool,
+                //     machinecode,
+                // );
             }
             Operator::I32Add
             | Operator::I64Add
@@ -103,7 +136,7 @@ pub fn compile_function(
             | Operator::I64Sub
             | Operator::I32Mul
             | Operator::I64Mul => {
-                compile_binop(&op, &mut value_stack, &mut register_pool, machinecode);
+                // compile_binop(&op, &mut value_stack, &mut register_pool, machinecode);
             }
             _ => {
                 return Err(TinyWasmError::Compiler(format!(

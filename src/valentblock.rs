@@ -8,54 +8,13 @@ use super::*;
 use crate::assembler::aarch64::*;
 use crate::assembler::{emit_epilogue, emit_prologue};
 
-use control_instr::*;
 use function::*;
-use numeric_instr::*;
 use procedure_call::*;
 use stack::*;
-use variable_instr::*;
 
-mod control_instr;
 mod function;
-mod numeric_instr;
 mod procedure_call;
 mod stack;
-mod variable_instr;
-
-#[derive(Debug)]
-pub enum Opcode {
-    Func,
-    Block,
-    Loop,
-    If,
-    Else,
-}
-
-#[derive(Debug)]
-pub enum Instruction {
-    Br,
-}
-
-#[derive(Debug)]
-pub struct Patch {
-    pub location: usize,
-    pub instruction: Instruction,
-}
-
-#[derive(Debug)]
-pub struct ControlFrame {
-    pub opcode: Opcode,
-    pub start_types: Vec<ValType>,
-    pub end_types: Vec<ValType>,
-    pub stack_height: usize,
-    pub patches: Vec<Patch>,
-}
-
-#[derive(Debug)]
-pub struct StackElement {
-    reg: Reg,
-    valtype: wasmparser::ValType,
-}
 
 #[derive(Debug)]
 pub struct Export {

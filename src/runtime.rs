@@ -1,9 +1,8 @@
 use memmap2::{Mmap, MmapMut};
 use std::mem;
 
-use super::Result;
 use super::assembler::*;
-use super::compiler::*;
+use super::*;
 use debugger::*;
 
 mod debugger;
