@@ -19,5 +19,9 @@ fn test_locals() -> Result<()> {
     let res = entrypoint.call(10000001i32)?;
     assert_eq!(res, 10000001i32);
 
+    let entrypoint = instance.get_function::<(), i64>("tee_i64")?;
+    let res = entrypoint.call()?;
+    assert_eq!(res, 9223372036854775807i64);
+
     Ok(())
 }

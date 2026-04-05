@@ -93,6 +93,10 @@ pub fn compile_function(
                     machinecode,
                 );
             }
+            Operator::LocalTee { local_index } => {
+                let var = variables.get(local_index as usize).unwrap();
+                compile_local_tee(var, var.offset, &mut value_stack, machinecode);
+            }
             Operator::I32Add
             | Operator::I64Add
             | Operator::I32Sub

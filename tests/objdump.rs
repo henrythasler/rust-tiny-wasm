@@ -7,8 +7,6 @@ use std::fs;
 use std::path::Path;
 use tiny_wasm::*;
 
-
-
 #[test]
 fn test_objdump() {
     let base = Path::new("tests/assets");

@@ -46,13 +46,13 @@ pub fn compile_function(
     let mut value_stack: Vec<StackElement> = vec![];
 
     // Control stack is initialized with the (implicit) outer func-block
-    let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
-        opcode: Opcode::Func,
-        start_types: func_type.params().to_vec(),
-        end_types: func_type.results().to_vec(),
-        stack_height: value_stack.len(),
-        patches: vec![],
-    }];
+    // let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
+    //     opcode: Opcode::Func,
+    //     start_types: func_type.params().to_vec(),
+    //     end_types: func_type.results().to_vec(),
+    //     stack_height: value_stack.len(),
+    //     patches: vec![],
+    // }];
 
     let initial_size = machinecode.len();
     let mut register_pool = RegisterPool::default();
@@ -79,7 +79,8 @@ pub fn compile_function(
         variables.extend(save_locals_to_stack(&mut stack_offset, locals, machinecode));
     }
 
-    'expression: while !reader.eof() {
+    // 'expression: while !reader.eof() {
+    while !reader.eof() {
         let index = reader.original_position();
         let op = reader.read().unwrap();
         match op {
@@ -91,7 +92,7 @@ pub fn compile_function(
             Operator::Return => {
                 // compile_return(&mut control_stack, machinecode);
             }
-            Operator::I32Const { value } => {
+            Operator::I32Const { .. } => {
                 // compile_const(
                 //     &op,
                 //     value,
@@ -100,7 +101,7 @@ pub fn compile_function(
                 //     machinecode,
                 // );
             }
-            Operator::I64Const { value } => {
+            Operator::I64Const { .. } => {
                 // compile_const(
                 //     &op,
                 //     value,
@@ -109,7 +110,7 @@ pub fn compile_function(
                 //     machinecode,
                 // );
             }
-            Operator::LocalGet { local_index } => {
+            Operator::LocalGet { .. } => {
                 // let var = variables.get(local_index as usize).unwrap();
                 // compile_local_get(
                 //     var,
@@ -119,7 +120,7 @@ pub fn compile_function(
                 //     machinecode,
                 // );
             }
-            Operator::LocalSet { local_index } => {
+            Operator::LocalSet { .. } => {
                 // let var = variables.get(local_index as usize).unwrap();
                 // compile_local_set(
                 //     var,

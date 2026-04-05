@@ -200,7 +200,7 @@ Local variable instructions in WebAssembly are needed to use function parameters
 ### Goals
 
 - [x] Investigate how the stack can be used to store registers or local variables.
-- [x] Implement the `local.get` and `local.set` instructions.
+- [x] Implement the `local.get`, `local.set` and `local.tee` instructions.
 - [x] Make parameters available to the function at runtime.
 - [x] Manage local variables at runtime.
 - [x] Load and parse the WebAssembly modules `tests/assets/parameters.wasm` and `tests/assets/locals.wasm`.
