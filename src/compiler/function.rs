@@ -55,6 +55,9 @@ pub fn compile_function(
             Operator::Return => {
                 compile_return(&mut control_stack, machinecode);
             }
+            Operator::If { blockty } => {}
+            Operator::Else => {}
+            Operator::I64LtS => {}
             Operator::I32Const { value } => {
                 compile_const(
                     &op,
@@ -140,12 +143,16 @@ pub fn compile_function(
 
 pub fn map_op_to_valtype(op: &Operator) -> ValType {
     match op {
-        Operator::I32Add | Operator::I32Sub | Operator::I32Mul | Operator::I32Const { .. } => {
-            ValType::I32
-        }
-        Operator::I64Add | Operator::I64Sub | Operator::I64Mul | Operator::I64Const { .. } => {
-            ValType::I64
-        }
+        Operator::I32Add
+        | Operator::I32Sub
+        | Operator::I32Mul
+        | Operator::I32Const { .. }
+        | Operator::I32LtS => ValType::I32,
+        Operator::I64Add
+        | Operator::I64Sub
+        | Operator::I64Mul
+        | Operator::I64Const { .. }
+        | Operator::I64LtS => ValType::I64,
         _ => panic!("Operator '{:?}' not supported", op),
     }
 }

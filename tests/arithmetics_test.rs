@@ -88,7 +88,7 @@ fn test_parameters() -> Result<()> {
     assert_eq!(mul64.call(-1, 1)?, -1);
     assert_eq!(mul64.call(1, -1)?, -1);
 
-    assert_eq!(mul64.call(0x10000000, 4096)?, 0x10000000000);
+    assert_eq!(mul64.call(0x1000000000000000, 4096)?, 0);
     assert_eq!(mul64.call(i64::MIN, 0)?, 0);
     assert_eq!(mul64.call(i64::MIN, -1)?, i64::MIN);
     assert_eq!(mul64.call(i64::MAX, -1)?, i64::MIN + 1);

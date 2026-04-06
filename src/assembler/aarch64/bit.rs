@@ -10,6 +10,33 @@ pub fn orr_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSi
     instr
 }
 
+/// Unsigned bitfield move
+///
+/// If <imms> is greater than or equal to <immr>, this copies a bitfield of (<imms>-<immr>+1) bits starting from bit position <immr> in the source register to the least significant bits of the destination register.
+/// If <imms> is less than <immr>, this copies a bitfield of (<imms>+1) bits from the least significant bits of the source register to bit position (regsize-<immr>) of the destination register, where regsize is the destination register size of 32 or 64 bits.
+/// In both cases, the destination bits below and above the bitfield are set to zero.
+pub fn ubfm(rd: Reg, rn: Reg, immr: u32, imms: u32, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x53000000, 0xD3400000, size);
+    instr |= (immr & 0x3F) << 16; // immr
+    instr |= (imms & 0x3F) << 10; // imms
+    instr |= (rn & 0x1F) << 5; // Rn (source register)
+    instr |= rd & 0x1F; // Rd (destination register)
+    instr
+}
+
+/// Logical Shift Right (immediate).
+///
+/// This instruction shifts a register value right by an immediate number of bits, shifting in zeros, and writes the result to the destination register.
+pub fn lsr_imm(rd: Reg, rn: Reg, shift: u32, size: RegSize) -> u32 {
+    return ubfm(
+        rd,
+        rn,
+        shift,
+        if size == RegSize::Reg32bit { 31 } else { 63 },
+        size,
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -40,5 +67,17 @@ mod tests {
             ),
             0x2A0F3DCD
         );
+    }
+
+    fn test_ubfm() {}
+
+    fn test_lsr_imm() {
+        // lsr x10, x11, #32
+        assert_eq!(
+            lsr_imm(Reg::X10, Reg::X11, 32, RegSize::Reg64bit),
+            0xD360FD6A
+        );
+        // lsr w3, w7, #3
+        assert_eq!(lsr_imm(Reg::W3, Reg::W7, 3, RegSize::Reg32bit), 0x53037CE3);
     }
 }

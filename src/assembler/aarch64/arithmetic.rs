@@ -53,6 +53,40 @@ pub fn sub_shifted_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, siz
     instr
 }
 
+/// This instruction subtracts an optionally-shifted register value from a register value, and writes the result to the destination register. It updates the condition flags based on the result.
+pub fn subs_shifted_reg(
+    rd: Reg,
+    rn: Reg,
+    rm: Reg,
+    shift: Shift,
+    amount: u32,
+    size: RegSize,
+) -> u32 {
+    let mut instr = select_instr(0x6B000000, 0xEB000000, size);
+    instr |= ((shift as u32) & 0x3) << 22; // shift type
+    instr |= (amount & 0x3F) << 10; // shift amount (0-63 for 64-bit, 0-31 for 32-bit)
+    instr |= (rm & 0x1F) << 16; // Rm (operand register)
+    instr |= (rn & 0x1F) << 5; // Rn (source register)
+    instr |= rd & 0x1F; // Rd (destination register)
+    instr
+}
+
+/// This instruction subtracts an optionally-shifted register value from a register value. It updates the condition flags based on the result and discards the result.
+pub fn cmp_shifted_reg(rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSize) -> u32 {
+    subs_shifted_reg(
+        if size == RegSize::Reg64bit {
+            Reg::XZR
+        } else {
+            Reg::WZR
+        },
+        rn,
+        rm,
+        shift,
+        amount,
+        size,
+    )
+}
+
 pub fn sub_extended_reg(
     rd: Reg,
     rn: Reg,
