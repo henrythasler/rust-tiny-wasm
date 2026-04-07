@@ -55,9 +55,13 @@ pub fn compile_function(
             Operator::Return => {
                 compile_return(&mut control_stack, machinecode);
             }
-            Operator::If { blockty } => {}
+            Operator::If { blockty } => {
+                
+            }
             Operator::Else => {}
-            Operator::I64LtS => {}
+            Operator::I64LtS => {
+                compile_relop(&op, &mut value_stack, &mut register_pool, machinecode)
+            }
             Operator::I32Const { value } => {
                 compile_const(
                     &op,

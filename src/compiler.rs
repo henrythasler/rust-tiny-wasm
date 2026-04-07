@@ -34,6 +34,7 @@ pub enum Opcode {
 #[derive(Debug)]
 pub enum Instruction {
     Br,
+    Cbz,
 }
 
 #[derive(Debug)]

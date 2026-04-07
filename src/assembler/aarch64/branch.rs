@@ -1,4 +1,4 @@
-use super::Reg;
+use super::*;
 
 /// Return from subroutine
 ///
@@ -30,6 +30,18 @@ pub fn branch(offset: i32) -> u32 {
 
 pub fn patch_branch(offset: i32, location: &mut u32) {
     *location = 0x14000000 | (offset & 0x3FFFFFF) as u32 // imm26 offset
+}
+
+pub fn cbz(rt: Reg, offset: i32, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x34000000, 0xB4000000, size);
+    instr |= (((offset >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
+    instr |= rt & 0x1F; // Rt (register to be tested)
+    instr
+}
+
+pub fn patch_cbz(offset: i32, location: &mut u32) {
+    *location &= 0xff00001f;
+    *location |= (((offset >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
 }
 
 #[cfg(test)]

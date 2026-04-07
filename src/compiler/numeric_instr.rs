@@ -1,5 +1,3 @@
-use crate::assembler::aarch64::{arithmetic::cmp_shifted_reg};
-
 use super::*;
 
 pub fn compile_binop(
@@ -61,25 +59,25 @@ pub fn compile_relop(
     let op1 = value_stack.pop().unwrap();
 
     let valtype = map_op_to_valtype(op);
+    let size = map_valtype_to_regsize(&valtype);
+
     assert_eq!(op1.valtype, valtype, "Operand 1 type mismatch for relop");
     assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for relop");
 
     match op {
-        Operator::I32LtS => {
-            machinecode.push(cmp_shifted_reg(
+        Operator::I32LtS | Operator::I64LtS => {
+            machinecode.push(arithmetic::cmp_shifted_reg(
                 op1.reg,
                 op2.reg,
                 Shift::Lsl,
                 0,
+                size,
+            ));
+            machinecode.push(conditionals::cset(
+                op1.reg,
+                Condition::EQ,
                 RegSize::Reg32bit,
             ));
-            // machinecode.push(cset(
-            //     op1.reg,
-            //     op2.reg,
-            //     Shift::Lsl,
-            //     0,
-            //     RegSize::Reg32bit,
-            // ));
         }
         _ => panic!("Relation operator '{:?}' not supported", op),
     }

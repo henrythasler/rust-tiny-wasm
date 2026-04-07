@@ -7,6 +7,7 @@ pub mod arithmetic;
 pub mod bit;
 pub mod branch;
 pub mod compound;
+pub mod conditionals;
 pub mod hint;
 pub mod memory;
 pub mod processing;
@@ -153,6 +154,31 @@ pub enum Extend {
     Sxth = 5, // Signed extend halfword
     Sxtw = 6, // Signed extend word
     Sxtx = 7, // Signed extend doubleword
+}
+
+#[repr(u32)]
+pub enum Condition {
+    EQ = 0b0000, // equal
+    NE = 0b0001, // not equal
+    CS = 0b0010, // Carry set (identical to HS)
+    CC = 0b0011, // Carry clear (identical to LO)
+    MI = 0b0100, // Minus or negative result
+    PL = 0b0101, // Positive or zero result
+    VS = 0b0110, // Signed Overflow
+    VC = 0b0111, // No signed Overflow
+    HI = 0b1000, // Unsigned higher
+    LS = 0b1001, // Unsigned lower or same
+    GE = 0b1010, // Signed greater than or equal
+    LT = 0b1011, // Signed less than
+    GT = 0b1100, // Signed greater than
+    LE = 0b1101, // Signed less than or equal
+    AL = 0b1110, // Always (this is the default)
+    NV = 0b1111, // Never executed
+}
+
+impl Condition {
+    pub const HS: Condition = Condition::CS; // Unsigned Higher or same (identical to CS)
+    pub const LO: Condition = Condition::CC; // Unsigned Lower (identical to CC)
 }
 
 pub struct RegisterPool {

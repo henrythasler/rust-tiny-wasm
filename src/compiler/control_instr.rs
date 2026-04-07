@@ -1,3 +1,5 @@
+use wasmparser::BlockType;
+
 use super::*;
 
 pub fn compile_return(control_stack: &mut [ControlFrame], machinecode: &mut Vec<u32>) {
@@ -9,6 +11,40 @@ pub fn compile_return(control_stack: &mut [ControlFrame], machinecode: &mut Vec<
         instruction: Instruction::Br,
     });
     machinecode.push(branch::branch(0));
+}
+
+pub fn compile_if(
+    blockty: BlockType,
+    control_stack: &mut Vec<ControlFrame>,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    assert!(
+        value_stack.len() >= 1,
+        "insufficient operands on stack for if"
+    );
+
+    let cond = value_stack.pop().unwrap();
+    assert_eq!(cond.valtype, ValType::I32, "Operand type mismatch for if");
+
+    let end_type = match blockty {
+        BlockType::Type(ty) => ty,
+        _ => panic!("Unexpected blocktype in 'for'"),
+    };
+
+    control_stack.push(ControlFrame {
+        opcode: Opcode::If,
+        start_types: vec![],
+        end_types: vec![end_type],
+        stack_height: value_stack.len(),
+        patches: vec![Patch {
+            location: machinecode.len(),
+            instruction: Instruction::Cbz,
+        }],
+    });
+    machinecode.push(branch::cbz(cond.reg, 0, RegSize::Reg32bit));
+    register_pool.free_register(&cond.reg);
 }
 
 /// Compiles the opcode `end`
@@ -45,19 +81,38 @@ pub fn compile_end(
     value_stack.truncate(frame.stack_height);
     value_stack.append(&mut results);
 
-    if let Opcode::Func = frame.opcode {
-        for patch in frame.patches {
-            match patch.instruction {
-                Instruction::Br => {
-                    let offset = machinecode.len() as i32 - patch.location as i32;
-                    let location = machinecode
-                        .get_mut(patch.location)
-                        .expect("patch location should point to valid location");
-                    branch::patch_branch(offset, location);
+    match frame.opcode {
+        Opcode::Func => {
+            for patch in frame.patches {
+                match patch.instruction {
+                    Instruction::Br => {
+                        let offset = machinecode.len() as i32 - patch.location as i32;
+                        let location = machinecode
+                            .get_mut(patch.location)
+                            .expect("patch location should point to valid location");
+                        branch::patch_branch(offset, location);
+                    }
+                    _ => panic!("unexpected Instruction"),
+                }
+            }
+            return true; // break 'expression;
+        }
+        Opcode::If => {
+            for patch in frame.patches {
+                match patch.instruction {
+                    Instruction::Cbz => {
+                        let offset = machinecode.len() as i32 - patch.location as i32;
+                        let location = machinecode
+                            .get_mut(patch.location)
+                            .expect("patch location should point to valid location");
+                        branch::patch_cbz(offset, location);
+                    }
+                    _ => panic!("unexpected Instruction"),
                 }
             }
         }
-        return true; // break 'expression;
+        _ => panic!("unsupported constrol-frame type"),
     }
+
     false
 }
