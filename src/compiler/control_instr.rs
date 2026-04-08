@@ -22,27 +22,29 @@ pub fn compile_if(
 ) {
     assert!(
         value_stack.len() >= 1,
-        "insufficient operands on stack for if"
+        "insufficient operands on stack for 'if'"
     );
 
     let cond = value_stack.pop().unwrap();
-    assert_eq!(cond.valtype, ValType::I32, "Operand type mismatch for if");
+    assert_eq!(cond.valtype, ValType::I32, "Operand type mismatch in 'if'");
 
-    let end_type = match blockty {
-        BlockType::Type(ty) => ty,
-        _ => panic!("Unexpected blocktype in 'for'"),
+    let end_types = match blockty {
+        BlockType::Type(ty) => vec![ty],
+        BlockType::Empty => vec![],
+        _ => panic!("Unexpected blocktype in 'if'"),
     };
 
     control_stack.push(ControlFrame {
         opcode: Opcode::If,
         start_types: vec![],
-        end_types: vec![end_type],
+        end_types,
         stack_height: value_stack.len(),
         patches: vec![Patch {
             location: machinecode.len(),
             instruction: Instruction::Cbz,
         }],
     });
+    println!("{:?}", control_stack);
     machinecode.push(branch::cbz(cond.reg, 0, RegSize::Reg32bit));
     register_pool.free_register(&cond.reg);
 }

@@ -82,7 +82,10 @@ pub fn compile_relop(
         _ => panic!("Relation operator '{:?}' not supported", op),
     }
 
-    value_stack.push(op1);
+    value_stack.push(StackElement {
+        reg: op1.reg,
+        valtype: ValType::I32,
+    });
     register_pool.free_register(&op2.reg);
 }
 

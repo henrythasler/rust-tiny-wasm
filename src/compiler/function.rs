@@ -56,7 +56,13 @@ pub fn compile_function(
                 compile_return(&mut control_stack, machinecode);
             }
             Operator::If { blockty } => {
-                
+                compile_if(
+                    blockty,
+                    &mut control_stack,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
             }
             Operator::Else => {}
             Operator::I64LtS => {
