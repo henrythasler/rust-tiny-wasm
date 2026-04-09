@@ -9,12 +9,11 @@
   local.get $var0
   i64.const 0
   i64.lt_s
-  if ;;(result i64)
-    ;; i64.const -1
+  if (result i64)
+    i64.const -1
   else
-    ;; i64.const 1
+    i64.const 1
   end
-  local.get $var0
  )
 
  (func $nested_if (param $0 i64) (result i64)

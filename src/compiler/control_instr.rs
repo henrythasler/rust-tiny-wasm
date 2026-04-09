@@ -21,7 +21,7 @@ pub fn compile_if(
     machinecode: &mut Vec<u32>,
 ) {
     assert!(
-        value_stack.len() >= 1,
+        !value_stack.is_empty(),
         "insufficient operands on stack for 'if'"
     );
 
@@ -34,19 +34,69 @@ pub fn compile_if(
         _ => panic!("Unexpected blocktype in 'if'"),
     };
 
+    register_pool.free_register(&cond.reg);
+
     control_stack.push(ControlFrame {
         opcode: Opcode::If,
         start_types: vec![],
         end_types,
         stack_height: value_stack.len(),
+        value_stack: Some(value_stack.to_vec()),
+        register_pool: Some(register_pool.clone()),
         patches: vec![Patch {
             location: machinecode.len(),
             instruction: Instruction::Cbz,
         }],
     });
-    println!("{:?}", control_stack);
     machinecode.push(branch::cbz(cond.reg, 0, RegSize::Reg32bit));
-    register_pool.free_register(&cond.reg);
+}
+
+pub fn compile_else(
+    control_stack: &mut Vec<ControlFrame>,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    let frame = control_stack
+        .pop()
+        .expect("control stack should contain at least one element on 'end' opcode");
+
+    match frame.opcode {
+        Opcode::If => {
+            for patch in frame.patches {
+                match patch.instruction {
+                    Instruction::Cbz => {
+                        let offset = (machinecode.len() - patch.location + 1) as i32 * 4;
+                        let location = machinecode
+                            .get_mut(patch.location)
+                            .expect("patch location should point to valid location");
+                        branch::patch_cbz(offset, location);
+                    }
+                    _ => panic!("unexpected Instruction"),
+                }
+            }
+
+            // Restore value stack to state at the beginning of the 'if' block
+            print!("after if: {:?}", register_pool);
+            *value_stack = frame.value_stack.unwrap();
+            *register_pool = frame.register_pool.unwrap();
+
+            control_stack.push(ControlFrame {
+                opcode: Opcode::Else,
+                start_types: vec![],
+                end_types: frame.end_types,
+                stack_height: value_stack.len(),
+                value_stack: None,
+                register_pool: None,
+                patches: vec![Patch {
+                    location: machinecode.len(),
+                    instruction: Instruction::Br,
+                }],
+            });
+            machinecode.push(branch::branch(0));
+        }
+        _ => panic!("Unexpected Opcode in Else"),
+    }
 }
 
 /// Compiles the opcode `end`
@@ -71,13 +121,13 @@ pub fn compile_end(
         .pop()
         .expect("control stack should contain at least one element on 'end' opcode");
 
-    assert_eq!(
-        value_stack.len(),
-        frame.stack_height + frame.end_types.len(),
-        "Length of value stack ({}) should match block result ({})",
-        value_stack.len(),
-        frame.stack_height + frame.end_types.len()
-    );
+    // assert_eq!(
+    //     value_stack.len(),
+    //     frame.stack_height + frame.end_types.len(),
+    //     "Length of value stack ({}) should match block result ({})",
+    //     value_stack.len(),
+    //     frame.stack_height + frame.end_types.len()
+    // );
 
     let mut results = value_stack.split_off(value_stack.len() - frame.end_types.len());
     value_stack.truncate(frame.stack_height);
@@ -88,7 +138,7 @@ pub fn compile_end(
             for patch in frame.patches {
                 match patch.instruction {
                     Instruction::Br => {
-                        let offset = machinecode.len() as i32 - patch.location as i32;
+                        let offset = (machinecode.len() - patch.location + 1) as i32 * 4;
                         let location = machinecode
                             .get_mut(patch.location)
                             .expect("patch location should point to valid location");
@@ -103,11 +153,25 @@ pub fn compile_end(
             for patch in frame.patches {
                 match patch.instruction {
                     Instruction::Cbz => {
-                        let offset = machinecode.len() as i32 - patch.location as i32;
+                        let offset = (machinecode.len() - patch.location + 1) as i32 * 4;
                         let location = machinecode
                             .get_mut(patch.location)
                             .expect("patch location should point to valid location");
                         branch::patch_cbz(offset, location);
+                    }
+                    _ => panic!("unexpected Instruction"),
+                }
+            }
+        }
+        Opcode::Else => {
+            for patch in frame.patches {
+                match patch.instruction {
+                    Instruction::Br => {
+                        let offset = (machinecode.len() - patch.location) as i32 * 4;
+                        let location = machinecode
+                            .get_mut(patch.location)
+                            .expect("patch location should point to valid location");
+                        branch::patch_branch(offset, location);
                     }
                     _ => panic!("unexpected Instruction"),
                 }

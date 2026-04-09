@@ -181,6 +181,7 @@ impl Condition {
     pub const LO: Condition = Condition::CC; // Unsigned Lower (identical to CC)
 }
 
+#[derive(Debug, Clone)]
 pub struct RegisterPool {
     registers: Vec<(Reg, bool)>,
 }

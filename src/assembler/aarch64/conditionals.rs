@@ -37,10 +37,10 @@ mod tests {
         );
     }
 
-     fn test_cset() {
+    fn test_cset() {
         // cset x15, le
         assert_eq!(cset(Reg::X15, Condition::LE, RegSize::Reg64bit), 0x9A9FC7EF);
         // cset w25, eq
         assert_eq!(cset(Reg::W15, Condition::EQ, RegSize::Reg64bit), 0x1A9F17F9);
-     }
+    }
 }

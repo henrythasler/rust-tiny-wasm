@@ -15,6 +15,8 @@ pub fn compile_function(
         start_types: func_type.params().to_vec(),
         end_types: func_type.results().to_vec(),
         stack_height: value_stack.len(),
+        value_stack: None,
+        register_pool: None,
         patches: vec![],
     }];
 
@@ -64,7 +66,14 @@ pub fn compile_function(
                     machinecode,
                 );
             }
-            Operator::Else => {}
+            Operator::Else => {
+                compile_else(
+                    &mut control_stack,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
             Operator::I64LtS => {
                 compile_relop(&op, &mut value_stack, &mut register_pool, machinecode)
             }

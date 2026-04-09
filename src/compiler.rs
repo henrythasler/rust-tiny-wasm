@@ -49,10 +49,12 @@ pub struct ControlFrame {
     pub start_types: Vec<ValType>,
     pub end_types: Vec<ValType>,
     pub stack_height: usize,
+    pub value_stack: Option<Vec<StackElement>>,
+    pub register_pool: Option<RegisterPool>,
     pub patches: Vec<Patch>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StackElement {
     reg: Reg,
     valtype: wasmparser::ValType,

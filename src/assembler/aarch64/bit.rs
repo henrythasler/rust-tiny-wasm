@@ -28,13 +28,13 @@ pub fn ubfm(rd: Reg, rn: Reg, immr: u32, imms: u32, size: RegSize) -> u32 {
 ///
 /// This instruction shifts a register value right by an immediate number of bits, shifting in zeros, and writes the result to the destination register.
 pub fn lsr_imm(rd: Reg, rn: Reg, shift: u32, size: RegSize) -> u32 {
-    return ubfm(
+    ubfm(
         rd,
         rn,
         shift,
         if size == RegSize::Reg32bit { 31 } else { 63 },
         size,
-    );
+    )
 }
 
 #[cfg(test)]

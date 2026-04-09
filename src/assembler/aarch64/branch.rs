@@ -25,11 +25,11 @@ pub fn ret(rn: Reg) -> u32 {
 }
 
 pub fn branch(offset: i32) -> u32 {
-    0x14000000 | (offset & 0x3FFFFFF) as u32 // imm26 offset
+    0x14000000 | ((offset >> 2) & 0x3FFFFFF) as u32 // imm26 offset
 }
 
 pub fn patch_branch(offset: i32, location: &mut u32) {
-    *location = 0x14000000 | (offset & 0x3FFFFFF) as u32 // imm26 offset
+    *location = 0x14000000 | ((offset >> 2) & 0x3FFFFFF) as u32 // imm26 offset
 }
 
 pub fn cbz(rt: Reg, offset: i32, size: RegSize) -> u32 {
