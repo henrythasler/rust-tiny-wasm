@@ -69,8 +69,10 @@ mod tests {
         );
     }
 
+    #[test]
     fn test_ubfm() {}
 
+    #[test]
     fn test_lsr_imm() {
         // lsr x10, x11, #32
         assert_eq!(
