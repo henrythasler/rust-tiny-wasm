@@ -74,7 +74,7 @@ pub fn compile_function(
                     machinecode,
                 );
             }
-            Operator::I64LtS => {
+            Operator::I32LtS | Operator::I64LtS => {
                 compile_relop(&op, &mut value_stack, &mut register_pool, machinecode)
             }
             Operator::I32Const { value } => {

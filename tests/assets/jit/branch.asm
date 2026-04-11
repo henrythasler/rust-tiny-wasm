@@ -11,7 +11,7 @@ SYMBOL TABLE:
 
 Contents of section .text:
  0000 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
- 0010 e80340f9 090080d2 1f0109eb e8079f1a  ..@.............
+ 0010 e80340f9 090080d2 1f0109eb e8a79f1a  ..@.............
  0020 c8000034 e8ff9fd2 e8ffbff2 e8ffdff2  ...4............
  0030 e8fffff2 02000014 280080d2 e00308aa  ........(.......
  0040 e1031faa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
@@ -36,7 +36,7 @@ Disassembly of section .text:
   10:	f94003e8 	ldr	x8, [sp]
   14:	d2800009 	mov	x9, #0x0                   	// #0
   18:	eb09011f 	cmp	x8, x9
-  1c:	1a9f07e8 	cset	w8, ne	// ne = any
+  1c:	1a9fa7e8 	cset	w8, lt  // lt = tstop
   20:	340000c8 	cbz	w8, 38 <simple_if+0x38>
   24:	d29fffe8 	mov	x8, #0xffff                	// #65535
   28:	f2bfffe8 	movk	x8, #0xffff, lsl #16

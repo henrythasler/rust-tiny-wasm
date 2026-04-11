@@ -64,18 +64,19 @@ pub fn compile_relop(
     assert_eq!(op1.valtype, valtype, "Operand 1 type mismatch for relop");
     assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for relop");
 
+    machinecode.push(arithmetic::cmp_shifted_reg(
+        op1.reg,
+        op2.reg,
+        Shift::Lsl,
+        0,
+        size,
+    ));
+
     match op {
         Operator::I32LtS | Operator::I64LtS => {
-            machinecode.push(arithmetic::cmp_shifted_reg(
-                op1.reg,
-                op2.reg,
-                Shift::Lsl,
-                0,
-                size,
-            ));
             machinecode.push(conditionals::cset(
                 op1.reg,
-                Condition::EQ,
+                Condition::from_u32(Condition::LT ^ 1).unwrap(),
                 RegSize::Reg32bit,
             ));
         }

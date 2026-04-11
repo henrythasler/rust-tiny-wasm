@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use num_enum::TryFromPrimitive;
-use std::ops::BitAnd;
+use std::ops::{BitAnd, BitXor};
 
 pub mod arithmetic;
 pub mod bit;
@@ -158,27 +158,73 @@ pub enum Extend {
 
 #[repr(u32)]
 pub enum Condition {
-    EQ = 0b0000, // equal
-    NE = 0b0001, // not equal
-    CS = 0b0010, // Carry set (identical to HS)
-    CC = 0b0011, // Carry clear (identical to LO)
-    MI = 0b0100, // Minus or negative result
-    PL = 0b0101, // Positive or zero result
-    VS = 0b0110, // Signed Overflow
-    VC = 0b0111, // No signed Overflow
-    HI = 0b1000, // Unsigned higher
-    LS = 0b1001, // Unsigned lower or same
-    GE = 0b1010, // Signed greater than or equal
-    LT = 0b1011, // Signed less than
-    GT = 0b1100, // Signed greater than
-    LE = 0b1101, // Signed less than or equal
-    AL = 0b1110, // Always (this is the default)
-    NV = 0b1111, // Never executed
+    /// equal
+    EQ = 0b0000,
+    /// not equal
+    NE = 0b0001,
+    /// Carry set (identical to HS)
+    CS = 0b0010,
+    /// Carry clear (identical to LO)
+    CC = 0b0011,
+    /// Minus or negative result
+    MI = 0b0100,
+    /// Positive or zero result
+    PL = 0b0101,
+    /// Signed Overflow
+    VS = 0b0110,
+    /// No signed Overflow
+    VC = 0b0111,
+    /// Unsigned higher
+    HI = 0b1000,
+    /// Unsigned lower or same
+    LS = 0b1001,
+    /// Signed greater than or equal
+    GE = 0b1010,
+    /// Signed less than
+    LT = 0b1011,
+    /// Signed greater than
+    GT = 0b1100,
+    /// Signed less than or equal
+    LE = 0b1101,
+    /// Always (this is the default)
+    AL = 0b1110,
+    /// Never executed
+    NV = 0b1111,
 }
 
 impl Condition {
     pub const HS: Condition = Condition::CS; // Unsigned Higher or same (identical to CS)
     pub const LO: Condition = Condition::CC; // Unsigned Lower (identical to CC)
+
+    pub fn from_u32(v: u32) -> Option<Self> {
+        match v {
+            0b0000 => Some(Self::EQ),
+            0b0001 => Some(Self::NE),
+            0b0010 => Some(Self::CS),
+            0b0011 => Some(Self::CC),
+            0b0100 => Some(Self::MI),
+            0b0101 => Some(Self::PL),
+            0b0110 => Some(Self::VS),
+            0b0111 => Some(Self::VC),
+            0b1000 => Some(Self::HI),
+            0b1001 => Some(Self::LS),
+            0b1010 => Some(Self::GE),
+            0b1011 => Some(Self::LT),
+            0b1100 => Some(Self::GT),
+            0b1101 => Some(Self::LE),
+            0b1110 => Some(Self::AL),
+            0b1111 => Some(Self::NV),
+            _ => None,
+        }
+    }
+}
+
+impl BitXor<u32> for Condition {
+    type Output = u32;
+
+    fn bitxor(self, rhs: u32) -> Self::Output {
+        (self as u32) ^ rhs
+    }
 }
 
 #[derive(Debug, Clone)]

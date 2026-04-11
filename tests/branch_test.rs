@@ -9,7 +9,7 @@ fn test_branch() -> Result<()> {
 
     let simple_if = instance.get_function::<(i64,), i64>("simple_if")?;
     assert_eq!(simple_if.call(-10)?, -1);
-    // assert_eq!(simple_if.call(10)?, 1);
+    assert_eq!(simple_if.call(10)?, 1);
 
     Ok(())
 }

@@ -7,7 +7,6 @@ use wasmparser::{Parser, Payload::*, ValType};
 pub mod assembler;
 pub mod compiler;
 pub mod runtime;
-pub mod valentblock;
 
 pub type Result<T> = std::result::Result<T, TinyWasmError>;
 
@@ -129,13 +128,7 @@ pub fn print_module(module: &[u8]) -> Result<()> {
 /// # Errors
 /// This function will return an error if the module cannot be compiled or instantiated.
 pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
-    let linked_module = {
-        if std::env::var_os("VALENT_BLOCK").is_some() {
-            valentblock::compile(module)?
-        } else {
-            compiler::compile(module)?
-        }
-    };
+    let linked_module = compiler::compile(module)?;
     runtime::instantiate_module(&linked_module)
 }
 
