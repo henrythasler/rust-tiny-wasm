@@ -13,8 +13,9 @@ test:
         rm ${file}; \
     done
     cargo llvm-cov clean --workspace
-    RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)'
-    # RUSTFLAGS="-C instrument-coverage -C link-dead-code" RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --show-instantiations --ignore-filename-regex '(build\.rs|main\.rs)'
+    # see https://docs.rs/crate/cargo-llvm-cov/latest and https://doc.rust-lang.org/cargo/commands/cargo-test.html
+    RUST_BACKTRACE=0 cargo llvm-cov test --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test'
+    # RUSTFLAGS="-C instrument-coverage -C link-dead-code" RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --show-instantiations --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test'
 
 # Run executable
 run +arguments:
