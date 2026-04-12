@@ -229,7 +229,8 @@ impl BitXor<u32> for Condition {
 
 #[derive(Debug, Clone)]
 pub struct RegisterPool {
-    registers: Vec<(Reg, bool)>,
+    registers: Vec<Reg>,
+    pub index: i32,
 }
 
 impl Default for RegisterPool {
@@ -242,33 +243,33 @@ impl RegisterPool {
     pub fn new() -> Self {
         Self {
             registers: vec![
-                (Reg::X8, true),
-                (Reg::X9, true),
-                (Reg::X10, true),
-                (Reg::X11, true),
-                (Reg::X12, true),
-                (Reg::X13, true),
-                (Reg::X14, true),
-                (Reg::X15, true),
+                Reg::X8,
+                Reg::X9,
+                Reg::X10,
+                Reg::X11,
+                Reg::X12,
+                Reg::X13,
+                Reg::X14,
+                Reg::X15,
             ],
+            index: 0,
         }
     }
 
-    pub fn allocate_register(&mut self) -> Reg {
-        if let Some(item) = self.registers.iter_mut().find(|i| i.1) {
-            item.1 = false;
-            item.0
-        } else {
-            panic!("Register pool should not be exhausted")
-        }
+    pub fn current(self) -> Reg {
+        self.registers[self.index as usize]
     }
 
-    pub fn free_register(&mut self, reg: &Reg) {
-        if let Some(item) = self.registers.iter_mut().find(|i| i.0 == *reg) {
-            item.1 = true;
-        } else {
-            panic!("Register should be found in pool")
-        }
+    pub fn alloc(&mut self) -> Reg {
+        let reg = self.registers[self.index as usize];
+        self.index += 1;
+        assert!(self.index < self.registers.len() as i32);
+        reg
+    }
+
+    pub fn free(&mut self) {
+        self.index -= 1;
+        assert!(self.index >= 0);
     }
 }
 
@@ -310,25 +311,16 @@ mod tests {
     #[test]
     fn test_registerpool() {
         let mut pool = RegisterPool::new();
-        assert_eq!(pool.allocate_register(), Reg::X8);
-        assert_eq!(pool.allocate_register(), Reg::X9);
-        assert_eq!(pool.allocate_register(), Reg::X10);
-        assert_eq!(pool.allocate_register(), Reg::X11);
-        pool.free_register(&Reg::X9);
-        pool.free_register(&Reg::X10);
-        pool.free_register(&Reg::X11);
-        assert_eq!(pool.allocate_register(), Reg::X9);
-        assert_eq!(pool.allocate_register(), Reg::X10);
-        assert_eq!(pool.allocate_register(), Reg::X11);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_wrong_register() {
-        let mut pool = RegisterPool::new();
-        assert_eq!(pool.allocate_register(), Reg::X8);
-        assert_eq!(pool.allocate_register(), Reg::X9);
-        pool.free_register(&Reg::X30);
+        assert_eq!(pool.alloc(), Reg::X8);
+        assert_eq!(pool.alloc(), Reg::X9);
+        assert_eq!(pool.alloc(), Reg::X10);
+        assert_eq!(pool.alloc(), Reg::X11);
+        pool.free();
+        pool.free();
+        pool.free();
+        assert_eq!(pool.alloc(), Reg::X9);
+        assert_eq!(pool.alloc(), Reg::X10);
+        assert_eq!(pool.alloc(), Reg::X11);
     }
 
     #[test]
@@ -336,7 +328,7 @@ mod tests {
     fn test_pool_exhaustion() {
         let mut pool = RegisterPool::new();
         for _ in 0..i32::MAX {
-            pool.allocate_register();
+            pool.alloc();
         }
     }
 

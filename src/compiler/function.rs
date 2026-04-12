@@ -16,12 +16,12 @@ pub fn compile_function(
         end_types: func_type.results().to_vec(),
         stack_height: value_stack.len(),
         value_stack: None,
-        register_pool: None,
+        register_pool_index: None,
         patches: vec![],
     }];
 
     let initial_size = machinecode.len();
-    let mut register_pool = RegisterPool::default();
+    let mut register_pool = RegisterPool::new();
 
     // calculate initial stack size from all parameters and locals
     let (_variables_size, stack_size) = get_aligned_stack_size(func_type, locals);

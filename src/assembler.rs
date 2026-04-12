@@ -3,7 +3,7 @@ pub mod aarch64;
 
 pub fn emit_prologue(
     stack_size: usize,
-    registerpool: &mut RegisterPool,
+    register_pool: &mut RegisterPool,
     machinecode: &mut Vec<u32>,
 ) {
     machinecode.push(0xA9BF7BFD); // stp fp, lr, [sp, #-16]!  ; create a new stack frame
@@ -19,7 +19,7 @@ pub fn emit_prologue(
                 RegSize::Reg64bit,
             ));
         } else {
-            let reg = registerpool.allocate_register();
+            let reg = register_pool.alloc();
             compound::mov_large_immediate(reg, stack_size as i64, RegSize::Reg64bit, machinecode);
             machinecode.push(arithmetic::sub_extended_reg(
                 Reg::SP,
@@ -29,7 +29,7 @@ pub fn emit_prologue(
                 0,
                 RegSize::Reg64bit,
             ));
-            registerpool.free_register(&reg);
+            register_pool.free();
         }
     }
 }

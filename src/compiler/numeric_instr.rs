@@ -43,7 +43,7 @@ pub fn compile_binop(
     }
 
     value_stack.push(op1);
-    register_pool.free_register(&op2.reg);
+    register_pool.free();
 }
 
 pub fn compile_relop(
@@ -87,7 +87,7 @@ pub fn compile_relop(
         reg: op1.reg,
         valtype: ValType::I32,
     });
-    register_pool.free_register(&op2.reg);
+    register_pool.free();
 }
 
 pub fn compile_const<T: Into<i64>>(
@@ -97,7 +97,7 @@ pub fn compile_const<T: Into<i64>>(
     register_pool: &mut RegisterPool,
     machinecode: &mut Vec<u32>,
 ) {
-    let reg = register_pool.allocate_register();
+    let reg = register_pool.alloc();
     let valtype = map_op_to_valtype(op);
 
     value_stack.push(StackElement { reg, valtype });

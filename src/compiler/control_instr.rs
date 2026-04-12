@@ -34,7 +34,7 @@ pub fn compile_if(
         _ => panic!("Unexpected blocktype in 'if'"),
     };
 
-    register_pool.free_register(&cond.reg);
+    register_pool.free();
 
     control_stack.push(ControlFrame {
         opcode: Opcode::If,
@@ -42,7 +42,7 @@ pub fn compile_if(
         end_types,
         stack_height: value_stack.len(),
         value_stack: Some(value_stack.to_vec()),
-        register_pool: Some(register_pool.clone()),
+        register_pool_index: Some(register_pool.index),
         patches: vec![Patch {
             location: machinecode.len(),
             instruction: Instruction::Cbz,
@@ -76,10 +76,9 @@ pub fn compile_else(
                 }
             }
 
-            // Restore value stack to state at the beginning of the 'if' block
-            print!("after if: {:?}", register_pool);
+            // Restore value stack and register pool to state at the beginning of the 'if' block
             *value_stack = frame.value_stack.unwrap();
-            *register_pool = frame.register_pool.unwrap();
+            register_pool.index = frame.register_pool_index.unwrap();
 
             control_stack.push(ControlFrame {
                 opcode: Opcode::Else,
@@ -87,7 +86,7 @@ pub fn compile_else(
                 end_types: frame.end_types,
                 stack_height: value_stack.len(),
                 value_stack: None,
-                register_pool: None,
+                register_pool_index: None,
                 patches: vec![Patch {
                     location: machinecode.len(),
                     instruction: Instruction::Br,

@@ -50,7 +50,7 @@ pub struct ControlFrame {
     pub end_types: Vec<ValType>,
     pub stack_height: usize,
     pub value_stack: Option<Vec<StackElement>>,
-    pub register_pool: Option<RegisterPool>,
+    pub register_pool_index: Option<i32>,
     pub patches: Vec<Patch>,
 }
 

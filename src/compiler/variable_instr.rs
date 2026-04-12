@@ -7,7 +7,7 @@ pub fn compile_local_get(
     register_pool: &mut RegisterPool,
     machinecode: &mut Vec<u32>,
 ) {
-    let reg = register_pool.allocate_register();
+    let reg = register_pool.alloc();
     value_stack.push(StackElement {
         reg,
         valtype: variable.valtype,
@@ -45,7 +45,7 @@ pub fn compile_local_set(
         map_valtype_to_memsize(&variable.valtype),
         map_valtype_to_regsize(&variable.valtype),
     ));
-    register_pool.free_register(&element.reg);
+    register_pool.free();
 }
 
 pub fn compile_local_tee(
