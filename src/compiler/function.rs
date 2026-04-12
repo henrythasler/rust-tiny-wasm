@@ -49,14 +49,8 @@ pub fn compile_function(
         let index = reader.original_position();
         let op = reader.read().unwrap();
         match op {
-            Operator::End => {
-                if compile_end(&mut control_stack, &mut value_stack, machinecode) {
-                    break 'expression;
-                }
-            }
-            Operator::Return => {
-                compile_return(&mut control_stack, machinecode);
-            }
+            Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
+            Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
             Operator::If { blockty } => {
                 compile_if(
                     blockty,
@@ -73,6 +67,16 @@ pub fn compile_function(
                     &mut register_pool,
                     machinecode,
                 );
+            }
+            Operator::End => {
+                if compile_end(
+                    &mut control_stack,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                ) {
+                    break 'expression;
+                }
             }
             Operator::I32LtS | Operator::I64LtS => {
                 compile_relop(&op, &mut value_stack, &mut register_pool, machinecode)

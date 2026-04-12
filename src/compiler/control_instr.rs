@@ -2,10 +2,21 @@ use wasmparser::BlockType;
 
 use super::*;
 
-pub fn compile_return(control_stack: &mut [ControlFrame], machinecode: &mut Vec<u32>) {
+pub fn compile_return(
+    control_stack: &mut [ControlFrame],
+    value_stack: &[StackElement],
+    machinecode: &mut Vec<u32>,
+) {
     let frame = control_stack
         .get_mut(0)
         .expect("control stack should contain at least one element on 'return' opcode");
+
+    assert_eq!(
+        frame.end_types.len(),
+        value_stack.len(),
+        "insufficient operands on stack for 'return'"
+    );
+
     frame.patches.push(Patch {
         location: machinecode.len(),
         instruction: Instruction::Br,
@@ -66,6 +77,7 @@ pub fn compile_else(
             for patch in frame.patches {
                 match patch.instruction {
                     Instruction::Cbz => {
+                        // +1 because we want to jump *after* the last then-instruction
                         let offset = (machinecode.len() - patch.location + 1) as i32 * 4;
                         let location = machinecode
                             .get_mut(patch.location)
@@ -114,30 +126,31 @@ pub fn compile_else(
 pub fn compile_end(
     control_stack: &mut Vec<ControlFrame>,
     value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
     machinecode: &mut [u32],
 ) -> bool {
     let frame = control_stack
         .pop()
         .expect("control stack should contain at least one element on 'end' opcode");
 
-    // assert_eq!(
-    //     value_stack.len(),
-    //     frame.stack_height + frame.end_types.len(),
-    //     "Length of value stack ({}) should match block result ({})",
-    //     value_stack.len(),
-    //     frame.stack_height + frame.end_types.len()
-    // );
-
     let mut results = value_stack.split_off(value_stack.len() - frame.end_types.len());
     value_stack.truncate(frame.stack_height);
     value_stack.append(&mut results);
+
+    assert_eq!(
+        value_stack.len(),
+        frame.stack_height + frame.end_types.len(),
+        "Length of value stack ({}) should match block result ({})",
+        value_stack.len(),
+        frame.stack_height + frame.end_types.len()
+    );
 
     match frame.opcode {
         Opcode::Func => {
             for patch in frame.patches {
                 match patch.instruction {
                     Instruction::Br => {
-                        let offset = (machinecode.len() - patch.location + 1) as i32 * 4;
+                        let offset = (machinecode.len() - patch.location) as i32 * 4;
                         let location = machinecode
                             .get_mut(patch.location)
                             .expect("patch location should point to valid location");
@@ -149,10 +162,14 @@ pub fn compile_end(
             return true; // break 'expression;
         }
         Opcode::If => {
+            // Restore value stack and register pool to state at the beginning of the 'if' block
+            *value_stack = frame.value_stack.unwrap();
+            register_pool.index = frame.register_pool_index.unwrap();
+
             for patch in frame.patches {
                 match patch.instruction {
                     Instruction::Cbz => {
-                        let offset = (machinecode.len() - patch.location + 1) as i32 * 4;
+                        let offset = (machinecode.len() - patch.location) as i32 * 4;
                         let location = machinecode
                             .get_mut(patch.location)
                             .expect("patch location should point to valid location");

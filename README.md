@@ -215,6 +215,10 @@ Local variable instructions in WebAssembly are needed to use function parameters
 - [x] Load and parse the WebAssembly module `tests/assets/arithmetics.wasm`.
 - [x] Pass all test-cases in `tests/arithmetics_test.rs`.
 
+## Chapter 11 - Loops
+
+## Chapter 12 - Conditional Branches
+
 ## Extensions
 
  - [ ] Verify signatures before calling a Wasm-Function (exports, internal).

@@ -1,11 +1,35 @@
 (module
  (export "simple_if" (func $simple_if))
+ (export "simple_if_return" (func $simple_if_return)) 
+ (export "simple_if_else" (func $simple_if_else))
  (export "nested_if" (func $nested_if))
  (export "nested_else" (func $nested_else))
  (export "simple_if_add1" (func $simple_if_add1))
  (export "nested_else_add1" (func $nested_else_add1))
 
  (func $simple_if (param $var0 i64) (result i64)
+  local.get $var0
+  i64.const 0
+  i64.lt_s
+  if
+    i64.const -1
+    drop
+  end
+  i64.const 1
+ )
+
+  (func $simple_if_return (param $var0 i64) (result i64)
+  local.get $var0
+  i64.const 0
+  i64.lt_s
+  if
+    i64.const -1
+    return
+  end
+  i64.const 1
+ )
+
+ (func $simple_if_else (param $var0 i64) (result i64)
   local.get $var0
   i64.const 0
   i64.lt_s
