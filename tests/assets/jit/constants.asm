@@ -5,19 +5,19 @@ SYMBOL TABLE:
 0000000000000000 l     F .text	0000000000000020 get_42
 0000000000000020 l     F .text	0000000000000020 get_minus_1
 0000000000000040 l     F .text	0000000000000028 get_large_num
-0000000000000068 l     F .text	0000000000000020 get_i64_min
+0000000000000068 l     F .text	0000000000000028 get_i64_min
 
 
 Contents of section .text:
  0000 fd7bbfa9 fd030091 48058052 e003082a  .{......H..R...*
  0010 e1031f2a fd7bc1a8 c0035fd6 1f2003d5  ...*.{...._.. ..
- 0020 fd7bbfa9 fd030091 e8ff9f52 e8ffbf72  .{.........R...r
- 0030 e003082a e1031f2a fd7bc1a8 c0035fd6  ...*...*.{...._.
+ 0020 fd7bbfa9 fd030091 08008012 e003082a  .{.............*
+ 0030 e1031f2a fd7bc1a8 c0035fd6 1f2003d5  ...*.{...._.. ..
  0040 fd7bbfa9 fd030091 887997d2 4815b2f2  .{.......y..H...
  0050 08cfcaf2 8846e2f2 e00308aa e1031faa  .....F..........
  0060 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
- 0070 080080d2 0800f0f2 e00308aa e1031faa  ................
- 0080 fd7bc1a8 c0035fd6                    .{...._.        
+ 0070 e8ff9f92 0800a0f2 0800c0f2 0800f0f2  ................
+ 0080 e00308aa e1031faa fd7bc1a8 c0035fd6  .........{...._.
 
 Disassembly of section .text:
 
@@ -34,12 +34,12 @@ Disassembly of section .text:
 0000000000000020 <get_minus_1>:
   20:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
   24:	910003fd 	mov	x29, sp
-  28:	529fffe8 	mov	w8, #0xffff                	// #65535
-  2c:	72bfffe8 	movk	w8, #0xffff, lsl #16
-  30:	2a0803e0 	mov	w0, w8
-  34:	2a1f03e1 	mov	w1, wzr
-  38:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  3c:	d65f03c0 	ret
+  28:	12800008 	mov	w8, #0xffffffff            	// #-1
+  2c:	2a0803e0 	mov	w0, w8
+  30:	2a1f03e1 	mov	w1, wzr
+  34:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  38:	d65f03c0 	ret
+  3c:	d503201f 	nop
 
 0000000000000040 <get_large_num>:
   40:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
@@ -56,9 +56,11 @@ Disassembly of section .text:
 0000000000000068 <get_i64_min>:
   68:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
   6c:	910003fd 	mov	x29, sp
-  70:	d2800008 	mov	x8, #0x0                   	// #0
-  74:	f2f00008 	movk	x8, #0x8000, lsl #48
-  78:	aa0803e0 	mov	x0, x8
-  7c:	aa1f03e1 	mov	x1, xzr
-  80:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  84:	d65f03c0 	ret
+  70:	929fffe8 	mov	x8, #0xffffffffffff0000    	// #-65536
+  74:	f2a00008 	movk	x8, #0x0, lsl #16
+  78:	f2c00008 	movk	x8, #0x0, lsl #32
+  7c:	f2f00008 	movk	x8, #0x8000, lsl #48
+  80:	aa0803e0 	mov	x0, x8
+  84:	aa1f03e1 	mov	x1, xzr
+  88:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  8c:	d65f03c0 	ret

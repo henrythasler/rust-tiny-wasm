@@ -5,15 +5,16 @@ build:
 # Run all tests
 test:
     #!/bin/bash
-    cargo llvm-cov clean --workspace
-    RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)'
-    # RUSTFLAGS="-C instrument-coverage -C link-dead-code" RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --show-instantiations --ignore-filename-regex '(build\.rs|main\.rs)'
+    cargo test objdump
     for file in ./tests/assets/jit/*.o; do \
         echo $file; \
         # aarch64-linux-gnu-objdump -D -b binary -m aarch64 $file > ${file%.o}.asm; \
         aarch64-linux-gnu-objdump -d -s -t $file > ${file%.o}.asm; \
         rm ${file}; \
-    done    
+    done
+    cargo llvm-cov clean --workspace
+    RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)'
+    # RUSTFLAGS="-C instrument-coverage -C link-dead-code" RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --show-instantiations --ignore-filename-regex '(build\.rs|main\.rs)'
 
 # Run executable
 run +arguments:
