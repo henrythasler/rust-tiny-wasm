@@ -17,6 +17,7 @@ pub fn compile_function(
         stack_height: value_stack.len(),
         value_stack: None,
         register_pool_index: None,
+        machinecode_offset: machinecode.len(),
         patches: vec![],
     }];
 
@@ -51,6 +52,24 @@ pub fn compile_function(
         match op {
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
             Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
+            Operator::Loop { blockty } => {
+                compile_loop(
+                    blockty,
+                    &mut control_stack,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
+            Operator::BrIf { relative_depth } => {
+                compile_brif(
+                    relative_depth,
+                    &mut control_stack,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
             Operator::If { blockty } => {
                 compile_if(
                     blockty,

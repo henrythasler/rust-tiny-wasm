@@ -1,5 +1,17 @@
 use super::*;
 
+/// Moves a large immediate value into a register by breaking it down into 16-bit chunks.
+///
+/// This function handles both positive and negative values. For negative values,
+/// it uses the `movn` instruction to set the register to the bitwise NOT of the value,
+/// and then uses `movk` to set the remaining bits.
+/// For positive values, it uses `movz` to set the initial bits and `movk` for the rest.
+///
+/// # Arguments
+/// * `rd` - The destination register.
+/// * `value` - The immediate value to be moved into the register.
+/// * `size` - The size of the register (32-bit or 64-bit).
+/// * `machinecode` - A mutable reference to a vector where the generated machine code will be stored.
 pub fn mov_large_immediate(rd: Reg, value: i64, size: RegSize, machinecode: &mut Vec<u32>) {
     let chunk_limit = if size == RegSize::Reg32bit { 2 } else { 4 };
     let negative = value < 0;

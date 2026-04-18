@@ -53,6 +53,7 @@ pub struct ControlFrame {
     pub stack_height: usize,
     pub value_stack: Option<Vec<StackElement>>,
     pub register_pool_index: Option<i32>,
+    pub machinecode_offset: usize,
     pub patches: Vec<Patch>,
 }
 

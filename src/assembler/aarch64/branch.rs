@@ -44,6 +44,13 @@ pub fn patch_cbz(offset: i32, location: &mut u32) {
     *location |= (((offset >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
 }
 
+pub fn cbnz(rt: Reg, offset: i32, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x35000000, 0xB5000000, size);
+    instr |= (((offset >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
+    instr |= rt & 0x1F; // Rt (register to be tested)
+    instr
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

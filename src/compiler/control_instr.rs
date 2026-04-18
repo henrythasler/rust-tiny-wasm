@@ -24,6 +24,69 @@ pub fn compile_return(
     machinecode.push(branch::branch(0));
 }
 
+pub fn compile_loop(
+    blockty: BlockType,
+    control_stack: &mut Vec<ControlFrame>,
+    value_stack: &mut [StackElement],
+    register_pool: &mut RegisterPool,
+    machinecode: &mut [u32],
+) {
+    assert_eq!(blockty, BlockType::Empty);
+
+    control_stack.push(ControlFrame {
+        opcode: Opcode::Loop,
+        start_types: vec![],
+        end_types: vec![],
+        stack_height: value_stack.len(),
+        value_stack: Some(value_stack.to_vec()),
+        register_pool_index: Some(register_pool.index),
+        machinecode_offset: machinecode.len(),
+        patches: vec![],
+    });
+}
+
+// pub fn compile_br(
+//     relative_depth: u32,
+//     control_stack: &mut Vec<ControlFrame>,
+//     value_stack: &mut Vec<StackElement>,
+//     register_pool: &mut RegisterPool,
+//     machinecode: &mut Vec<u32>,
+// ) {
+// }
+
+pub fn compile_brif(
+    _relative_depth: u32,
+    control_stack: &mut [ControlFrame],
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    assert!(
+        !value_stack.is_empty(),
+        "insufficient operands on stack for 'if'"
+    );
+
+    let cond = value_stack.pop().unwrap();
+    assert_eq!(
+        cond.valtype,
+        ValType::I32,
+        "Operand type mismatch in 'brif'"
+    );
+    let frame = control_stack
+        .last()
+        .expect("control stack should contain at least one element on 'end' opcode");
+
+    register_pool.free();
+
+    match frame.opcode {
+        Opcode::Loop => {
+            let offset = (frame.machinecode_offset as i32 - machinecode.len() as i32) * 4;
+            machinecode.push(branch::cbnz(cond.reg, offset, RegSize::Reg32bit));
+        }
+        _ => panic!("unexpected Instruction"),
+    }
+}
+
 pub fn compile_if(
     blockty: BlockType,
     control_stack: &mut Vec<ControlFrame>,
@@ -54,6 +117,7 @@ pub fn compile_if(
         stack_height: value_stack.len(),
         value_stack: Some(value_stack.to_vec()),
         register_pool_index: Some(register_pool.index),
+        machinecode_offset: machinecode.len(),
         patches: vec![Patch {
             location: machinecode.len(),
             instruction: Instruction::Cbz,
@@ -99,6 +163,7 @@ pub fn compile_else(
                 stack_height: value_stack.len(),
                 value_stack: None,
                 register_pool_index: None,
+                machinecode_offset: machinecode.len(),
                 patches: vec![Patch {
                     location: machinecode.len(),
                     instruction: Instruction::Br,
@@ -133,7 +198,8 @@ pub fn compile_end(
         .pop()
         .expect("control stack should contain at least one element on 'end' opcode");
 
-    let mut results = value_stack.split_off(value_stack.len() - frame.end_types.len());
+    let mut results = value_stack
+        .split_off(i32::max(0, value_stack.len() as i32 - frame.end_types.len() as i32) as usize);
     value_stack.truncate(frame.stack_height);
     value_stack.append(&mut results);
 
@@ -193,6 +259,7 @@ pub fn compile_end(
                 }
             }
         }
+        Opcode::Loop => {}
         _ => panic!("unsupported constrol-frame type"),
     }
 

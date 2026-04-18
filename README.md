@@ -219,6 +219,8 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 ## Chapter 12 - Conditional Branches
 
+## Chapter 13 - Blocks
+
 ## Extensions
 
  - [ ] Verify signatures before calling a Wasm-Function (exports, internal).
