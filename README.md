@@ -221,6 +221,8 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 ## Chapter 13 - Blocks
 
+## Chapter 14 - Rust to Wasm
+
 ## Extensions
 
  - [ ] Verify signatures before calling a Wasm-Function (exports, internal).

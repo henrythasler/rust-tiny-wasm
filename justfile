@@ -39,6 +39,13 @@ wat2wasm:
         wat2wasm $file -o ${file%.wat}.wasm; \
     done
 
+rs2wasm:
+    for file in ./tests/assets/rs/*.rs; do \
+        echo $file; \
+        rustc --target wasm32v1-none -Cpanic=abort -o ${file%.rs}.wasm $file; \
+        wasm-opt -Oz --strip-debug --strip-producers -o ${file%.rs}.wasm ${file%.rs}.wasm; \
+    done
+
 valentblock:
     VALENT_BLOCK=1 cargo test --target aarch64-unknown-linux-gnu --test objdump --test valent_blocks_test
     for file in ./tests/assets/jit/*.o; do \
