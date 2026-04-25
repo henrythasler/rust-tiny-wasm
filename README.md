@@ -221,7 +221,15 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 ## Chapter 13 - Blocks
 
-## Chapter 14 - Rust to Wasm
+## Chapter xx - Rust to Wasm
+
+### Goals
+
+- [ ] Investigate how a minimal rust program can be compiled to webassembly.
+
+### References
+
+- [The rustc book - wasm32v1-none](https://doc.rust-lang.org/rustc/platform-support/wasm32v1-none.html)
 
 ## Extensions
 

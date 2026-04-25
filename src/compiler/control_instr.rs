@@ -24,6 +24,31 @@ pub fn compile_return(
     machinecode.push(branch::branch(0));
 }
 
+pub fn compile_block(
+    blockty: BlockType,
+    control_stack: &mut Vec<ControlFrame>,
+    value_stack: &mut [StackElement],
+    register_pool: &mut RegisterPool,
+    machinecode: &mut [u32],
+) {
+    let end_types = match blockty {
+        BlockType::Type(ty) => vec![ty],
+        BlockType::Empty => vec![],
+        _ => panic!("Unexpected blocktype in 'if'"),
+    };
+
+    control_stack.push(ControlFrame {
+        opcode: Opcode::Block,
+        start_types: vec![],
+        end_types,
+        stack_height: value_stack.len(),
+        value_stack: Some(value_stack.to_vec()),
+        register_pool_index: Some(register_pool.index),
+        machinecode_offset: machinecode.len(),
+        patches: vec![],
+    });
+}
+
 pub fn compile_loop(
     blockty: BlockType,
     control_stack: &mut Vec<ControlFrame>,
@@ -45,17 +70,33 @@ pub fn compile_loop(
     });
 }
 
-// pub fn compile_br(
-//     relative_depth: u32,
-//     control_stack: &mut Vec<ControlFrame>,
-//     value_stack: &mut Vec<StackElement>,
-//     register_pool: &mut RegisterPool,
-//     machinecode: &mut Vec<u32>,
-// ) {
-// }
+pub fn compile_br(
+    relative_depth: u32,
+    control_stack: &mut [ControlFrame],
+    machinecode: &mut Vec<u32>,
+) {
+    let idx = control_stack.len() - 1 - relative_depth as usize;
+    let frame = control_stack
+        .get_mut(idx)
+        .expect("control stack inconsistent");
+
+    match frame.opcode {
+        Opcode::Block => {
+            frame.patches.push(Patch {
+                location: machinecode.len(),
+                instruction: Instruction::Br,
+            });
+            machinecode.push(branch::branch(0));
+        }
+        _ => panic!(
+            "unexpected instruction for control stack item {:?}:",
+            frame.opcode
+        ),
+    }
+}
 
 pub fn compile_brif(
-    _relative_depth: u32,
+    relative_depth: u32,
     control_stack: &mut [ControlFrame],
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
@@ -72,9 +113,10 @@ pub fn compile_brif(
         ValType::I32,
         "Operand type mismatch in 'brif'"
     );
+    let idx = control_stack.len() - 1 - relative_depth as usize;
     let frame = control_stack
-        .last()
-        .expect("control stack should contain at least one element on 'end' opcode");
+        .get_mut(idx)
+        .expect("control stack inconsistent");
 
     register_pool.free();
 
@@ -83,7 +125,17 @@ pub fn compile_brif(
             let offset = (frame.machinecode_offset as i32 - machinecode.len() as i32) * 4;
             machinecode.push(branch::cbnz(cond.reg, offset, RegSize::Reg32bit));
         }
-        _ => panic!("unexpected Instruction"),
+        Opcode::Block => {
+            frame.patches.push(Patch {
+                location: machinecode.len(),
+                instruction: Instruction::Cbz,
+            });
+            machinecode.push(branch::cbnz(cond.reg, 0, RegSize::Reg32bit));
+        }
+        _ => panic!(
+            "unexpected instruction for control stack item {:?}:",
+            frame.opcode
+        ),
     }
 }
 
@@ -260,7 +312,26 @@ pub fn compile_end(
             }
         }
         Opcode::Loop => {}
-        _ => panic!("unsupported constrol-frame type"),
+        Opcode::Block => {
+            for patch in frame.patches {
+                match patch.instruction {
+                    Instruction::Br => {
+                        let offset = (machinecode.len() - patch.location) as i32 * 4;
+                        let location = machinecode
+                            .get_mut(patch.location)
+                            .expect("patch location should point to valid location");
+                        branch::patch_branch(offset, location);
+                    }
+                    Instruction::Cbz => {
+                        let offset = (machinecode.len() - patch.location) as i32 * 4;
+                        let location = machinecode
+                            .get_mut(patch.location)
+                            .expect("patch location should point to valid location");
+                        branch::patch_cbz(offset, location);
+                    }
+                }
+            }
+        }
     }
 
     false

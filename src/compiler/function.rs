@@ -52,8 +52,8 @@ pub fn compile_function(
         match op {
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
             Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
-            Operator::Loop { blockty } => {
-                compile_loop(
+            Operator::Block { blockty } => {
+                compile_block(
                     blockty,
                     &mut control_stack,
                     &mut value_stack,
@@ -61,9 +61,27 @@ pub fn compile_function(
                     machinecode,
                 );
             }
+            Operator::Br { relative_depth } => {
+                compile_br(
+                    relative_depth,
+                    &mut control_stack,
+                    // &mut value_stack,
+                    // &mut register_pool,
+                    machinecode,
+                );
+            }
             Operator::BrIf { relative_depth } => {
                 compile_brif(
                     relative_depth,
+                    &mut control_stack,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
+            Operator::Loop { blockty } => {
+                compile_loop(
+                    blockty,
                     &mut control_stack,
                     &mut value_stack,
                     &mut register_pool,
