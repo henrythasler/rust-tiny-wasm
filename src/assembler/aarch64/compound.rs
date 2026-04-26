@@ -39,6 +39,15 @@ pub fn mov_large_immediate(rd: Reg, value: i64, size: RegSize, machinecode: &mut
     }
 }
 
+/// This instruction counts the number of consecutive binary zero bits, starting from the least significant bit in the source register, and places the
+/// count in the destination register.
+///
+/// This is a compound instruction using RBIT and CLZ.
+pub fn ctz(rd: Reg, rn: Reg, size: RegSize, machinecode: &mut Vec<u32>) {
+    machinecode.push(bit::rbit(rd, rn, size));
+    machinecode.push(bit::clz(rd, rd, size));
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

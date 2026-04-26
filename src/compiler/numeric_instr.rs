@@ -1,5 +1,33 @@
 use super::*;
 
+pub fn compile_unop(
+    op: &Operator,
+    value_stack: &mut Vec<StackElement>,
+    machinecode: &mut Vec<u32>,
+) {
+    let len = value_stack.len();
+    assert!(len >= 1, "insufficient operands on stack for unop");
+
+    let operand = value_stack.pop().unwrap();
+
+    let valtype = map_op_to_valtype(op);
+    assert_eq!(
+        operand.valtype, valtype,
+        "Operand 1 type mismatch for binop"
+    );
+
+    match op {
+        Operator::I32Ctz | Operator::I64Ctz => compound::ctz(
+            operand.reg,
+            operand.reg,
+            map_valtype_to_regsize(&valtype),
+            machinecode,
+        ),
+
+        _ => panic!("Unary operator '{:?}' not supported", op),
+    }
+}
+
 pub fn compile_binop(
     op: &Operator,
     value_stack: &mut Vec<StackElement>,

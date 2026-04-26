@@ -4,7 +4,7 @@ use tiny_wasm::*;
 
 #[test]
 fn test_parameters() -> Result<()> {
-    let module = fs::read(Path::new(Path::new("tests/assets/arithmetics.wasm")))?;
+    let module = fs::read(Path::new("tests/assets/arithmetics.wasm"))?;
     let instance = get_module_instance(&module)?;
 
     let add = instance.get_function::<(i32, i32), i32>("add")?;

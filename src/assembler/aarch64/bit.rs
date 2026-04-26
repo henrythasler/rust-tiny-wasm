@@ -37,6 +37,39 @@ pub fn lsr_imm(rd: Reg, rn: Reg, shift: u32, size: RegSize) -> u32 {
     )
 }
 
+/**
+ * This instruction counts the number of consecutive binary zero bits, starting from the most significant bit in the source register, and places the
+ * count in the destination register.
+ *
+ * `CLZ rd, rn`
+ * @param rd destination register
+ * @param rm source register
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+pub fn clz(rd: Reg, rn: Reg, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x5ac01000, 0xdac01000, size);
+    instr |= (rn & 0x1F) << 5; // Rn (dividend source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
+/**
+ * This instruction reverses the bit order in a register.
+ *
+ * `RBIT rd, rn`
+ * @param rd destination register
+ * @param rm source register
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+pub fn rbit(rd: Reg, rn: Reg, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x5ac00000, 0xdac00000, size);
+    instr |= (rn & 0x1F) << 5; // Rn (dividend source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
