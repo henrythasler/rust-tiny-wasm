@@ -115,19 +115,19 @@ pub fn sub_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u3
 
 /// This instruction subtracts an optionally-shifted immediate value from a register value, and writes the result to the destination register. It
 /// updates the condition flags based on the result.
-/// 
+///
 /// Encoding: `SUBS <rd>, <rn|SP>, #<imm12>{, LSL #12}`
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `rd` - destination register
 /// * `rn` - source register
 /// * `imm12` - 12-bit immediate value
 /// * `shift12` - whether to left shift the immediate by 12 bits
 /// * `size` - 32-bit or 64-bit variant
-/// 
+///
 /// # Returns
-/// 
+///
 /// The encoded instruction
 pub fn subs_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
     let mut instr = select_instr(0x71000000, 0xf1000000, size);

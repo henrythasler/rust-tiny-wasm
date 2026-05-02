@@ -5,8 +5,8 @@ use std::path::Path;
 use tiny_wasm::*;
 {% for module in modules %}
 #[test]
-fn test_{{ name }}_{{ module.name }}() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/wast/{{ name }}.wasm"))?;
+fn test_{{ module.name }}() -> Result<()> {
+    let module = fs::read(Path::new("tests/assets/wast/{{ module.name }}.wasm"))?;
     let instance = get_module_instance(&module)?;
 
     {% for function in module.functions -%}
@@ -15,7 +15,7 @@ fn test_{{ name }}_{{ module.name }}() -> Result<()> {
         {% if test.expected != "" -%}
     assert_eq!(func.call({{ test.args }})?, {{ test.expected }});
         {%- else -%}
-    func.call();
+    func.call()?;
         {%- endif %}
     {% endfor %}
     {%- endfor -%}

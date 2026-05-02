@@ -61,7 +61,6 @@ fn main() {
         let buf = parser::ParseBuffer::new(&wast_file).unwrap();
         let wast = parser::parse::<Wast>(&buf).unwrap();
 
-        let wast_filename = String::from(file.file_name().unwrap().to_str().unwrap());
         let mut test_modules: Vec<TestModule> = vec![];
 
         for directive in wast.directives {
@@ -69,17 +68,22 @@ fn main() {
                 WastDirective::Module(mut module) => {
                     let wasm = module.encode().unwrap();
 
-                    let mut output_path = base.join(&wast_filename);
+                    let wasm_filename = format!(
+                        "{}_{}",
+                        file.file_stem().unwrap().to_str().unwrap(),
+                        test_modules.len()
+                    );
+                    let mut output_path = base.join(&wasm_filename);
                     output_path.set_extension("wasm");
 
                     fs::write(&output_path, wasm).expect("fs::write() should be able to write");
                     test_modules.push(TestModule {
-                        name: format!("{}", test_modules.len()),
+                        name: wasm_filename,
                         functions: vec![],
                     });
                 }
-                WastDirective::AssertReturn { exec, results, .. } => {
-                    let (name, args) = match exec {
+                WastDirective::AssertReturn { exec, .. } => {
+                    let (name, _args) = match exec {
                         wast::WastExecute::Invoke(invoke) => {
                             let name = invoke.name;
                             let args = invoke.args;

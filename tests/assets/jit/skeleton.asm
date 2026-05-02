@@ -1,5 +1,5 @@
 
-./tests/assets/jit/skeleton.o:     file format elf64-littleaarch64
+tests/assets/jit/skeleton.o:     file format elf64-littleaarch64
 
 SYMBOL TABLE:
 0000000000000000 l     F .text	0000000000000020 _start

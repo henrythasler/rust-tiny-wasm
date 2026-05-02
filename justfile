@@ -4,17 +4,9 @@ build:
 
 # Run all tests
 test:
-    #!/bin/bash
-    cargo test objdump
-    for file in ./tests/assets/jit/*.o; do \
-        echo $file; \
-        # aarch64-linux-gnu-objdump -D -b binary -m aarch64 $file > ${file%.o}.asm; \
-        aarch64-linux-gnu-objdump -d -s -t $file > ${file%.o}.asm; \
-        rm ${file}; \
-    done
     cargo llvm-cov clean --workspace
     # see https://docs.rs/crate/cargo-llvm-cov/latest and https://doc.rust-lang.org/cargo/commands/cargo-test.html
-    RUST_BACKTRACE=0 cargo llvm-cov test --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test'
+    RUST_BACKTRACE=0 cargo llvm-cov test --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test' --test 'objdump'
     # RUSTFLAGS="-C instrument-coverage -C link-dead-code" RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --show-instantiations --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test'
 
 # Run executable

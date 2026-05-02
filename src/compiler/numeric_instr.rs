@@ -137,13 +137,16 @@ pub fn compile_relop(
     ));
 
     match op {
-        Operator::I32LtS | Operator::I64LtS => {
-            machinecode.push(conditionals::cset(
-                op1.reg,
-                Condition::from_u32(Condition::LT ^ 1).unwrap(),
-                RegSize::Reg32bit,
-            ));
-        }
+        Operator::I32LtS | Operator::I64LtS => machinecode.push(conditionals::cset(
+            op1.reg,
+            Condition::from_u32(Condition::LT ^ 1).unwrap(),
+            RegSize::Reg32bit,
+        )),
+        Operator::I32LeU | Operator::I64LeU => machinecode.push(conditionals::cset(
+            op1.reg,
+            Condition::from_u32(Condition::LS ^ 1).unwrap(),
+            RegSize::Reg32bit,
+        )),
         _ => panic!("Relation operator '{:?}' not supported", op),
     }
 

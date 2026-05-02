@@ -1,5 +1,5 @@
 
-./tests/assets/jit/branch.o:     file format elf64-littleaarch64
+tests/assets/jit/branch.o:     file format elf64-littleaarch64
 
 SYMBOL TABLE:
 0000000000000000 l     F .text	0000000000000040 simple_if
