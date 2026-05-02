@@ -15,6 +15,12 @@ Here are some guidelines about how to use Gen-AI tools in the context of this tu
 3. Ask for options how to solve a specific problem to make an informed decision about which option to use or ask again if you are not fully satisfied.
 4. Use code snippets or generated code sparsely. Make sure you understand the generated code and could explain most of it to a peer programmer.
 
+## Quickstart
+
+- Install dependencies: `sudo apt install build-essential g++-aarch64-linux-gnu gdb-multiarch just qemu-user wabt binaryen`
+- Install rust toolchain via [Getting Started](https://rust-lang.org/learn/get-started/).
+- Install rust dependencies: `cargo +stable install cargo-llvm-cov --locked && rustup target add wasm32v1-none`
+
 ## Chapter 1 - Toolchain Setup
 
 The very first chapter is about installing and setting up the Rust toolchain locally and in the CI.
@@ -47,7 +53,8 @@ The very first chapter is about installing and setting up the Rust toolchain loc
 - Build and run the application with `cargo run` on the native target.
 - Run the ARM64 application with `qemu-aarch64 -L /usr/aarch64-linux-gnu/ target/aarch64-unknown-linux-gnu/debug/rust-tiny-wasm`
 - To build on a native ARM64 target in the github CI, use `runs-on: ubuntu-24.04-arm`.
-- Dependency installation one-liner: `sudo apt install just qemu-user qemu-user-static && cargo +stable install cargo-llvm-cov --locked`
+- Dependency installation one-liner: `sudo apt install build-essential g++-aarch64-linux-gnu gdb-multiarch just qemu-user && cargo +stable install cargo-llvm-cov --locked`
+- Maybe: `sudo apt install qemu-user-static`
 
 ### References
 
@@ -227,10 +234,16 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 - [ ] Investigate how a minimal rust program can be compiled to webassembly.
 
-### References
+### Detailled Description
 
-- [The rustc book - wasm32v1-none](https://doc.rust-lang.org/rustc/platform-support/wasm32v1-none.html)
+Use [The rustc book - wasm32v1-none](https://doc.rust-lang.org/rustc/platform-support/wasm32v1-none.html).
 
 ## Extensions
 
  - [ ] Verify signatures before calling a Wasm-Function (exports, internal).
+
+ ## References
+
+- [WebAssembly 1.0 Core Specification](https://www.w3.org/TR/wasm-core-1/)
+- [Arm A-profile A64 Instruction Set Architecture](https://developer.arm.com/documentation/ddi0602/2025-09?lang=en)
+- [godbolt - Compiler Explorer](https://godbolt.org/)

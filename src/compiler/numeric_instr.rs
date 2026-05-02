@@ -26,6 +26,42 @@ pub fn compile_unop(
 
         _ => panic!("Unary operator '{:?}' not supported", op),
     }
+    value_stack.push(operand);
+}
+
+pub fn compile_testop(
+    op: &Operator,
+    value_stack: &mut Vec<StackElement>,
+    machinecode: &mut Vec<u32>,
+) {
+    let len = value_stack.len();
+    assert!(len >= 1, "insufficient operands on stack for testop");
+
+    let operand = value_stack.pop().unwrap();
+
+    let valtype = map_op_to_valtype(op);
+    assert_eq!(
+        operand.valtype, valtype,
+        "Operand 1 type mismatch for testop"
+    );
+
+    match op {
+        Operator::I32Eqz | Operator::I64Eqz => {
+            machinecode.push(arithmetic::cmp_imm(
+                operand.reg,
+                0,
+                false,
+                map_valtype_to_regsize(&valtype),
+            ));
+            machinecode.push(conditionals::cset(
+                operand.reg,
+                Condition::from_u32(Condition::EQ ^ 1).unwrap(),
+                RegSize::Reg32bit,
+            ));
+        }
+        _ => panic!("Unary operator '{:?}' not supported", op),
+    }
+    value_stack.push(operand);
 }
 
 pub fn compile_binop(

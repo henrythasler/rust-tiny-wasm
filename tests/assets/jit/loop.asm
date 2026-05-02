@@ -35,7 +35,7 @@ Disassembly of section .text:
   24:	b94007e8 	ldr	w8, [sp, #4]
   28:	b94003e9 	ldr	w9, [sp]
   2c:	6b09011f 	cmp	w8, w9
-  30:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+  30:	1a9fa7e8 	cset	w8, lt	// lt = tstop
   34:	35ffff08 	cbnz	w8, 14 <loop_n+0x14>
   38:	b94007e8 	ldr	w8, [sp, #4]
   3c:	2a0803e0 	mov	w0, w8
@@ -62,7 +62,7 @@ Disassembly of section .text:
   88:	b94003e8 	ldr	w8, [sp]
   8c:	b94007e9 	ldr	w9, [sp, #4]
   90:	6b09011f 	cmp	w8, w9
-  94:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+  94:	1a9fa7e8 	cset	w8, lt	// lt = tstop
   98:	35fffe88 	cbnz	w8, 68 <loop_nm+0x18>
   9c:	b9400be8 	ldr	w8, [sp, #8]
   a0:	2a0803e0 	mov	w0, w8

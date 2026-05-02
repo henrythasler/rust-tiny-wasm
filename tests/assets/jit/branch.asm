@@ -61,7 +61,7 @@ Disassembly of section .text:
   10:	f94003e8 	ldr	x8, [sp]
   14:	d2800009 	mov	x9, #0x0                   	// #0
   18:	eb09011f 	cmp	x8, x9
-  1c:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+  1c:	1a9fa7e8 	cset	w8, lt	// lt = tstop
   20:	34000048 	cbz	w8, 28 <simple_if+0x28>
   24:	92800008 	mov	x8, #0xffffffffffffffff    	// #-1
   28:	d2800028 	mov	x8, #0x1                   	// #1
@@ -79,7 +79,7 @@ Disassembly of section .text:
   50:	f94003e8 	ldr	x8, [sp]
   54:	d2800009 	mov	x9, #0x0                   	// #0
   58:	eb09011f 	cmp	x8, x9
-  5c:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+  5c:	1a9fa7e8 	cset	w8, lt	// lt = tstop
   60:	34000068 	cbz	w8, 6c <simple_if_return+0x2c>
   64:	92800008 	mov	x8, #0xffffffffffffffff    	// #-1
   68:	14000002 	b	70 <simple_if_return+0x30>
@@ -99,7 +99,7 @@ Disassembly of section .text:
   98:	f94003e8 	ldr	x8, [sp]
   9c:	d2800009 	mov	x9, #0x0                   	// #0
   a0:	eb09011f 	cmp	x8, x9
-  a4:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+  a4:	1a9fa7e8 	cset	w8, lt	// lt = tstop
   a8:	34000068 	cbz	w8, b4 <simple_if_else+0x2c>
   ac:	92800008 	mov	x8, #0xffffffffffffffff    	// #-1
   b0:	14000002 	b	b8 <simple_if_else+0x30>
@@ -119,12 +119,12 @@ Disassembly of section .text:
   e0:	f94003e8 	ldr	x8, [sp]
   e4:	d2800009 	mov	x9, #0x0                   	// #0
   e8:	eb09011f 	cmp	x8, x9
-  ec:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+  ec:	1a9fa7e8 	cset	w8, lt	// lt = tstop
   f0:	34000148 	cbz	w8, 118 <nested_if+0x48>
   f4:	f94003e8 	ldr	x8, [sp]
   f8:	92800129 	mov	x9, #0xfffffffffffffff6    	// #-10
   fc:	eb09011f 	cmp	x8, x9
- 100:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+ 100:	1a9fa7e8 	cset	w8, lt	// lt = tstop
  104:	34000068 	cbz	w8, 110 <nested_if+0x40>
  108:	92800c68 	mov	x8, #0xffffffffffffff9c    	// #-100
  10c:	14000002 	b	114 <nested_if+0x44>
@@ -147,14 +147,14 @@ Disassembly of section .text:
  148:	f94003e8 	ldr	x8, [sp]
  14c:	d2800009 	mov	x9, #0x0                   	// #0
  150:	eb09011f 	cmp	x8, x9
- 154:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+ 154:	1a9fa7e8 	cset	w8, lt	// lt = tstop
  158:	34000068 	cbz	w8, 164 <nested_else+0x2c>
  15c:	92800008 	mov	x8, #0xffffffffffffffff    	// #-1
  160:	14000009 	b	184 <nested_else+0x4c>
  164:	f94003e8 	ldr	x8, [sp]
  168:	d2800149 	mov	x9, #0xa                   	// #10
  16c:	eb09011f 	cmp	x8, x9
- 170:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+ 170:	1a9fa7e8 	cset	w8, lt	// lt = tstop
  174:	34000068 	cbz	w8, 180 <nested_else+0x48>
  178:	d2800148 	mov	x8, #0xa                   	// #10
  17c:	14000002 	b	184 <nested_else+0x4c>
@@ -175,7 +175,7 @@ Disassembly of section .text:
  1b0:	f94003e8 	ldr	x8, [sp]
  1b4:	d2800009 	mov	x9, #0x0                   	// #0
  1b8:	eb09011f 	cmp	x8, x9
- 1bc:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+ 1bc:	1a9fa7e8 	cset	w8, lt	// lt = tstop
  1c0:	34000068 	cbz	w8, 1cc <simple_if_add1+0x2c>
  1c4:	92800008 	mov	x8, #0xffffffffffffffff    	// #-1
  1c8:	14000002 	b	1d0 <simple_if_add1+0x30>
@@ -197,14 +197,14 @@ Disassembly of section .text:
  200:	f94003e8 	ldr	x8, [sp]
  204:	d2800009 	mov	x9, #0x0                   	// #0
  208:	eb09011f 	cmp	x8, x9
- 20c:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+ 20c:	1a9fa7e8 	cset	w8, lt	// lt = tstop
  210:	34000068 	cbz	w8, 21c <nested_else_add1+0x2c>
  214:	92800008 	mov	x8, #0xffffffffffffffff    	// #-1
  218:	14000009 	b	23c <nested_else_add1+0x4c>
  21c:	f94003e8 	ldr	x8, [sp]
  220:	d2800149 	mov	x9, #0xa                   	// #10
  224:	eb09011f 	cmp	x8, x9
- 228:	1a9fa7e8 	cset	w8, lt  // lt = tstop
+ 228:	1a9fa7e8 	cset	w8, lt	// lt = tstop
  22c:	34000068 	cbz	w8, 238 <nested_else_add1+0x48>
  230:	d2800148 	mov	x8, #0xa                   	// #10
  234:	14000002 	b	23c <nested_else_add1+0x4c>

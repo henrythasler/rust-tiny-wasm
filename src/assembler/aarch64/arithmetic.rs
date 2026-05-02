@@ -113,6 +113,60 @@ pub fn sub_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u3
     instr
 }
 
+/// This instruction subtracts an optionally-shifted immediate value from a register value, and writes the result to the destination register. It
+/// updates the condition flags based on the result.
+/// 
+/// Encoding: `SUBS <rd>, <rn|SP>, #<imm12>{, LSL #12}`
+/// 
+/// # Arguments
+/// 
+/// * `rd` - destination register
+/// * `rn` - source register
+/// * `imm12` - 12-bit immediate value
+/// * `shift12` - whether to left shift the immediate by 12 bits
+/// * `size` - 32-bit or 64-bit variant
+/// 
+/// # Returns
+/// 
+/// The encoded instruction
+pub fn subs_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x71000000, 0xf1000000, size);
+    instr |= if shift12 { 0x400000 } else { 0 }; // optional left shift (LSL #12)
+    instr |= (imm12 & 0xFFF) << 10; // imm12 field
+    instr |= (rn & 0x1F) << 5; // Rn (source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
+/// This instruction subtracts an optionally-shifted immediate value from a register value. It updates the condition flags based on the result, and
+/// discards the result.
+///
+/// Encoding: `CMP rn|SP, #imm12{, shift12}`
+///
+/// # Arguments
+///
+/// * `rn` - source register
+/// * `imm12` - 12-bit immediate value
+/// * `shift12` - whether to left shift the immediate by 12 bits
+/// * `size` - 32-bit or 64-bit variant
+///
+/// # Returns
+///
+/// The encoded instruction
+pub fn cmp_imm(rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
+    subs_imm(
+        if size == RegSize::Reg64bit {
+            Reg::XZR
+        } else {
+            Reg::WZR
+        },
+        rn,
+        imm12,
+        shift12,
+        size,
+    )
+}
+
 pub fn madd_reg(rd: Reg, rn: Reg, rm: Reg, ra: Reg, size: RegSize) -> u32 {
     let mut instr = select_instr(0x1b000000, 0x9b000000, size);
     instr |= (rm & 0x1F) << 16; // Rm (multiplier source register)

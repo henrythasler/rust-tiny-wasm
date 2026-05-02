@@ -118,6 +118,9 @@ pub fn compile_function(
             Operator::I32LtS | Operator::I64LtS => {
                 compile_relop(&op, &mut value_stack, &mut register_pool, machinecode)
             }
+            Operator::I32Eqz | Operator::I64Eqz => {
+                compile_testop(&op, &mut value_stack, machinecode)
+            }
             Operator::I32Const { value } => {
                 compile_const(
                     &op,
@@ -211,13 +214,15 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I32Mul
         | Operator::I32Const { .. }
         | Operator::I32Ctz
-        | Operator::I32LtS => ValType::I32,
+        | Operator::I32LtS
+        | Operator::I32Eqz => ValType::I32,
         Operator::I64Add
         | Operator::I64Sub
         | Operator::I64Mul
         | Operator::I64Const { .. }
         | Operator::I64Ctz
-        | Operator::I64LtS => ValType::I64,
+        | Operator::I64LtS
+        | Operator::I64Eqz => ValType::I64,
         _ => panic!("Operator '{:?}' not supported", op),
     }
 }
