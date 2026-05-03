@@ -10,13 +10,13 @@ fn test_{{ module.name }}() -> Result<()> {
     let instance = get_module_instance(&module)?;
     {% for function in module.functions %}
     let func = instance.get_function::<{{ function.arg_types }}, {{ function.result_types }}>("{{ function.name }}")?;
-    {% for test in function.tests -%}
-        {% if test.expected != "" -%}
+        {% for test in function.tests -%}
+            {% if test.expected != "" -%}
     assert_eq!(func.call({{ test.args }})?, {{ test.expected }});
-        {%- else -%}
+            {%- else -%}
     func.call()?;
-        {%- endif %}
-    {% endfor %}
+            {%- endif %}
+        {% endfor %}
     {%- endfor -%}
     Ok(())
 }

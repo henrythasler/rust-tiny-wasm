@@ -59,8 +59,8 @@ fn args_to_string(args: &[wast::WastArg]) -> Vec<String> {
     args.iter()
         .map(|arg| match arg {
             wast::WastArg::Core(val) => match val {
-                wast::core::WastArgCore::I32(i) => format!("{}i32", i),
-                wast::core::WastArgCore::I64(i) => format!("{}i64", i),
+                wast::core::WastArgCore::I32(i) => format!("{}", i),
+                wast::core::WastArgCore::I64(i) => format!("{}", i),
                 _ => panic!("Unsupported argument type: {:?}", val),
             },
             _ => panic!("Unsupported argument type: {:?}", arg),
@@ -92,8 +92,8 @@ fn results_to_string(results: &[WastRet]) -> Vec<String> {
         .iter()
         .map(|result| match result {
             WastRet::Core(val) => match val {
-                wast::core::WastRetCore::I32(i) => format!("{}i32", i),
-                wast::core::WastRetCore::I64(i) => format!("{}i64", i),
+                wast::core::WastRetCore::I32(i) => format!("{}", i),
+                wast::core::WastRetCore::I64(i) => format!("{}", i),
                 _ => panic!("Unsupported result type: {:?}", val),
             },
             _ => panic!("Unsupported result type: {:?}", result),

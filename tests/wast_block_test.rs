@@ -10,50 +10,50 @@ fn test_block_0() -> Result<()> {
     let instance = get_module_instance(&module)?;
     
     let func = instance.get_function::<(), ()>("type-i32")?;
-    func.call()?;
-    
+        func.call()?;
+        
     let func = instance.get_function::<(), ()>("type-i64")?;
-    func.call()?;
-    
+        func.call()?;
+        
     let func = instance.get_function::<(), i32>("type-i32-value")?;
-    assert_eq!(func.call()?, 1i32);
-    
+        assert_eq!(func.call()?, 1);
+        
     let func = instance.get_function::<(), i64>("type-i64-value")?;
-    assert_eq!(func.call()?, 2i64);
-    
+        assert_eq!(func.call()?, 2);
+        
     let func = instance.get_function::<(i32, ), i32>("as-block-first")?;
-    assert_eq!(func.call(0i32)?, 2i32);
-    assert_eq!(func.call(1i32)?, 3i32);
-    
+        assert_eq!(func.call(0)?, 2);
+        assert_eq!(func.call(1)?, 3);
+        
     let func = instance.get_function::<(i32, ), i32>("as-block-first-value")?;
-    assert_eq!(func.call(0i32)?, 11i32);
-    assert_eq!(func.call(1i32)?, 10i32);
-    
+        assert_eq!(func.call(0)?, 11);
+        assert_eq!(func.call(1)?, 10);
+        
     let func = instance.get_function::<(), i32>("as-binary-left")?;
-    assert_eq!(func.call()?, 1i32);
-    
+        assert_eq!(func.call()?, 1);
+        
     let func = instance.get_function::<(), i32>("as-binary-right")?;
-    assert_eq!(func.call()?, 1i32);
-    
+        assert_eq!(func.call()?, 1);
+        
     let func = instance.get_function::<(), i32>("as-test-operand")?;
-    assert_eq!(func.call()?, 0i32);
-    
+        assert_eq!(func.call()?, 0);
+        
     let func = instance.get_function::<(), i32>("as-compare-left")?;
-    assert_eq!(func.call()?, 1i32);
-    
+        assert_eq!(func.call()?, 1);
+        
     let func = instance.get_function::<(), i32>("as-compare-right")?;
-    assert_eq!(func.call()?, 1i32);
-    
+        assert_eq!(func.call()?, 1);
+        
     let func = instance.get_function::<(), i32>("as-br_if-value")?;
-    assert_eq!(func.call()?, 8i32);
-    
+        assert_eq!(func.call()?, 8);
+        
     let func = instance.get_function::<(), i32>("as-br_if-value-cond")?;
-    assert_eq!(func.call()?, 9i32);
-    
+        assert_eq!(func.call()?, 9);
+        
     let func = instance.get_function::<(), i32>("nested-br-value")?;
-    assert_eq!(func.call()?, 9i32);
-    
+        assert_eq!(func.call()?, 9);
+        
     let func = instance.get_function::<(), i32>("nested-br_if-value")?;
-    assert_eq!(func.call()?, 9i32);
-    Ok(())
+        assert_eq!(func.call()?, 9);
+        Ok(())
 }

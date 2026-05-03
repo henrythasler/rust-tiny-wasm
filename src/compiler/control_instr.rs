@@ -313,6 +313,8 @@ pub fn compile_end(
         }
         Opcode::Loop => {}
         Opcode::Block => {
+            // println!("block end: register_pool.index={:?}, frame.register_pool_index={:?}", register_pool.index, frame.register_pool_index.unwrap());
+            // register_pool.index = frame.register_pool_index.unwrap();
             for patch in frame.patches {
                 match patch.instruction {
                     Instruction::Br => {

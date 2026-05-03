@@ -268,8 +268,8 @@ impl RegisterPool {
     }
 
     pub fn free(&mut self) {
+        assert!(self.index > 0);
         self.index -= 1;
-        assert!(self.index >= 0);
     }
 }
 
