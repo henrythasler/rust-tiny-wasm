@@ -51,7 +51,7 @@ fn args_to_types(args: &[wast::WastArg]) -> String {
     match types.len() {
         0 => String::from("()"),
         1 => format!("({}, )", types[0]),
-        _ => format!("({}, )", types.join(", ")),
+        _ => format!("({})", types.join(", ")),
     }
 }
 
@@ -82,7 +82,7 @@ fn results_to_types(results: &[WastRet]) -> String {
         .collect();
     match types.len() {
         0 => String::from("()"),
-        1 => format!("{}", types.join(", ")),
+        1 => types.join(", ").to_string(),
         _ => format!("({})", types.join(", ")),
     }
 }
@@ -107,6 +107,20 @@ fn main() {
     let mut tests: Vec<WastFile> = vec![];
 
     let blocked = ["invalid", "draft", "dummy"];
+
+    // clear the output folder before generating new tests
+    for entry in fs::read_dir(test_path).expect("Should be able to read the folder content") {
+        let entry = entry.unwrap();
+        let file = entry.path();
+        if file.extension().and_then(|e| e.to_str()) == Some("rs")
+            && file
+                .file_name()
+                .and_then(|f| f.to_str())
+                .is_some_and(|f| f.starts_with("wast_"))
+        {
+            fs::remove_file(file).expect("Should be able to remove the file");
+        }
+    }
 
     for entry in fs::read_dir(base).expect("Should be able to read the folder content") {
         let entry = entry.unwrap();

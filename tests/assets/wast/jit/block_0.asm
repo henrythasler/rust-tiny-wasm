@@ -34,7 +34,7 @@ Contents of section .text:
  00b0 e1031faa fd7bc1a8 c0035fd6 1f2003d5  .....{...._.. ..
  00c0 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
  00d0 e80340b9 68000035 48008052 02000014  ..@.h..5H..R....
- 00e0 69008052 e003092a e1031f2a ff430091  i..R...*...*.C..
+ 00e0 68008052 e003082a e1031f2a ff430091  h..R...*...*.C..
  00f0 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
  0100 ff4300d1 e00300b9 48018052 e90340b9  .C......H..R..@.
  0110 69000035 68018052 01000014 e003082a  i..5h..R.......*
@@ -136,8 +136,8 @@ Disassembly of section .text:
   d4:	35000068 	cbnz	w8, e0 <as-block-first+0x20>
   d8:	52800048 	mov	w8, #0x2                   	// #2
   dc:	14000002 	b	e4 <as-block-first+0x24>
-  e0:	52800069 	mov	w9, #0x3                   	// #3
-  e4:	2a0903e0 	mov	w0, w9
+  e0:	52800068 	mov	w8, #0x3                   	// #3
+  e4:	2a0803e0 	mov	w0, w8
   e8:	2a1f03e1 	mov	w1, wzr
   ec:	910043ff 	add	sp, sp, #0x10
   f0:	a8c17bfd 	ldp	x29, x30, [sp], #16

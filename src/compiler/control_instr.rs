@@ -255,6 +255,9 @@ pub fn compile_end(
     value_stack.truncate(frame.stack_height);
     value_stack.append(&mut results);
 
+    // restore register pool to state at the beginning of the block, so registers used in this block are available again
+    register_pool.index = frame.register_pool_index.unwrap_or(0) + frame.end_types.len() as i32;
+
     assert_eq!(
         value_stack.len(),
         frame.stack_height + frame.end_types.len(),
@@ -313,8 +316,6 @@ pub fn compile_end(
         }
         Opcode::Loop => {}
         Opcode::Block => {
-            // println!("block end: register_pool.index={:?}, frame.register_pool_index={:?}", register_pool.index, frame.register_pool_index.unwrap());
-            // register_pool.index = frame.register_pool_index.unwrap();
             for patch in frame.patches {
                 match patch.instruction {
                     Instruction::Br => {

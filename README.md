@@ -197,7 +197,7 @@ As the complexity of the program increases, there is eventually a need to debug 
 
 ### Goals
 
-- [x] Investigate how `gdb` can be used with rust executables running in `qemu-aarch64`.
+- [x] Investigate how `gdb` or `lldb` can be used with rust executables running in `qemu-aarch64`.
 - [x] Insert a breakpoint right before the JIT-code is executed.
 - [x] Step through the JIT code and verify register content.
 
