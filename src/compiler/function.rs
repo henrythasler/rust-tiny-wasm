@@ -16,7 +16,8 @@ pub fn compile_function(
         end_types: func_type.results().to_vec(),
         stack_height: value_stack.len(),
         value_stack: None,
-        register_pool_index: None,
+        register_index: None,
+        result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![],
     }];

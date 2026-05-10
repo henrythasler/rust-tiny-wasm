@@ -34,7 +34,7 @@ pub fn compile_block(
     let end_types = match blockty {
         BlockType::Type(ty) => vec![ty],
         BlockType::Empty => vec![],
-        _ => panic!("Unexpected blocktype in 'if'"),
+        _ => panic!("Unexpected result type for block"),
     };
 
     control_stack.push(ControlFrame {
@@ -43,7 +43,8 @@ pub fn compile_block(
         end_types,
         stack_height: value_stack.len(),
         value_stack: Some(value_stack.to_vec()),
-        register_pool_index: Some(register_pool.index),
+        register_index: Some(register_pool.index),
+        result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![],
     });
@@ -64,7 +65,8 @@ pub fn compile_loop(
         end_types: vec![],
         stack_height: value_stack.len(),
         value_stack: Some(value_stack.to_vec()),
-        register_pool_index: Some(register_pool.index),
+        register_index: Some(register_pool.index),
+        result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![],
     });
@@ -120,6 +122,10 @@ pub fn compile_brif(
 
     register_pool.free();
 
+    if frame.end_types.len() > 0 {
+        frame.result_register = Some(value_stack.last().unwrap().reg);
+    }
+
     match frame.opcode {
         Opcode::Loop => {
             let offset = (frame.machinecode_offset as i32 - machinecode.len() as i32) * 4;
@@ -168,7 +174,8 @@ pub fn compile_if(
         end_types,
         stack_height: value_stack.len(),
         value_stack: Some(value_stack.to_vec()),
-        register_pool_index: Some(register_pool.index),
+        register_index: Some(register_pool.index),
+        result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![Patch {
             location: machinecode.len(),
@@ -206,7 +213,7 @@ pub fn compile_else(
 
             // Restore value stack and register pool to state at the beginning of the 'if' block
             *value_stack = frame.value_stack.unwrap();
-            register_pool.index = frame.register_pool_index.unwrap();
+            register_pool.index = frame.register_index.unwrap();
 
             control_stack.push(ControlFrame {
                 opcode: Opcode::Else,
@@ -214,7 +221,8 @@ pub fn compile_else(
                 end_types: frame.end_types,
                 stack_height: value_stack.len(),
                 value_stack: None,
-                register_pool_index: None,
+                register_index: None,
+                result_register: None,
                 machinecode_offset: machinecode.len(),
                 patches: vec![Patch {
                     location: machinecode.len(),
@@ -244,7 +252,7 @@ pub fn compile_end(
     control_stack: &mut Vec<ControlFrame>,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
-    machinecode: &mut [u32],
+    machinecode: &mut Vec<u32>,
 ) -> bool {
     let frame = control_stack
         .pop()
@@ -256,7 +264,28 @@ pub fn compile_end(
     value_stack.append(&mut results);
 
     // restore register pool to state at the beginning of the block, so registers used in this block are available again
-    register_pool.index = frame.register_pool_index.unwrap_or(0) + frame.end_types.len() as i32;
+    register_pool.index = frame.register_index.unwrap_or(0) + frame.end_types.len() as i32;
+
+    // stack unwinding register alignment
+    if !frame.end_types.is_empty()
+        && let Some(expected_reg) = frame.result_register
+    {
+        let stack_element = value_stack.last().unwrap();
+        let result_type = frame.end_types.last().unwrap();
+
+        if stack_element.reg != expected_reg {
+            let stack_element = value_stack.pop().unwrap();
+            value_stack.push(StackElement {
+                reg: expected_reg,
+                valtype: *result_type,
+            });
+            machinecode.push(processing::mov_reg(
+                expected_reg,
+                stack_element.reg,
+                map_valtype_to_regsize(result_type),
+            ));
+        }
+    }
 
     assert_eq!(
         value_stack.len(),
@@ -285,7 +314,7 @@ pub fn compile_end(
         Opcode::If => {
             // Restore value stack and register pool to state at the beginning of the 'if' block
             *value_stack = frame.value_stack.unwrap();
-            register_pool.index = frame.register_pool_index.unwrap();
+            register_pool.index = frame.register_index.unwrap();
 
             for patch in frame.patches {
                 match patch.instruction {

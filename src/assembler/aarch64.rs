@@ -256,8 +256,12 @@ impl RegisterPool {
         }
     }
 
-    pub fn current(self) -> Reg {
+    pub fn current(&self) -> Reg {
         self.registers[self.index as usize]
+    }
+
+    pub fn from_i32(&self, index: &i32) -> Reg {
+        self.registers[*index as usize]
     }
 
     pub fn alloc(&mut self) -> Reg {
