@@ -15,7 +15,7 @@ fn test_{{ module.name }}() -> Result<()> {
         {%- for test in function.tests -%}
             {%- if test.expected != "" %}
     assert_eq!(func.call({{ test.args }})?, {{ test.expected }});
-            {%- else -%}
+            {%- else %}
     func.call()?;
             {%- endif -%}
         {%- endfor -%}

@@ -10,9 +10,11 @@ fn test_block_0() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/wast/block_0.wasm"))?;
     let instance = get_module_instance(&module)?;
 
-    let func = instance.get_function::<(), ()>("type-i32")?;func.call()?;
+    let func = instance.get_function::<(), ()>("type-i32")?;
+    func.call()?;
 
-    let func = instance.get_function::<(), ()>("type-i64")?;func.call()?;
+    let func = instance.get_function::<(), ()>("type-i64")?;
+    func.call()?;
 
     let func = instance.get_function::<(), i32>("type-i32-value")?;
     assert_eq!(func.call()?, 1);

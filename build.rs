@@ -101,12 +101,11 @@ fn results_to_string(results: &[WastRet]) -> Vec<String> {
         .collect()
 }
 
-fn main() {
-    let base = Path::new("tests/assets/wast");
-    let test_path = Path::new("tests");
+/// Convert all wast-files in a given path to rust integration tests
+fn wast_to_test(input_path: &str, output_path: &str, blocked: &[&str]) {
+    let base = Path::new(input_path);
+    let test_path = Path::new(output_path);
     let mut tests: Vec<WastFile> = vec![];
-
-    let blocked = ["invalid", "draft", "dummy"];
 
     // clear the output folder before generating new tests
     for entry in fs::read_dir(test_path).expect("Should be able to read the folder content") {
@@ -210,4 +209,12 @@ fn main() {
         output_path.set_extension("rs");
         fs::write(output_path, res).expect("fs::write() should be able to write");
     }
+}
+
+fn main() -> std::io::Result<()> {
+    // convert all wast-testcases to integration tests
+    let blocked = vec!["invalid", "draft", "dummy"];
+    wast_to_test("tests/assets/wast", "tests", &blocked);
+
+    Ok(())
 }
