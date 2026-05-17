@@ -75,12 +75,17 @@ pub fn compile_loop(
 pub fn compile_br(
     relative_depth: u32,
     control_stack: &mut [ControlFrame],
+    value_stack: &[StackElement],
     machinecode: &mut Vec<u32>,
 ) {
     let idx = control_stack.len() - 1 - relative_depth as usize;
     let frame = control_stack
         .get_mut(idx)
         .expect("control stack inconsistent");
+
+    if !frame.end_types.is_empty() && frame.result_register.is_none() {
+        frame.result_register = Some(value_stack.last().unwrap().reg);
+    }
 
     match frame.opcode {
         Opcode::Block => {
@@ -122,7 +127,7 @@ pub fn compile_brif(
 
     register_pool.free();
 
-    if frame.end_types.len() > 0 {
+    if !frame.end_types.is_empty() && frame.result_register.is_none() {
         frame.result_register = Some(value_stack.last().unwrap().reg);
     }
 

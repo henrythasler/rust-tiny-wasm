@@ -66,7 +66,7 @@ pub fn compile_function(
                 compile_br(
                     relative_depth,
                     &mut control_stack,
-                    // &mut value_stack,
+                    &value_stack,
                     // &mut register_pool,
                     machinecode,
                 );
