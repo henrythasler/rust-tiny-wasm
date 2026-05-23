@@ -9,6 +9,7 @@ SYMBOL TABLE:
 00000000000000a8 l     F .text	0000000000000040 parameter-br_if
 00000000000000e8 l     F .text	0000000000000040 parameter-nested-return
 0000000000000128 l     F .text	0000000000000050 nested-br_if
+0000000000000178 l     F .text	0000000000000050 loop_return
 
 
 Contents of section .text:
@@ -35,7 +36,12 @@ Contents of section .text:
  0140 29008052 29010035 68018052 48018052  )..R)..5h..RH..R
  0150 09008052 a9000035 88028052 29008052  ...R...5...R)..R
  0160 49000035 c8038052 e003082a e1031f2a  I..5...R...*...*
- 0170 fd7bc1a8 c0035fd6                    .{...._.        
+ 0170 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 0180 ff4300d1 ff0300b9 e80340b9 49008052  .C........@.I..R
+ 0190 0801090b e80300b9 05000014 49018052  ............I..R
+ 01a0 1f01096b e8a79f1a 08ffff35 e80340b9  ...k.......5..@.
+ 01b0 e003082a e1031f2a ff430091 fd7bc1a8  ...*...*.C...{..
+ 01c0 c0035fd6 1f2003d5                    .._.. ..        
 
 Disassembly of section .text:
 
@@ -146,3 +152,25 @@ Disassembly of section .text:
  16c:	2a1f03e1 	mov	w1, wzr
  170:	a8c17bfd 	ldp	x29, x30, [sp], #16
  174:	d65f03c0 	ret
+
+0000000000000178 <loop_return>:
+ 178:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 17c:	910003fd 	mov	x29, sp
+ 180:	d10043ff 	sub	sp, sp, #0x10
+ 184:	b90003ff 	str	wzr, [sp]
+ 188:	b94003e8 	ldr	w8, [sp]
+ 18c:	52800049 	mov	w9, #0x2                   	// #2
+ 190:	0b090108 	add	w8, w8, w9
+ 194:	b90003e8 	str	w8, [sp]
+ 198:	14000005 	b	1ac <loop_return+0x34>
+ 19c:	52800149 	mov	w9, #0xa                   	// #10
+ 1a0:	6b09011f 	cmp	w8, w9
+ 1a4:	1a9fa7e8 	cset	w8, lt	// lt = tstop
+ 1a8:	35ffff08 	cbnz	w8, 188 <loop_return+0x10>
+ 1ac:	b94003e8 	ldr	w8, [sp]
+ 1b0:	2a0803e0 	mov	w0, w8
+ 1b4:	2a1f03e1 	mov	w1, wzr
+ 1b8:	910043ff 	add	sp, sp, #0x10
+ 1bc:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 1c0:	d65f03c0 	ret
+ 1c4:	d503201f 	nop

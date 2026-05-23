@@ -57,7 +57,11 @@ pub fn compile_loop(
     register_pool: &mut RegisterPool,
     machinecode: &mut [u32],
 ) {
-    assert_eq!(blockty, BlockType::Empty);
+    assert_eq!(
+        blockty,
+        BlockType::Empty,
+        "result type of loop block must be 'Empty'"
+    );
 
     control_stack.push(ControlFrame {
         opcode: Opcode::Loop,

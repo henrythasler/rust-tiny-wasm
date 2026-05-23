@@ -32,5 +32,8 @@ fn test_block() -> Result<()> {
     let func = instance.get_function::<(), i32>("nested-br_if")?;
     assert_eq!(func.call()?, 42);
 
+    let func = instance.get_function::<(), i32>("loop_return")?;
+    assert_eq!(func.call()?, 2);
+
     Ok(())
 }

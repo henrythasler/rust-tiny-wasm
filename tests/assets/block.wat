@@ -1,7 +1,4 @@
 (module
-  (type $type0 (func))
-  (type $type1 (func (result i32)))
-  (type $type2 (func (param i32) (result i32)))
   (export "simple" (func $func0))
   (export "simple-br-i32" (func $func1))
   (export "simple-return" (func $func2))
@@ -9,6 +6,7 @@
   (export "parameter-br_if" (func $func4))
   (export "parameter-nested-return" (func $func5))
   (export "nested-br_if" (func $func6))
+  (export "loop_return" (func $loop_return))
   (func $func0
     block
       i32.const 63
@@ -95,5 +93,21 @@
       drop
       i32.const 30
     end $label1
+  )
+  (func $loop_return (result i32)
+  (local $cnt i32)
+  block $label1
+    loop $label0
+      local.get $cnt
+      i32.const 2
+      i32.add
+      local.tee $cnt
+      br $label1
+      i32.const 10
+      i32.lt_s
+      br_if $label0
+    end $label0
+  end $label1
+  local.get $cnt
   )
 )
