@@ -103,6 +103,18 @@ pub fn compile_binop(
             op2.reg,
             map_valtype_to_regsize(&valtype),
         )),
+        Operator::I32DivS | Operator::I64DivS => machinecode.push(arithmetic::sdiv(
+            op1.reg,
+            op1.reg,
+            op2.reg,
+            map_valtype_to_regsize(&valtype),
+        )),
+        Operator::I32DivU | Operator::I64DivU => machinecode.push(arithmetic::udiv(
+            op1.reg,
+            op1.reg,
+            op2.reg,
+            map_valtype_to_regsize(&valtype),
+        )),
         _ => panic!("Binary operator '{:?}' not supported", op),
     }
 

@@ -180,6 +180,48 @@ pub fn mul_reg(rd: Reg, rn: Reg, rm: Reg, size: RegSize) -> u32 {
     madd_reg(rd, rn, rm, Reg::WZR, size)
 }
 
+/// This instruction divides the first signed source register value by the second signed source register value.
+/// Writes the result to the destination register. Dividing by zero writes the value zero to the destination register.
+///
+/// Encoding: `SDIV <rd>, <rn>, <rm>`
+///
+/// # Arguments
+/// * `rd` - destination register
+/// * `rn` - dividend source register
+/// * `rm` - divisor source register
+/// * `size` - 32-bit or 64-bit variant
+///
+/// # Returns
+/// The encoded instruction
+pub fn sdiv(rd: Reg, rn: Reg, rm: Reg, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x1AC00C00, 0x9AC00C00, size);
+    instr |= (rm & 0x1F) << 16; // Rm (divisor source register)
+    instr |= (rn & 0x1F) << 5; // Rn (dividend source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
+/// This instruction divides the first unsigned source register value by the second unsigned source register value.
+/// Writes the result to the destination register. Dividing by zero writes the value zero to the destination register.
+///
+/// Encoding: `UDIV <rd>, <rn>, <rm>`
+///
+/// # Arguments
+/// * `rd` - destination register
+/// * `rn` - dividend source register
+/// * `rm` - divisor source register
+/// * `size` - 32-bit or 64-bit variant
+///
+/// # Returns
+/// The encoded instruction
+pub fn udiv(rd: Reg, rn: Reg, rm: Reg, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x1AC00800, 0x9AC00800, size);
+    instr |= (rm & 0x1F) << 16; // Rm (divisor source register)
+    instr |= (rn & 0x1F) << 5; // Rn (dividend source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -283,6 +325,34 @@ mod tests {
         assert_eq!(
             sub_imm(Reg::X1, Reg::X10, 0x100, true, RegSize::Reg64bit),
             0xD1440141
+        );
+    }
+
+    #[test]
+    fn test_sdiv() {
+        // sdiv x1, x5, x11
+        assert_eq!(
+            sdiv(Reg::X1, Reg::X5, Reg::X11, RegSize::Reg64bit),
+            0x9ACB0CA1
+        );
+        // sdiv w11, w5, w1
+        assert_eq!(
+            sdiv(Reg::W11, Reg::W5, Reg::W1, RegSize::Reg32bit),
+            0x1AC10CAB
+        );
+    }
+
+    #[test]
+    fn test_udiv() {
+        // udiv x1, x5, x11
+        assert_eq!(
+            udiv(Reg::X1, Reg::X5, Reg::X11, RegSize::Reg64bit),
+            0x9ACB08A1
+        );
+        // udiv w11, w5, w1
+        assert_eq!(
+            udiv(Reg::W11, Reg::W5, Reg::W1, RegSize::Reg32bit),
+            0x1AC108AB
         );
     }
 }

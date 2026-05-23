@@ -228,6 +228,8 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 ## Chapter 13 - Blocks
 
+## Chapter 14 - Division and Trap Handling
+
 ## Chapter xx - Rust to Wasm
 
 ### Goals
@@ -247,3 +249,4 @@ Use [The rustc book - wasm32v1-none](https://doc.rust-lang.org/rustc/platform-su
 - [WebAssembly 1.0 Core Specification](https://www.w3.org/TR/wasm-core-1/)
 - [Arm A-profile A64 Instruction Set Architecture](https://developer.arm.com/documentation/ddi0602/2025-09?lang=en)
 - [godbolt - Compiler Explorer](https://godbolt.org/)
+- [ARMConverter.com - Online ARM to HEX Converter](https://armconverter.com/?lock=arm64)
