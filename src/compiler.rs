@@ -5,7 +5,7 @@ use std::mem;
 use wasmparser::{Operator, Parser, Payload::*, ValType};
 
 use super::*;
-use crate::assembler::aarch64::*;
+use crate::assembler::{aarch64::*, emit_trap_handler};
 use crate::assembler::{emit_epilogue, emit_prologue};
 
 use control_instr::*;
@@ -83,6 +83,8 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     let mut functions: Vec<u32> = Vec::new();
 
     let mut function_index = 0;
+
+    let trap_handler = emit_trap_handler(&mut machinecode);
 
     for payload in parser.parse_all(module) {
         match payload? {
@@ -179,6 +181,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     Ok(LinkedModule {
         machinecode,
         functions: wasm_functions,
+        trap_handler: Some(trap_handler),
     })
 }
 

@@ -3,22 +3,68 @@ use std::mem;
 
 use super::assembler::*;
 use super::*;
-use debugger::*;
+// use debugger::*;
 
-mod debugger;
+// mod debugger;
 
+#[repr(u64)]
+#[non_exhaustive]
 #[derive(Debug, PartialEq, Eq)]
+pub enum WasmReturnCode {
+    Ok = 0,
+    Trap = 1,
+}
+
+#[non_exhaustive]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TrapCode {
-    None,
+    None = 0,
+    StackOverflow = 1,
+    MemoryOutOfBounds = 2,
+    HeapMisaligned = 3,
+    TableOutOfBounds = 4,
+    IndirectCallToNull = 5,
+    BadSignature = 6,
+    IntegerOverflow = 7,
+    IntegerDivisionByZero = 8,
+    BadConversionToInteger = 9,
+    UnreachableCodeReached = 10,
+    Interrupt = 11,
 }
 
 impl TrapCode {
     pub fn from_code(code: i64) -> Self {
         match code {
             0 => TrapCode::None,
-            _ => panic!("Unknown error code: {}", code),
+            1 => TrapCode::StackOverflow,
+            2 => TrapCode::MemoryOutOfBounds,
+            3 => TrapCode::HeapMisaligned,
+            4 => TrapCode::TableOutOfBounds,
+            5 => TrapCode::IndirectCallToNull,
+            6 => TrapCode::BadSignature,
+            7 => TrapCode::IntegerOverflow,
+            8 => TrapCode::IntegerDivisionByZero,
+            9 => TrapCode::BadConversionToInteger,
+            10 => TrapCode::UnreachableCodeReached,
+            11 => TrapCode::Interrupt,
+            _ => panic!("Unknown trap code: {}", code),
         }
     }
+
+    pub const ALL: &'static [TrapCode] = &[
+        TrapCode::None,
+        TrapCode::StackOverflow,
+        TrapCode::MemoryOutOfBounds,
+        TrapCode::HeapMisaligned,
+        TrapCode::TableOutOfBounds,
+        TrapCode::IndirectCallToNull,
+        TrapCode::BadSignature,
+        TrapCode::IntegerOverflow,
+        TrapCode::IntegerDivisionByZero,
+        TrapCode::BadConversionToInteger,
+        TrapCode::UnreachableCodeReached,
+        TrapCode::Interrupt,
+    ];
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -84,17 +130,17 @@ macro_rules! impl_call {
         {
             pub fn call(&self) -> Result<R> {
                 let res = unsafe {
-                let func: extern "C" fn() -> (R, i64) =
+                let wasm_func: extern "C" fn() -> (u64, R) =
                     std::mem::transmute(self.ptr);
-                set_breakpoint();
-                func()
+                // set_breakpoint();
+                wasm_func()
                 };
-                let result: Result<R> = match res.1 {
-                    0 => Ok(res.0),
-                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.0.into()))),
+                let result: Result<R> = match res.0 {
+                    0 => Ok(res.1),
+                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.1.into()))),
                     _ => Err(TinyWasmError::Runtime(format!(
-                        "Invalid result tag: {}",
-                        res.1
+                        "Invalid result tag: {:?}",
+                        res.0
                     ))),
                 };
                 result
@@ -119,17 +165,17 @@ macro_rules! impl_call {
                 $($arg: $arg),+
             ) -> Result<R> {
                 let res = unsafe {
-                let wasm_func: extern "C" fn($($arg),+) -> (R, i64) =
+                let wasm_func: extern "C" fn($($arg),+) -> (u64, R) =
                     std::mem::transmute(self.ptr);
                 // set_breakpoint();
                 wasm_func($($arg),+)
                 };
-                let result: Result<R> = match res.1 {
-                    0 => Ok(res.0),
-                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.0.into()))),
+                let result: Result<R> = match res.0 {
+                    0 => Ok(res.1),
+                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.1.into()))),
                     _ => Err(TinyWasmError::Runtime(format!(
-                        "Invalid result tag: {}",
-                        res.1
+                        "Invalid result tag: {:?}",
+                        res.0
                     ))),
                 };
                 result
@@ -256,6 +302,7 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
+            None,
         );
         let instance = instantiate_module(&module)?;
         let _ = instance.get_function::<(), i32>("test")?;
@@ -272,6 +319,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
+            None,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), ()>("void")?;
@@ -283,13 +331,14 @@ mod tests {
     #[test]
     fn invalid_result_tag() -> Result<()> {
         let module = LinkedModule::new(
-            // result tag in X1 is 255, which is invalid
-            vec![0xAA1F03E0, 0xD2801FE1, 0xd65f03c0], // [MOV X0, XZR; MOV X1, 0xFF; RET]
+            // result tag in X0 is 255, which is invalid
+            vec![0xD2801FE0, 0xD2801FE1, 0xd65f03c0], // [MOV X0, 0xFF; MOV X1, 0xFF; RET]
             vec![WasmFunction {
                 name: String::from("invalid_result"),
                 offset: 0,
                 length: 3,
             }],
+            None,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i64>("invalid_result")?;
@@ -303,14 +352,15 @@ mod tests {
     #[test]
     fn trap_code() -> Result<()> {
         let module = LinkedModule::new(
-            // Tag in X1 is 1, which indicates a trap
-            // Value in X0 is 0, which is TrapCode::None
-            vec![0xAA1F03E0, 0xD2800021, 0xd65f03c0], // [MOV X0, XZR; MOV X1, 1; RET]
+            // Tag in X0 is 1, which indicates a trap
+            // Value in X1 is 0, which is TrapCode::None
+            vec![0xAA1F03E1, 0xD2800020, 0xd65f03c0], // [MOV X1, XZR; MOV X0, 1; RET]
             vec![WasmFunction {
                 name: String::from("trap_code"),
                 offset: 0,
                 length: 3,
             }],
+            None,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i32>("trap_code")?;
@@ -328,6 +378,7 @@ mod tests {
                 offset: 0,
                 length: 0,
             }],
+            None,
         );
         assert_eq!(
             instantiate_module(&module).unwrap_err(),
@@ -345,6 +396,7 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
+            None,
         );
         let instance = instantiate_module(&module)?;
         assert_eq!(

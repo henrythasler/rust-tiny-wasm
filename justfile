@@ -5,8 +5,10 @@ build:
 # Run all tests
 test:
     cargo llvm-cov clean --workspace
+    # dump the JIT code for inspection before executing all (integration) tests
+    cargo test --target aarch64-unknown-linux-gnu --test objdump
     # see https://docs.rs/crate/cargo-llvm-cov/latest and https://doc.rust-lang.org/cargo/commands/cargo-test.html
-    RUST_BACKTRACE=0 cargo llvm-cov test --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test' --test 'objdump'
+    RUST_BACKTRACE=0 cargo llvm-cov test --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test'
     # RUSTFLAGS="-C instrument-coverage -C link-dead-code" RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --show-instantiations --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test'
 
 # Run executable

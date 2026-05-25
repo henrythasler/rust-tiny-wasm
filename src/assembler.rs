@@ -1,4 +1,7 @@
+use super::*;
 use aarch64::*;
+
+use crate::runtime::{TrapCode, WasmReturnCode};
 pub mod aarch64;
 
 pub fn emit_prologue(
@@ -47,6 +50,29 @@ pub fn emit_epilogue(stack_size: usize, machinecode: &mut Vec<u32>) {
     }
     machinecode.push(0xA8C17BFD); // ldp fp, lr, [sp], #16  ; destroy stack frame and restore FP, LR and SP
     machinecode.push(branch::ret(Reg::LR)); // ret
+}
+
+pub fn emit_trap_handler(machinecode: &mut Vec<u32>) -> WasmFunction {
+    let offset = machinecode.len();
+    for (trap_cnt, &code) in TrapCode::ALL.iter().enumerate() {
+        // emit a trap handler for each trap code, which moves the trap code to X1 and returns with X0=Trap (1)
+        machinecode.push(processing::mov_imm(Reg::X1, code as u32, RegSize::Reg64bit));
+        machinecode.push(branch::branch(
+            ((TrapCode::ALL.len() - trap_cnt) as i32 * 2 - 1) * INSTRUCTION_SIZE as i32,
+        )); // b <next trap handler>
+    }
+    machinecode.push(processing::mov_imm(
+        Reg::X0,
+        WasmReturnCode::Trap as u32,
+        RegSize::Reg64bit,
+    ));
+    machinecode.push(branch::ret(Reg::LR)); // ret
+
+    WasmFunction {
+        name: String::from("trap_handler"),
+        offset,
+        length: machinecode.len() - offset,
+    }
 }
 
 #[cfg(test)]

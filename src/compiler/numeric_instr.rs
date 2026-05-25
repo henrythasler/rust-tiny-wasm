@@ -103,12 +103,15 @@ pub fn compile_binop(
             op2.reg,
             map_valtype_to_regsize(&valtype),
         )),
-        Operator::I32DivS | Operator::I64DivS => machinecode.push(arithmetic::sdiv(
-            op1.reg,
-            op1.reg,
-            op2.reg,
-            map_valtype_to_regsize(&valtype),
-        )),
+        Operator::I32DivS | Operator::I64DivS => {
+            // machinecode.push(branch::cbnz(op2.reg, 4, map_valtype_to_regsize(&valtype)));
+            machinecode.push(arithmetic::sdiv(
+                op1.reg,
+                op1.reg,
+                op2.reg,
+                map_valtype_to_regsize(&valtype),
+            ))
+        }
         Operator::I32DivU | Operator::I64DivU => machinecode.push(arithmetic::udiv(
             op1.reg,
             op1.reg,

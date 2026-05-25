@@ -1,3 +1,5 @@
+use crate::runtime::WasmReturnCode;
+
 use super::*;
 
 pub fn compile_function(
@@ -189,14 +191,19 @@ pub fn compile_function(
     }
 
     // move result values to result registers according to Aarch64 Procedure Call Standard (X0..X7)
-    // X0: Result, X1: Tag (0=Ok, 1=Trap)
-    if !func_type.results().is_empty() {
-        load_results(&mut value_stack, func_type.results().len(), machinecode)?;
-    } else {
+    // X0: Return Code (0=Ok, 1=Trap),
+    // X1: Result or Trap code
+    if func_type.results().is_empty() {
+        // Return Code =Ok (0)
+        machinecode.push(processing::mov_imm(
+            Reg::X0,
+            WasmReturnCode::Ok as u32,
+            RegSize::Reg64bit,
+        ));
         // Result=0
-        machinecode.push(processing::mov_reg(Reg::X0, Reg::XZR, RegSize::Reg64bit));
-        // Tag=Ok (0)
         machinecode.push(processing::mov_reg(Reg::X1, Reg::XZR, RegSize::Reg64bit));
+    } else {
+        load_results(&mut value_stack, func_type.results().len(), machinecode)?;
     }
 
     // restore initial state before returning to the caller
