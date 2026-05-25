@@ -119,10 +119,10 @@ macro_rules! impl_call {
                 $($arg: $arg),+
             ) -> Result<R> {
                 let res = unsafe {
-                let func: extern "C" fn($($arg),+) -> (R, i64) =
+                let wasm_func: extern "C" fn($($arg),+) -> (R, i64) =
                     std::mem::transmute(self.ptr);
-                set_breakpoint();
-                func($($arg),+)
+                // set_breakpoint();
+                wasm_func($($arg),+)
                 };
                 let result: Result<R> = match res.1 {
                     0 => Ok(res.0),

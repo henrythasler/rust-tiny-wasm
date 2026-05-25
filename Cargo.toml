@@ -4,14 +4,28 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-current_platform = "0.2.0"
+# Color output to console
 owo-colors = "4"
+
+# allocate executable memory in the runtime (https://docs.rs/memmap2/latest/memmap2/)
 memmap2 = "0.9.10"
+
+# Converting Vec[u32] into &[u8] ()
 bytemuck = "1.25.0"
+
+# Command Line Argument Parser for Rust (https://docs.rs/clap/latest/clap/)
 clap = { version = "4.5.60", features = ["derive"] }
+
+# Write object files for disassembly (https://docs.rs/object/latest/object/)
 object = { version = "0.38.1", features = ["write"] }
+
+# Parse WASM binary files
 wasmparser = "0.245.1"
+
+# Conversion between enums an primitive types
 num_enum = "0.7.6"
+
+# Template engine
 askama = "0.15.6"
 
 [build-dependencies]
