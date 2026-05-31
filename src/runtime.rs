@@ -16,7 +16,7 @@ pub enum WasmReturnCode {
 }
 
 #[non_exhaustive]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum TrapCode {
     None = 0,
     StackOverflow = 1,
@@ -99,6 +99,12 @@ unsafe fn clear_cache(addr: *mut u8, len: usize) {
     }
 }
 
+#[repr(C)]
+pub struct CallableRawResult<R> {
+    pub status: u64,
+    pub value: R,
+}
+
 #[derive(Debug)]
 pub struct Callable<P, R> {
     ptr: *const u8,
@@ -130,10 +136,11 @@ macro_rules! impl_call {
         {
             pub fn call(&self) -> Result<R> {
                 let res = unsafe {
-                let wasm_func: extern "C" fn() -> (u64, R) =
-                    std::mem::transmute(self.ptr);
-                // set_breakpoint();
-                wasm_func()
+                    // FIXME: return CallableRawResult in stead of a tuple
+                    let wasm_func: extern "C" fn() -> (u64, R) =
+                        std::mem::transmute(self.ptr);
+                    // set_breakpoint();
+                    wasm_func()
                 };
                 let result: Result<R> = match res.0 {
                     0 => Ok(res.1),
@@ -302,7 +309,6 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            None,
         );
         let instance = instantiate_module(&module)?;
         let _ = instance.get_function::<(), i32>("test")?;
@@ -319,7 +325,6 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            None,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), ()>("void")?;
@@ -338,7 +343,6 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            None,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i64>("invalid_result")?;
@@ -360,7 +364,6 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            None,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i32>("trap_code")?;
@@ -378,7 +381,6 @@ mod tests {
                 offset: 0,
                 length: 0,
             }],
-            None,
         );
         assert_eq!(
             instantiate_module(&module).unwrap_err(),
@@ -396,7 +398,6 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            None,
         );
         let instance = instantiate_module(&module)?;
         assert_eq!(

@@ -50,18 +50,18 @@ fn test_objdump() {
                 let bytes: &[u8] = bytemuck::cast_slice(&linked_module.machinecode);
                 object.set_section_data(text_section, bytes, 16); // 16-byte alignment
 
-                if let Some(trap_handler) = linked_module.trap_handler {
-                    object.add_symbol(Symbol {
-                        name: trap_handler.name.clone().into_bytes(),
-                        value: (trap_handler.offset * assembler::aarch64::INSTRUCTION_SIZE) as u64,
-                        size: (trap_handler.length * assembler::aarch64::INSTRUCTION_SIZE) as u64,
-                        kind: SymbolKind::Text,
-                        scope: SymbolScope::Compilation,
-                        weak: false,
-                        section: SymbolSection::Section(text_section),
-                        flags: SymbolFlags::None,
-                    });
-                }
+                // if let Some(trap_handler) = linked_module.trap_handler {
+                //     object.add_symbol(Symbol {
+                //         name: trap_handler.name.clone().into_bytes(),
+                //         value: (trap_handler.offset * assembler::aarch64::INSTRUCTION_SIZE) as u64,
+                //         size: (trap_handler.length * assembler::aarch64::INSTRUCTION_SIZE) as u64,
+                //         kind: SymbolKind::Text,
+                //         scope: SymbolScope::Compilation,
+                //         weak: false,
+                //         section: SymbolSection::Section(text_section),
+                //         flags: SymbolFlags::None,
+                //     });
+                // }
 
                 // Add a symbol for the function
                 for function in &linked_module.functions {

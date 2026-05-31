@@ -23,19 +23,19 @@ pub struct WasmFunction {
 pub struct LinkedModule {
     pub machinecode: Vec<u32>,
     pub functions: Vec<WasmFunction>,
-    pub trap_handler: Option<WasmFunction>,
+    // pub trap_handler: Option<WasmFunction>,
 }
 
 impl LinkedModule {
     pub fn new(
         machinecode: Vec<u32>,
         functions: Vec<WasmFunction>,
-        trap_handler: Option<WasmFunction>,
+        // trap_handler: Option<WasmFunction>,
     ) -> Self {
         Self {
             machinecode,
             functions,
-            trap_handler,
+            // trap_handler,
         }
     }
 }

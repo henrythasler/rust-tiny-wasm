@@ -1,7 +1,8 @@
 use super::*;
-use aarch64::*;
-
 use crate::runtime::{TrapCode, WasmReturnCode};
+use aarch64::*;
+use std::collections::HashMap;
+
 pub mod aarch64;
 
 pub fn emit_prologue(
@@ -52,9 +53,14 @@ pub fn emit_epilogue(stack_size: usize, machinecode: &mut Vec<u32>) {
     machinecode.push(branch::ret(Reg::LR)); // ret
 }
 
-pub fn emit_trap_handler(machinecode: &mut Vec<u32>) -> WasmFunction {
+pub fn emit_trap_handler(
+    machinecode: &mut Vec<u32>,
+    trap_offsets: &mut HashMap<TrapCode, usize>,
+) -> WasmFunction {
     let offset = machinecode.len();
     for (trap_cnt, &code) in TrapCode::ALL.iter().enumerate() {
+        // store offset to current trap code
+        trap_offsets.insert(code, machinecode.len());
         // emit a trap handler for each trap code, which moves the trap code to X1 and returns with X0=Trap (1)
         machinecode.push(processing::mov_imm(Reg::X1, code as u32, RegSize::Reg64bit));
         machinecode.push(branch::branch(

@@ -68,6 +68,7 @@ pub fn compile_binop(
     op: &Operator,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
+    trap_locations: &mut Vec<Patch>,
     machinecode: &mut Vec<u32>,
 ) {
     let len = value_stack.len();
@@ -104,7 +105,14 @@ pub fn compile_binop(
             map_valtype_to_regsize(&valtype),
         )),
         Operator::I32DivS | Operator::I64DivS => {
-            // machinecode.push(branch::cbnz(op2.reg, 4, map_valtype_to_regsize(&valtype)));
+            machinecode.push(branch::cbnz(
+                op2.reg,
+                4 * INSTRUCTION_SIZE as i32,
+                map_valtype_to_regsize(&valtype),
+            ));
+
+            trap_inline(TrapCode::IntegerDivisionByZero, trap_locations, machinecode);
+
             machinecode.push(arithmetic::sdiv(
                 op1.reg,
                 op1.reg,

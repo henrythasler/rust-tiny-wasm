@@ -24,6 +24,8 @@ pub fn compile_function(
         patches: vec![],
     }];
 
+    let mut trap_locations: Vec<Patch> = vec![];
+
     let initial_size = machinecode.len();
     let mut register_pool = RegisterPool::new();
 
@@ -176,7 +178,13 @@ pub fn compile_function(
             | Operator::I64DivU
             | Operator::I32DivS
             | Operator::I64DivS => {
-                compile_binop(&op, &mut value_stack, &mut register_pool, machinecode);
+                compile_binop(
+                    &op,
+                    &mut value_stack,
+                    &mut register_pool,
+                    &mut trap_locations,
+                    machinecode,
+                );
             }
             Operator::I32Ctz | Operator::I64Ctz => {
                 compile_unop(&op, &mut value_stack, machinecode);
@@ -204,6 +212,19 @@ pub fn compile_function(
         machinecode.push(processing::mov_reg(Reg::X1, Reg::XZR, RegSize::Reg64bit));
     } else {
         load_results(&mut value_stack, func_type.results().len(), machinecode)?;
+    }
+
+    for patch in trap_locations {
+        match patch.instruction {
+            Instruction::Br => {
+                let offset = (machinecode.len() - patch.location) as i32 * 4;
+                let location = machinecode
+                    .get_mut(patch.location)
+                    .expect("patch location should point to valid location");
+                branch::patch_branch(offset, location);
+            }
+            _ => panic!("unexpected instruction"),
+        }
     }
 
     // restore initial state before returning to the caller

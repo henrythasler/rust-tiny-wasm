@@ -5,16 +5,9 @@ use std::mem;
 use wasmparser::{Operator, Parser, Payload::*, ValType};
 
 use super::*;
-use crate::assembler::{aarch64::*, emit_trap_handler};
+use crate::assembler::aarch64::*;
 use crate::assembler::{emit_epilogue, emit_prologue};
-
-use control_instr::*;
-use function::*;
-use numeric_instr::*;
-use parametric_instr::*;
-use procedure_call::*;
-use stack::*;
-use variable_instr::*;
+use crate::runtime::TrapCode;
 
 mod control_instr;
 mod function;
@@ -22,7 +15,17 @@ mod numeric_instr;
 mod parametric_instr;
 mod procedure_call;
 mod stack;
+mod traphandler;
 mod variable_instr;
+
+use control_instr::*;
+use function::*;
+use numeric_instr::*;
+use parametric_instr::*;
+use procedure_call::*;
+use stack::*;
+use traphandler::*;
+use variable_instr::*;
 
 #[derive(Debug)]
 pub enum Opcode {
@@ -84,7 +87,8 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
     let mut function_index = 0;
 
-    let trap_handler = emit_trap_handler(&mut machinecode);
+    // let mut trap_offsets: HashMap<TrapCode, usize> = HashMap::new();
+    // let trap_handler = emit_trap_handler(&mut machinecode, &mut trap_offsets);
 
     for payload in parser.parse_all(module) {
         match payload? {
@@ -181,7 +185,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     Ok(LinkedModule {
         machinecode,
         functions: wasm_functions,
-        trap_handler: Some(trap_handler),
+        // trap_handler: Some(trap_handler),
     })
 }
 
