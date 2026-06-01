@@ -136,18 +136,17 @@ macro_rules! impl_call {
         {
             pub fn call(&self) -> Result<R> {
                 let res = unsafe {
-                    // FIXME: return CallableRawResult in stead of a tuple
-                    let wasm_func: extern "C" fn() -> (u64, R) =
+                    let wasm_func: extern "C" fn() -> CallableRawResult<R> =
                         std::mem::transmute(self.ptr);
                     // set_breakpoint();
                     wasm_func()
                 };
-                let result: Result<R> = match res.0 {
-                    0 => Ok(res.1),
-                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.1.into()))),
+                let result: Result<R> = match res.status {
+                    0 => Ok(res.value),
+                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.value.into()))),
                     _ => Err(TinyWasmError::Runtime(format!(
                         "Invalid result tag: {:?}",
-                        res.0
+                        res.status
                     ))),
                 };
                 result
@@ -164,7 +163,7 @@ macro_rules! impl_call {
             #[allow(clippy::too_many_arguments)]
             /// This function calls the JIT-compiled WebAssembly function with the provided arguments and returns the result.
             ///
-            /// The function is expected to return a tuple of (value, tag), where 'value' is the actual return value and 'tag'
+            /// The function is expected to return a struct (value, tag), where 'value' is the actual return value and 'tag'
             /// indicates whether the call was successful (0) or resulted in a trap (1).
             /// The result is returned as a `Result<R>`, where `R` is the expected return type of the WebAssembly function.
             pub fn call(
@@ -172,17 +171,17 @@ macro_rules! impl_call {
                 $($arg: $arg),+
             ) -> Result<R> {
                 let res = unsafe {
-                let wasm_func: extern "C" fn($($arg),+) -> (u64, R) =
+                let wasm_func: extern "C" fn($($arg),+) -> CallableRawResult<R> =
                     std::mem::transmute(self.ptr);
                 // set_breakpoint();
                 wasm_func($($arg),+)
                 };
-                let result: Result<R> = match res.0 {
-                    0 => Ok(res.1),
-                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.1.into()))),
+                let result: Result<R> = match res.status {
+                    0 => Ok(res.value),
+                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.value.into()))),
                     _ => Err(TinyWasmError::Runtime(format!(
                         "Invalid result tag: {:?}",
-                        res.0
+                        res.status
                     ))),
                 };
                 result
