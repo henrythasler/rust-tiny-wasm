@@ -1,6 +1,8 @@
 use super::*;
 use crate::runtime::WasmReturnCode;
 
+pub const TRAP_SKIP_BRANCH: i32 = 4;
+
 pub fn trap_inline(
     trap_code: TrapCode,
     trap_locations: &mut Vec<Patch>,

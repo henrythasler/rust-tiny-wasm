@@ -104,28 +104,72 @@ pub fn compile_binop(
             op2.reg,
             map_valtype_to_regsize(&valtype),
         )),
-        Operator::I32DivS | Operator::I64DivS => {
+        Operator::I32DivS | Operator::I64DivS | Operator::I32DivU | Operator::I64DivU => {
+            // check for div by zero; jump over trap code if not zero
             machinecode.push(branch::cbnz(
                 op2.reg,
-                4 * INSTRUCTION_SIZE as i32,
+                TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
                 map_valtype_to_regsize(&valtype),
             ));
-
             trap_inline(TrapCode::IntegerDivisionByZero, trap_locations, machinecode);
 
-            machinecode.push(arithmetic::sdiv(
-                op1.reg,
-                op1.reg,
-                op2.reg,
-                map_valtype_to_regsize(&valtype),
-            ))
+            match op {
+                Operator::I32DivS | Operator::I64DivS => {
+                    let reg_size = map_valtype_to_regsize(&valtype);
+
+                    // need to check for integer overflow (INT_MIN/-1)
+                    // (1) check if divisor is -1
+                    machinecode.push(arithmetic::cmn_imm(
+                        op2.reg,
+                        1,
+                        false,
+                        map_valtype_to_regsize(&valtype),
+                    ));
+                    machinecode.push(branch::branch_cond(
+                        Condition::NE,
+                        (TRAP_SKIP_BRANCH + 3) * INSTRUCTION_SIZE as i32,
+                    ));
+
+                    // (2) Yes! Now check if dividend is INT(32|64)_MIN
+                    let temp_reg = register_pool.alloc();
+                    let shift = if reg_size == RegSize::Reg32bit {
+                        16
+                    } else {
+                        48
+                    };
+
+                    machinecode.push(processing::movz(temp_reg, 0x8000, shift, reg_size));
+                    machinecode.push(arithmetic::cmp_shifted_reg(
+                        op1.reg,
+                        temp_reg,
+                        Shift::Lsl,
+                        0,
+                        reg_size,
+                    ));
+                    machinecode.push(branch::branch_cond(
+                        Condition::NE,
+                        TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+                    ));
+                    trap_inline(TrapCode::IntegerOverflow, trap_locations, machinecode);
+                    register_pool.free();
+
+                    machinecode.push(arithmetic::sdiv(
+                        op1.reg,
+                        op1.reg,
+                        op2.reg,
+                        map_valtype_to_regsize(&valtype),
+                    ));
+                }
+
+                Operator::I32DivU | Operator::I64DivU => machinecode.push(arithmetic::udiv(
+                    op1.reg,
+                    op1.reg,
+                    op2.reg,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("Binary operator '{:?}' not supported", op),
+            }
         }
-        Operator::I32DivU | Operator::I64DivU => machinecode.push(arithmetic::udiv(
-            op1.reg,
-            op1.reg,
-            op2.reg,
-            map_valtype_to_regsize(&valtype),
-        )),
         _ => panic!("Binary operator '{:?}' not supported", op),
     }
 

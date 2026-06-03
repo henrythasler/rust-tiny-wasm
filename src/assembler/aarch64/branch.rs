@@ -32,6 +32,13 @@ pub fn patch_branch(offset: i32, location: &mut u32) {
     *location = 0x14000000 | ((offset >> 2) & 0x3FFFFFF) as u32 // imm26 offset
 }
 
+pub fn branch_cond(cond: Condition, imm19: i32) -> u32 {
+    let mut instr = 0x54000000u32;
+    instr |= (((imm19 >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
+    instr |= cond as u32; // branch condition
+    instr
+}
+
 pub fn cbz(rt: Reg, offset: i32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x34000000, 0xB4000000, size);
     instr |= (((offset >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
