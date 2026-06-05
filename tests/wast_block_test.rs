@@ -55,5 +55,6 @@ fn test_block_0() -> Result<()> {
     assert_eq!(func.call()?, 9);
 
     let func = instance.get_function::<(), i32>("nested-br_if-value")?;
-    assert_eq!(func.call()?, 9);Ok(())
+    assert_eq!(func.call()?, 9);
+    Ok(())
 }

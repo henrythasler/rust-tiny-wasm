@@ -26,11 +26,12 @@ struct TestFunction {
     name: String,
     arg_types: String,
     result_types: String,
-    tests: Vec<TestCases>,
+    tests: Vec<TestCase>,
 }
 
 #[derive(Debug)]
-struct TestCases {
+struct TestCase {
+    variant: String,
     args: String,
     expected: String,
 }
@@ -99,6 +100,17 @@ fn results_to_string(results: &[WastRet]) -> Vec<String> {
             _ => panic!("Unsupported result type: {:?}", result),
         })
         .collect()
+}
+
+fn message_to_trap_enum(message: &str) -> String {
+    match message.trim() {
+        "unreachable" => String::from("Unreachable"),
+        "out of bounds memory access" => String::from("OutOfBoundsMemoryAccess"),
+        "integer divide by zero" => String::from("IntegerDivisionByZero"),
+        "integer overflow" => String::from("IntegerOverflow"),
+        "invalid conversion to integer" => String::from("InvalidConversionToInteger"),
+        _ => panic!("Unsupported trap message: {}", message),
+    }
 }
 
 /// Convert all wast-files in a given path to rust integration tests
@@ -174,7 +186,8 @@ fn wast_to_test(input_path: &str, output_path: &str, blocked: &[&str]) {
                     };
                     let current_module = test_modules.last_mut().unwrap();
                     // check if the function already exists in the last module, if not create it
-                    if !current_module.functions.iter().any(|f| f.name == name) {
+                    let func = current_module.functions.iter_mut().find(|f| f.name == name);
+                    if !func.is_some() {
                         current_module.functions.push(TestFunction {
                             name: String::from(name),
                             tests: vec![],
@@ -182,14 +195,51 @@ fn wast_to_test(input_path: &str, output_path: &str, blocked: &[&str]) {
                             result_types: results_to_types(&results),
                         });
                     }
+                    else {
+                        let func = func.unwrap();
+                        if func.result_types.len() < results_to_types(&results).len() {
+                            func.result_types = results_to_types(&results);
+                        }
+                    }
                     current_module
                         .functions
                         .last_mut()
                         .unwrap()
                         .tests
-                        .push(TestCases {
+                        .push(TestCase {
+                            variant: String::from("assert_return"),
                             args: args_to_string(&args).join(", "),
                             expected: results_to_string(&results).join(", "),
+                        });
+                }
+                WastDirective::AssertTrap { exec, message, .. } => {
+                    let (name, args) = match exec {
+                        wast::WastExecute::Invoke(invoke) => {
+                            let name = invoke.name;
+                            let args = invoke.args;
+                            (name, args)
+                        }
+                        _ => continue,
+                    };
+                    let current_module = test_modules.last_mut().unwrap();
+                    // check if the function already exists in the last module, if not create it
+                    if !current_module.functions.iter().any(|f| f.name == name) {
+                        current_module.functions.push(TestFunction {
+                            name: String::from(name),
+                            tests: vec![],
+                            arg_types: args_to_types(&args),
+                            result_types: String::from("()"),
+                        });
+                    }
+                    current_module
+                        .functions
+                        .last_mut()
+                        .unwrap()
+                        .tests
+                        .push(TestCase {
+                            variant: String::from("assert_trap"),
+                            args: args_to_string(&args).join(", "),
+                            expected: message_to_trap_enum(message),
                         });
                 }
                 _ => panic!("unsupported WastDirective: {:?}", directive),

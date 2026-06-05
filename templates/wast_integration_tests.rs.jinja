@@ -13,13 +13,17 @@ fn test_{{ module.name }}() -> Result<()> {
 
     let func = instance.get_function::<{{ function.arg_types }}, {{ function.result_types }}>("{{ function.name }}")?;
         {%- for test in function.tests -%}
-            {%- if test.expected != "" %}
+            {%- if test.variant == "assert_return" -%}
+                {%- if test.expected != "" %}
     assert_eq!(func.call({{ test.args }})?, {{ test.expected }});
-            {%- else %}
+                {%- else %}
     func.call()?;
+                {%- endif -%}
+            {%- elif test.variant == "assert_trap" %}
+    assert!(matches!(func.call({{ test.args }}).unwrap_err(), runtime::TinyWasmError::Trap(trap_code) if trap_code==runtime::TrapCode::{{ test.expected }}));
             {%- endif -%}
         {%- endfor -%}
-    {%- endfor -%}
+    {%- endfor %}
     Ok(())
 }
 {% endfor %}
