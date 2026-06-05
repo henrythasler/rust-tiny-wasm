@@ -68,8 +68,10 @@ fn test_division_1() -> Result<()> {
     assert_eq!(func.call(11, 5)?, 2);
     assert_eq!(func.call(17, 7)?, 2);
 
-    let func = instance.get_function::<(i64, i64), ()>("div_u")?;
+    let func = instance.get_function::<(i64, i64), i64>("div_u")?;
     assert!(matches!(func.call(1, 0).unwrap_err(), runtime::TinyWasmError::Trap(trap_code) if trap_code==runtime::TrapCode::IntegerDivisionByZero));
     assert!(matches!(func.call(0, 0).unwrap_err(), runtime::TinyWasmError::Trap(trap_code) if trap_code==runtime::TrapCode::IntegerDivisionByZero));
+    assert_eq!(func.call(11, 5)?, 2);
+    assert_eq!(func.call(17, 7)?, 2);
     Ok(())
 }

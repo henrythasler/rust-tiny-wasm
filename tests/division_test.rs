@@ -38,5 +38,10 @@ fn test_division() -> Result<()> {
     let res = func.call(-2147483648i32, -1).unwrap_err();
     assert!(matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::IntegerOverflow));
 
+    // let func = instance.get_function::<(), ()>("div_by_zero")?;
+    // assert!(
+    //     matches!(func.call().unwrap_err(), runtime::TinyWasmError::Trap(trap_code) if trap_code==runtime::TrapCode::IntegerDivisionByZero)
+    // );
+
     Ok(())
 }

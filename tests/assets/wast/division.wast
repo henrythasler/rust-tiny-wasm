@@ -57,3 +57,5 @@
 
 (assert_trap (invoke "div_u" (i64.const 1) (i64.const 0)) "integer divide by zero")
 (assert_trap (invoke "div_u" (i64.const 0) (i64.const 0)) "integer divide by zero")
+(assert_return (invoke "div_u" (i64.const 11) (i64.const 5)) (i64.const 2))
+(assert_return (invoke "div_u" (i64.const 17) (i64.const 7)) (i64.const 2))

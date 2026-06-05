@@ -171,10 +171,10 @@ macro_rules! impl_call {
                 $($arg: $arg),+
             ) -> Result<R> {
                 let res = unsafe {
-                let wasm_func: extern "C" fn($($arg),+) -> CallableRawResult<R> =
-                    std::mem::transmute(self.ptr);
-                // set_breakpoint();
-                wasm_func($($arg),+)
+                    let wasm_func: extern "C" fn($($arg),+) -> CallableRawResult<R> =
+                        std::mem::transmute(self.ptr);
+                    // set_breakpoint();
+                    wasm_func($($arg),+)
                 };
                 let result: Result<R> = match res.status {
                     0 => Ok(res.value),
@@ -219,8 +219,8 @@ impl Into64 for i64 {
 // For void functions:
 impl Into64 for () {
     fn into(self) -> i64 {
-        0
-    } // or panic if you never use it
+        panic!("Cannot convert () to i64");
+    }
 }
 
 #[derive(Debug)]
@@ -290,7 +290,7 @@ mod tests {
     fn into64_test() {
         assert_eq!(Into64::into(1i64), 1);
         assert_eq!(Into64::into(1i32), 1);
-        assert_eq!(Into64::into(()), 0);
+        // assert_eq!(Into64::into(()), 0);
     }
 
     #[test]

@@ -6,6 +6,7 @@ SYMBOL TABLE:
 0000000000000068 l     F .text	0000000000000048 div_u32
 00000000000000b0 l     F .text	0000000000000068 div_s64
 0000000000000118 l     F .text	0000000000000048 div_u64
+0000000000000160 l     F .text	0000000000000058 div_by_zero
 
 
 Contents of section .text:
@@ -31,6 +32,12 @@ Contents of section .text:
  0130 e90740f9 890000b5 010180d2 200080d2  ..@......... ...
  0140 04000014 0809c99a 000080d2 e10308aa  ................
  0150 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
+ 0160 fd7bbfa9 fd030091 28008052 09008052  .{......(..R...R
+ 0170 89000035 010180d2 200080d2 0c000014  ...5.... .......
+ 0180 3f050031 e1000054 0a00b052 1f010a6b  ?..1...T...R...k
+ 0190 81000054 e10080d2 200080d2 04000014  ...T.... .......
+ 01a0 080dc91a 000080d2 e1031faa fd7bc1a8  .............{..
+ 01b0 c0035fd6 1f2003d5                    .._.. ..        
 
 Disassembly of section .text:
 
@@ -129,3 +136,27 @@ Disassembly of section .text:
  154:	a8c17bfd 	ldp	x29, x30, [sp], #16
  158:	d65f03c0 	ret
  15c:	d503201f 	nop
+
+0000000000000160 <div_by_zero>:
+ 160:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 164:	910003fd 	mov	x29, sp
+ 168:	52800028 	mov	w8, #0x1                   	// #1
+ 16c:	52800009 	mov	w9, #0x0                   	// #0
+ 170:	35000089 	cbnz	w9, 180 <div_by_zero+0x20>
+ 174:	d2800101 	mov	x1, #0x8                   	// #8
+ 178:	d2800020 	mov	x0, #0x1                   	// #1
+ 17c:	1400000c 	b	1ac <div_by_zero+0x4c>
+ 180:	3100053f 	cmn	w9, #0x1
+ 184:	540000e1 	b.ne	1a0 <div_by_zero+0x40>  // b.any
+ 188:	52b0000a 	mov	w10, #0x80000000            	// #-2147483648
+ 18c:	6b0a011f 	cmp	w8, w10
+ 190:	54000081 	b.ne	1a0 <div_by_zero+0x40>  // b.any
+ 194:	d28000e1 	mov	x1, #0x7                   	// #7
+ 198:	d2800020 	mov	x0, #0x1                   	// #1
+ 19c:	14000004 	b	1ac <div_by_zero+0x4c>
+ 1a0:	1ac90d08 	sdiv	w8, w8, w9
+ 1a4:	d2800000 	mov	x0, #0x0                   	// #0
+ 1a8:	aa1f03e1 	mov	x1, xzr
+ 1ac:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 1b0:	d65f03c0 	ret
+ 1b4:	d503201f 	nop
