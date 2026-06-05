@@ -100,9 +100,9 @@ unsafe fn clear_cache(addr: *mut u8, len: usize) {
 }
 
 #[repr(C)]
-pub struct CallableRawResult<R> {
+pub struct CallableRawResult {
     pub status: u64,
-    pub value: R,
+    pub value: i64,
 }
 
 #[derive(Debug)]
@@ -119,7 +119,7 @@ impl<P, R> Callable<P, R> {
     /// generic matches the actual function that is called.
     pub unsafe fn new(ptr: *const u8) -> Self
     where
-        R: Into64,
+        R: FromValue,
     {
         Self {
             ptr,
@@ -132,17 +132,17 @@ macro_rules! impl_call {
     () => {
         impl<R> Callable<(), R>
         where
-        R: Into64,
+        R: FromValue,
         {
             pub fn call(&self) -> Result<R> {
                 let res = unsafe {
-                    let wasm_func: extern "C" fn() -> CallableRawResult<R> =
+                    let wasm_func: extern "C" fn() -> CallableRawResult =
                         std::mem::transmute(self.ptr);
                     // set_breakpoint();
                     wasm_func()
                 };
                 let result: Result<R> = match res.status {
-                    0 => Ok(res.value),
+                    0 => Ok(R::from_value(res.value)),
                     1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.value.into()))),
                     _ => Err(TinyWasmError::Runtime(format!(
                         "Invalid result tag: {:?}",
@@ -157,7 +157,7 @@ macro_rules! impl_call {
     ($($arg:ident),+) => {
         impl<$($arg,)+ R> Callable<($($arg,)+), R>
         where
-        R: Into64,
+        R: FromValue,
          {
             #[allow(non_snake_case)]
             #[allow(clippy::too_many_arguments)]
@@ -171,14 +171,14 @@ macro_rules! impl_call {
                 $($arg: $arg),+
             ) -> Result<R> {
                 let res = unsafe {
-                    let wasm_func: extern "C" fn($($arg),+) -> CallableRawResult<R> =
+                    let wasm_func: extern "C" fn($($arg),+) -> CallableRawResult =
                         std::mem::transmute(self.ptr);
                     // set_breakpoint();
                     wasm_func($($arg),+)
                 };
                 let result: Result<R> = match res.status {
-                    0 => Ok(res.value),
-                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.value.into()))),
+                    0 => Ok(R::from_value(res.value)),
+                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.value))),
                     _ => Err(TinyWasmError::Runtime(format!(
                         "Invalid result tag: {:?}",
                         res.status
@@ -200,27 +200,24 @@ impl_call!(A, B, C, D, E, F);
 impl_call!(A, B, C, D, E, F, G);
 impl_call!(A, B, C, D, E, F, G, H);
 
-pub trait Into64 {
-    fn into(self) -> i64;
+pub trait FromValue: Sized {
+    fn from_value(value: i64) -> Self;
 }
 
-impl Into64 for i32 {
-    fn into(self) -> i64 {
-        self as i64
+impl FromValue for i32 {
+    fn from_value(value: i64) -> Self {
+        value as i32
     }
 }
 
-impl Into64 for i64 {
-    fn into(self) -> i64 {
-        self
+impl FromValue for i64 {
+    fn from_value(value: i64) -> Self {
+        value
     }
 }
 
-// For void functions:
-impl Into64 for () {
-    fn into(self) -> i64 {
-        panic!("Cannot convert () to i64");
-    }
+impl FromValue for () {
+    fn from_value(_value: i64) -> Self {}
 }
 
 #[derive(Debug)]
@@ -232,7 +229,7 @@ pub struct Runtime {
 impl Runtime {
     pub fn get_function<P, R>(&self, name: &str) -> Result<Callable<P, R>>
     where
-        R: Into64,
+        R: FromValue,
     {
         let function =
             self.functions
@@ -287,10 +284,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn into64_test() {
-        assert_eq!(Into64::into(1i64), 1);
-        assert_eq!(Into64::into(1i32), 1);
-        // assert_eq!(Into64::into(()), 0);
+    fn from_value_test() {
+        assert_eq!(i32::from_value(1i64), 1);
+        assert_eq!(i64::from_value(1i64), 1);
+        assert_eq!(<()>::from_value(0i64), ());
     }
 
     #[test]

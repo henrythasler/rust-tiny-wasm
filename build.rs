@@ -186,20 +186,19 @@ fn wast_to_test(input_path: &str, output_path: &str, blocked: &[&str]) {
                     };
                     let current_module = test_modules.last_mut().unwrap();
                     // check if the function already exists in the last module, if not create it
-                    let func = current_module.functions.iter_mut().find(|f| f.name == name);
-                    if !func.is_some() {
+                    if let Some(func) = current_module.functions.iter_mut().find(|f| f.name == name)
+                    {
+                        let new_result_types = results_to_types(&results);
+                        if func.result_types.len() < new_result_types.len() {
+                            func.result_types = new_result_types;
+                        }
+                    } else {
                         current_module.functions.push(TestFunction {
                             name: String::from(name),
                             tests: vec![],
                             arg_types: args_to_types(&args),
                             result_types: results_to_types(&results),
                         });
-                    }
-                    else {
-                        let func = func.unwrap();
-                        if func.result_types.len() < results_to_types(&results).len() {
-                            func.result_types = results_to_types(&results);
-                        }
                     }
                     current_module
                         .functions
