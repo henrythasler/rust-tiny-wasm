@@ -9,12 +9,12 @@ pub fn trap_inline(
     machinecode: &mut Vec<u32>,
 ) {
     machinecode.push(processing::mov_imm(
-        Reg::X1,
+        IReg::X1,
         trap_code as u32,
         RegSize::Reg64bit,
     ));
     machinecode.push(processing::mov_imm(
-        Reg::X0,
+        IReg::X0,
         WasmReturnCode::Trap as u32,
         RegSize::Reg64bit,
     ));

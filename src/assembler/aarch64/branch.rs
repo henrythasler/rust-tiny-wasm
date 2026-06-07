@@ -20,7 +20,7 @@ use super::*;
 /// let instr = ret(Reg::X30);
 /// assert_eq!(instr, 0xd65f03c0);
 /// ```
-pub fn ret(rn: Reg) -> u32 {
+pub fn ret(rn: IReg) -> u32 {
     0xD65F0000 | ((rn & 0x1F) << 5)
 }
 
@@ -39,7 +39,7 @@ pub fn branch_cond(cond: Condition, imm19: i32) -> u32 {
     instr
 }
 
-pub fn cbz(rt: Reg, offset: i32, size: RegSize) -> u32 {
+pub fn cbz(rt: IReg, offset: i32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x34000000, 0xB4000000, size);
     instr |= (((offset >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
     instr |= rt & 0x1F; // Rt (register to be tested)
@@ -51,7 +51,7 @@ pub fn patch_cbz(offset: i32, location: &mut u32) {
     *location |= (((offset >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
 }
 
-pub fn cbnz(rt: Reg, offset: i32, size: RegSize) -> u32 {
+pub fn cbnz(rt: IReg, offset: i32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x35000000, 0xB5000000, size);
     instr |= (((offset >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
     instr |= rt & 0x1F; // Rt (register to be tested)
@@ -64,8 +64,8 @@ mod tests {
 
     #[test]
     fn test_ret() {
-        assert_eq!(ret(Reg::X30), 0xd65f03c0);
-        assert_eq!(ret(Reg::LR), 0xd65f03c0);
-        assert_eq!(ret(Reg::X0), 0xd65f0000);
+        assert_eq!(ret(IReg::X30), 0xd65f03c0);
+        assert_eq!(ret(IReg::LR), 0xd65f03c0);
+        assert_eq!(ret(IReg::X0), 0xd65f0000);
     }
 }

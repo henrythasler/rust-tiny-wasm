@@ -9,10 +9,10 @@ SYMBOL TABLE:
 
 
 Contents of section .text:
- 0000 fd7bbfa9 fd030091 48058052 00008052  .{......H..R...R
- 0010 e103082a fd7bc1a8 c0035fd6 1f2003d5  ...*.{...._.. ..
- 0020 fd7bbfa9 fd030091 08008012 00008052  .{.............R
- 0030 e103082a fd7bc1a8 c0035fd6 1f2003d5  ...*.{...._.. ..
+ 0000 fd7bbfa9 fd030091 48058052 000080d2  .{......H..R....
+ 0010 e10308aa fd7bc1a8 c0035fd6 1f2003d5  .....{...._.. ..
+ 0020 fd7bbfa9 fd030091 08008012 000080d2  .{..............
+ 0030 e10308aa fd7bc1a8 c0035fd6 1f2003d5  .....{...._.. ..
  0040 fd7bbfa9 fd030091 887997d2 4815b2f2  .{.......y..H...
  0050 08cfcaf2 8846e2f2 000080d2 e10308aa  .....F..........
  0060 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
@@ -25,8 +25,8 @@ Disassembly of section .text:
    0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
    4:	910003fd 	mov	x29, sp
    8:	52800548 	mov	w8, #0x2a                  	// #42
-   c:	52800000 	mov	w0, #0x0                   	// #0
-  10:	2a0803e1 	mov	w1, w8
+   c:	d2800000 	mov	x0, #0x0                   	// #0
+  10:	aa0803e1 	mov	x1, x8
   14:	a8c17bfd 	ldp	x29, x30, [sp], #16
   18:	d65f03c0 	ret
   1c:	d503201f 	nop
@@ -35,8 +35,8 @@ Disassembly of section .text:
   20:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
   24:	910003fd 	mov	x29, sp
   28:	12800008 	mov	w8, #0xffffffff            	// #-1
-  2c:	52800000 	mov	w0, #0x0                   	// #0
-  30:	2a0803e1 	mov	w1, w8
+  2c:	d2800000 	mov	x0, #0x0                   	// #0
+  30:	aa0803e1 	mov	x1, x8
   34:	a8c17bfd 	ldp	x29, x30, [sp], #16
   38:	d65f03c0 	ret
   3c:	d503201f 	nop

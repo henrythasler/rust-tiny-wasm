@@ -1,3 +1,5 @@
+use wasmparser::{Ieee32, Ieee64};
+
 use super::*;
 
 pub fn compile_unop(
@@ -17,13 +19,12 @@ pub fn compile_unop(
     );
 
     match op {
-        Operator::I32Ctz | Operator::I64Ctz => compound::ctz(
-            operand.reg,
-            operand.reg,
-            map_valtype_to_regsize(&valtype),
-            machinecode,
-        ),
-
+        Operator::I32Ctz | Operator::I64Ctz => match operand.reg {
+            Reg::IReg(reg) => {
+                compound::ctz(reg, reg, map_valtype_to_regsize(&valtype), machinecode)
+            }
+            _ => panic!("ctz operator only supports integer registers"),
+        },
         _ => panic!("Unary operator '{:?}' not supported", op),
     }
     value_stack.push(operand);
@@ -46,19 +47,22 @@ pub fn compile_testop(
     );
 
     match op {
-        Operator::I32Eqz | Operator::I64Eqz => {
-            machinecode.push(arithmetic::cmp_imm(
-                operand.reg,
-                0,
-                false,
-                map_valtype_to_regsize(&valtype),
-            ));
-            machinecode.push(conditionals::cset(
-                operand.reg,
-                Condition::from_u32(Condition::EQ ^ 1).unwrap(),
-                RegSize::Reg32bit,
-            ));
-        }
+        Operator::I32Eqz | Operator::I64Eqz => match operand.reg {
+            Reg::IReg(reg) => {
+                machinecode.push(arithmetic::cmp_imm(
+                    reg,
+                    0,
+                    false,
+                    map_valtype_to_regsize(&valtype),
+                ));
+                machinecode.push(conditionals::cset(
+                    reg,
+                    Condition::from_u32(Condition::EQ ^ 1).unwrap(),
+                    RegSize::Reg32bit,
+                ));
+            }
+            _ => panic!("eqz operator only supports integer registers"),
+        },
         _ => panic!("Unary operator '{:?}' not supported", op),
     }
     value_stack.push(operand);
@@ -82,92 +86,102 @@ pub fn compile_binop(
     assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for binop");
 
     match op {
-        Operator::I32Add | Operator::I64Add => machinecode.push(arithmetic::add_shifted_reg(
-            op1.reg,
-            op1.reg,
-            op2.reg,
-            Shift::Lsl,
-            0,
-            map_valtype_to_regsize(&valtype),
-        )),
-        Operator::I32Sub | Operator::I64Sub => machinecode.push(arithmetic::sub_shifted_reg(
-            op1.reg,
-            op1.reg,
-            op2.reg,
-            Shift::Lsl,
-            0,
-            map_valtype_to_regsize(&valtype),
-        )),
-        Operator::I32Mul | Operator::I64Mul => machinecode.push(arithmetic::mul_reg(
-            op1.reg,
-            op1.reg,
-            op2.reg,
-            map_valtype_to_regsize(&valtype),
-        )),
-        Operator::I32DivS | Operator::I64DivS | Operator::I32DivU | Operator::I64DivU => {
-            // check for div by zero; jump over trap code if not zero
-            machinecode.push(branch::cbnz(
-                op2.reg,
-                TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+        Operator::I32Add | Operator::I64Add => match (op1.reg, op2.reg) {
+            (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(arithmetic::add_shifted_reg(
+                reg1,
+                reg1,
+                reg2,
+                Shift::Lsl,
+                0,
                 map_valtype_to_regsize(&valtype),
-            ));
-            trap_inline(TrapCode::IntegerDivisionByZero, trap_locations, machinecode);
-
-            match op {
-                Operator::I32DivS | Operator::I64DivS => {
-                    let reg_size = map_valtype_to_regsize(&valtype);
-
-                    // need to check for integer overflow (INT_MIN/-1)
-                    // (1) check if divisor is -1
-                    machinecode.push(arithmetic::cmn_imm(
-                        op2.reg,
-                        1,
-                        false,
-                        map_valtype_to_regsize(&valtype),
-                    ));
-                    machinecode.push(branch::branch_cond(
-                        Condition::NE,
-                        (TRAP_SKIP_BRANCH + 3) * INSTRUCTION_SIZE as i32,
-                    ));
-
-                    // (2) Yes! Now check if dividend is INT(32|64)_MIN
-                    let temp_reg = register_pool.alloc();
-                    let shift = if reg_size == RegSize::Reg32bit {
-                        16
-                    } else {
-                        48
-                    };
-
-                    machinecode.push(processing::movz(temp_reg, 0x8000, shift, reg_size));
-                    machinecode.push(arithmetic::cmp_shifted_reg(
-                        op1.reg,
-                        temp_reg,
-                        Shift::Lsl,
-                        0,
-                        reg_size,
-                    ));
-                    machinecode.push(branch::branch_cond(
-                        Condition::NE,
+            )),
+            _ => panic!("add operator only supports integer registers"),
+        },
+        Operator::I32Sub | Operator::I64Sub => match (op1.reg, op2.reg) {
+            (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(arithmetic::sub_shifted_reg(
+                reg1,
+                reg1,
+                reg2,
+                Shift::Lsl,
+                0,
+                map_valtype_to_regsize(&valtype),
+            )),
+            _ => panic!("sub operator only supports integer registers"),
+        },
+        Operator::I32Mul | Operator::I64Mul => match (op1.reg, op2.reg) {
+            (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(arithmetic::mul_reg(
+                reg1,
+                reg1,
+                reg2,
+                map_valtype_to_regsize(&valtype),
+            )),
+            _ => panic!("mul operator only supports integer registers"),
+        },
+        Operator::I32DivS | Operator::I64DivS | Operator::I32DivU | Operator::I64DivU => {
+            match (op1.reg, op2.reg) {
+                (Reg::IReg(reg1), Reg::IReg(reg2)) => {
+                    // check for div by zero; jump over trap code if not zero
+                    machinecode.push(branch::cbnz(
+                        reg2,
                         TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
-                    ));
-                    trap_inline(TrapCode::IntegerOverflow, trap_locations, machinecode);
-                    register_pool.free();
-
-                    machinecode.push(arithmetic::sdiv(
-                        op1.reg,
-                        op1.reg,
-                        op2.reg,
                         map_valtype_to_regsize(&valtype),
                     ));
-                }
+                    trap_inline(TrapCode::IntegerDivisionByZero, trap_locations, machinecode);
 
-                Operator::I32DivU | Operator::I64DivU => machinecode.push(arithmetic::udiv(
-                    op1.reg,
-                    op1.reg,
-                    op2.reg,
-                    map_valtype_to_regsize(&valtype),
-                )),
-                _ => panic!("Binary operator '{:?}' not supported", op),
+                    match op {
+                        Operator::I32DivS | Operator::I64DivS => {
+                            let reg_size = map_valtype_to_regsize(&valtype);
+
+                            // need to check for integer overflow (INT_MIN/-1)
+                            // (1) check if divisor is -1
+                            machinecode.push(arithmetic::cmn_imm(
+                                reg2,
+                                1,
+                                false,
+                                map_valtype_to_regsize(&valtype),
+                            ));
+                            machinecode.push(branch::branch_cond(
+                                Condition::NE,
+                                (TRAP_SKIP_BRANCH + 3) * INSTRUCTION_SIZE as i32,
+                            ));
+
+                            // (2) Yes! Now check if dividend is INT(32|64)_MIN
+                            let temp_reg = register_pool.alloc();
+                            let shift = if reg_size == RegSize::Reg32bit {
+                                16
+                            } else {
+                                48
+                            };
+
+                            machinecode.push(processing::movz(temp_reg, 0x8000, shift, reg_size));
+                            machinecode.push(arithmetic::cmp_shifted_reg(
+                                reg1,
+                                temp_reg,
+                                Shift::Lsl,
+                                0,
+                                reg_size,
+                            ));
+                            machinecode.push(branch::branch_cond(
+                                Condition::NE,
+                                TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+                            ));
+                            trap_inline(TrapCode::IntegerOverflow, trap_locations, machinecode);
+                            register_pool.free();
+
+                            machinecode.push(arithmetic::sdiv(
+                                reg1,
+                                reg1,
+                                reg2,
+                                map_valtype_to_regsize(&valtype),
+                            ));
+                        }
+                        Operator::I32DivU | Operator::I64DivU => machinecode.push(
+                            arithmetic::udiv(reg1, reg1, reg2, map_valtype_to_regsize(&valtype)),
+                        ),
+                        _ => panic!("Binary operator '{:?}' not supported", op),
+                    }
+                }
+                _ => panic!("div operator only supports integer registers"),
             }
         }
         _ => panic!("Binary operator '{:?}' not supported", op),
@@ -195,25 +209,29 @@ pub fn compile_relop(
     assert_eq!(op1.valtype, valtype, "Operand 1 type mismatch for relop");
     assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for relop");
 
-    machinecode.push(arithmetic::cmp_shifted_reg(
-        op1.reg,
-        op2.reg,
-        Shift::Lsl,
-        0,
-        size,
-    ));
-
     match op {
-        Operator::I32LtS | Operator::I64LtS => machinecode.push(conditionals::cset(
-            op1.reg,
-            Condition::from_u32(Condition::LT ^ 1).unwrap(),
-            RegSize::Reg32bit,
-        )),
-        Operator::I32LeU | Operator::I64LeU => machinecode.push(conditionals::cset(
-            op1.reg,
-            Condition::from_u32(Condition::LS ^ 1).unwrap(),
-            RegSize::Reg32bit,
-        )),
+        Operator::I32LtS | Operator::I64LtS => match (op1.reg, op2.reg) {
+            (Reg::IReg(reg1), Reg::IReg(reg2)) => {
+                machinecode.push(arithmetic::cmp_shifted_reg(reg1, reg2, Shift::Lsl, 0, size));
+                machinecode.push(conditionals::cset(
+                    reg1,
+                    Condition::from_u32(Condition::LT ^ 1).unwrap(),
+                    RegSize::Reg32bit,
+                ))
+            }
+            _ => panic!("relop operator '{:?}' only supports integer registers", op),
+        },
+        Operator::I32LeU | Operator::I64LeU => match (op1.reg, op2.reg) {
+            (Reg::IReg(reg1), Reg::IReg(reg2)) => {
+                machinecode.push(arithmetic::cmp_shifted_reg(reg1, reg2, Shift::Lsl, 0, size));
+                machinecode.push(conditionals::cset(
+                    reg1,
+                    Condition::from_u32(Condition::LS ^ 1).unwrap(),
+                    RegSize::Reg32bit,
+                ))
+            }
+            _ => panic!("relop operator '{:?}' only supports integer registers", op),
+        },
         _ => panic!("Relation operator '{:?}' not supported", op),
     }
 
@@ -234,7 +252,10 @@ pub fn compile_const<T: Into<i64>>(
     let reg = register_pool.alloc();
     let valtype = map_op_to_valtype(op);
 
-    value_stack.push(StackElement { reg, valtype });
+    value_stack.push(StackElement {
+        reg: Reg::IReg(reg),
+        valtype,
+    });
 
     compound::mov_large_immediate(
         reg,
@@ -242,4 +263,64 @@ pub fn compile_const<T: Into<i64>>(
         map_valtype_to_regsize(&valtype),
         machinecode,
     );
+}
+
+pub fn compile_f32_const(
+    op: &Operator,
+    value: Ieee32,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    let reg = register_pool.alloc_float();
+    let valtype = map_op_to_valtype(op);
+
+    value_stack.push(StackElement {
+        reg: Reg::FReg(reg),
+        valtype,
+    });
+
+    let temp_reg = register_pool.alloc();
+    compound::mov_large_immediate(
+        temp_reg,
+        value.bits() as i64,
+        RegSize::Reg32bit,
+        machinecode,
+    );
+    machinecode.push(processing::fmov(
+        Reg::FReg(reg),
+        Reg::IReg(temp_reg),
+        RegSize::Float32bit,
+    ));
+    register_pool.free();
+}
+
+pub fn compile_f64_const(
+    op: &Operator,
+    value: Ieee64,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    let reg = register_pool.alloc_float();
+    let valtype = map_op_to_valtype(op);
+
+    value_stack.push(StackElement {
+        reg: Reg::FReg(reg),
+        valtype,
+    });
+
+    let temp_reg = register_pool.alloc();
+    compound::mov_large_immediate(
+        temp_reg,
+        value.bits() as i64,
+        RegSize::Reg64bit,
+        machinecode,
+    );
+    machinecode.push(processing::fmov(
+        Reg::FReg(reg),
+        Reg::IReg(temp_reg),
+        RegSize::Float64bit,
+    ));
+    register_pool.free();
 }

@@ -10,11 +10,11 @@ SYMBOL TABLE:
 
 Contents of section .text:
  0000 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
- 0010 e10700b9 e80340b9 00008052 e103082a  ......@....R...*
+ 0010 e10700b9 e80340b9 000080d2 e10308aa  ......@.........
  0020 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
  0030 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
- 0040 e10700b9 e20b00b9 e80b40b9 00008052  ..........@....R
- 0050 e103082a ff430091 fd7bc1a8 c0035fd6  ...*.C...{...._.
+ 0040 e10700b9 e20b00b9 e80b40b9 000080d2  ..........@.....
+ 0050 e10308aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
  0060 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
  0070 e10700f9 e80740f9 000080d2 e10308aa  ......@.........
  0080 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
@@ -32,8 +32,8 @@ Disassembly of section .text:
    c:	b90003e0 	str	w0, [sp]
   10:	b90007e1 	str	w1, [sp, #4]
   14:	b94003e8 	ldr	w8, [sp]
-  18:	52800000 	mov	w0, #0x0                   	// #0
-  1c:	2a0803e1 	mov	w1, w8
+  18:	d2800000 	mov	x0, #0x0                   	// #0
+  1c:	aa0803e1 	mov	x1, x8
   20:	910043ff 	add	sp, sp, #0x10
   24:	a8c17bfd 	ldp	x29, x30, [sp], #16
   28:	d65f03c0 	ret
@@ -47,8 +47,8 @@ Disassembly of section .text:
   40:	b90007e1 	str	w1, [sp, #4]
   44:	b9000be2 	str	w2, [sp, #8]
   48:	b9400be8 	ldr	w8, [sp, #8]
-  4c:	52800000 	mov	w0, #0x0                   	// #0
-  50:	2a0803e1 	mov	w1, w8
+  4c:	d2800000 	mov	x0, #0x0                   	// #0
+  50:	aa0803e1 	mov	x1, x8
   54:	910043ff 	add	sp, sp, #0x10
   58:	a8c17bfd 	ldp	x29, x30, [sp], #16
   5c:	d65f03c0 	ret

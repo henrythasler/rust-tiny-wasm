@@ -24,7 +24,14 @@ use super::*;
 /// let instr = add_shifted_reg(Reg::W0, Reg::W1, Reg::W0, 0, Shift::Lsl, RegSize::Reg32bit);
 /// assert_eq!(instr, 0x0b000020);
 /// ```
-pub fn add_shifted_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSize) -> u32 {
+pub fn add_shifted_reg(
+    rd: IReg,
+    rn: IReg,
+    rm: IReg,
+    shift: Shift,
+    amount: u32,
+    size: RegSize,
+) -> u32 {
     let mut instr = select_instr(0x0b000000, 0x8b000000, size);
     instr |= ((shift as u32) & 0x03) << 22; // shift operator on rm
     instr |= (amount & 0x3F) << 10; // shift amount in imm6 field
@@ -34,7 +41,7 @@ pub fn add_shifted_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, siz
     instr
 }
 
-pub fn add_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
+pub fn add_imm(rd: IReg, rn: IReg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
     let mut instr = select_instr(0x11000000, 0x91000000, size);
     instr |= if shift12 { 0x400000 } else { 0 }; // optional left shift (LSL #12)
     instr |= (imm12 & 0xFFF) << 10; // imm12 field
@@ -43,7 +50,14 @@ pub fn add_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u3
     instr
 }
 
-pub fn sub_shifted_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSize) -> u32 {
+pub fn sub_shifted_reg(
+    rd: IReg,
+    rn: IReg,
+    rm: IReg,
+    shift: Shift,
+    amount: u32,
+    size: RegSize,
+) -> u32 {
     let mut instr = select_instr(0x4b000000, 0xcb000000, size);
     instr |= ((shift as u32) & 0x03) << 22; // shift operator on rm
     instr |= (amount & 0x3F) << 10; // shift amount in imm6 field
@@ -55,9 +69,9 @@ pub fn sub_shifted_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, siz
 
 /// This instruction subtracts an optionally-shifted register value from a register value, and writes the result to the destination register. It updates the condition flags based on the result.
 pub fn subs_shifted_reg(
-    rd: Reg,
-    rn: Reg,
-    rm: Reg,
+    rd: IReg,
+    rn: IReg,
+    rm: IReg,
     shift: Shift,
     amount: u32,
     size: RegSize,
@@ -72,12 +86,12 @@ pub fn subs_shifted_reg(
 }
 
 /// This instruction subtracts an optionally-shifted register value from a register value. It updates the condition flags based on the result and discards the result.
-pub fn cmp_shifted_reg(rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSize) -> u32 {
+pub fn cmp_shifted_reg(rn: IReg, rm: IReg, shift: Shift, amount: u32, size: RegSize) -> u32 {
     subs_shifted_reg(
         if size == RegSize::Reg64bit {
-            Reg::XZR
+            IReg::XZR
         } else {
-            Reg::WZR
+            IReg::WZR
         },
         rn,
         rm,
@@ -88,9 +102,9 @@ pub fn cmp_shifted_reg(rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSiz
 }
 
 pub fn sub_extended_reg(
-    rd: Reg,
-    rn: Reg,
-    rm: Reg,
+    rd: IReg,
+    rn: IReg,
+    rm: IReg,
     option: Extend,
     amount: u32,
     size: RegSize,
@@ -104,7 +118,7 @@ pub fn sub_extended_reg(
     instr
 }
 
-pub fn sub_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
+pub fn sub_imm(rd: IReg, rn: IReg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
     let mut instr = select_instr(0x51000000, 0xD1000000, size);
     instr |= if shift12 { 0x400000 } else { 0 }; // optional left shift (LSL #12)
     instr |= (imm12 & 0xFFF) << 10; // imm12 field
@@ -129,7 +143,7 @@ pub fn sub_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u3
 /// # Returns
 ///
 /// The encoded instruction
-pub fn subs_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
+pub fn subs_imm(rd: IReg, rn: IReg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
     let mut instr = select_instr(0x71000000, 0xf1000000, size);
     instr |= if shift12 { 0x400000 } else { 0 }; // optional left shift (LSL #12)
     instr |= (imm12 & 0xFFF) << 10; // imm12 field
@@ -153,12 +167,12 @@ pub fn subs_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u
 /// # Returns
 ///
 /// The encoded instruction
-pub fn cmp_imm(rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
+pub fn cmp_imm(rn: IReg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
     subs_imm(
         if size == RegSize::Reg64bit {
-            Reg::XZR
+            IReg::XZR
         } else {
-            Reg::WZR
+            IReg::WZR
         },
         rn,
         imm12,
@@ -180,7 +194,7 @@ pub fn cmp_imm(rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
 /// * `size` - 32-bit or 64-bit variant
 /// # Returns
 /// The encoded instruction
-pub fn adds_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
+pub fn adds_imm(rd: IReg, rn: IReg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
     let mut instr = select_instr(0x31000000, 0xb1000000, size);
     instr |= if shift12 { 0x400000 } else { 0 }; // optional left shift (LSL #12)
     instr |= (imm12 & 0xFFF) << 10; // imm12 field
@@ -189,12 +203,12 @@ pub fn adds_imm(rd: Reg, rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u
     instr
 }
 
-pub fn cmn_imm(rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
+pub fn cmn_imm(rn: IReg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
     adds_imm(
         if size == RegSize::Reg64bit {
-            Reg::XZR
+            IReg::XZR
         } else {
-            Reg::WZR
+            IReg::WZR
         },
         rn,
         imm12,
@@ -203,7 +217,7 @@ pub fn cmn_imm(rn: Reg, imm12: u32, shift12: bool, size: RegSize) -> u32 {
     )
 }
 
-pub fn madd_reg(rd: Reg, rn: Reg, rm: Reg, ra: Reg, size: RegSize) -> u32 {
+pub fn madd_reg(rd: IReg, rn: IReg, rm: IReg, ra: IReg, size: RegSize) -> u32 {
     let mut instr = select_instr(0x1b000000, 0x9b000000, size);
     instr |= (rm & 0x1F) << 16; // Rm (multiplier source register)
     instr |= (ra & 0x1F) << 10; // Ra (addend source register)
@@ -212,8 +226,8 @@ pub fn madd_reg(rd: Reg, rn: Reg, rm: Reg, ra: Reg, size: RegSize) -> u32 {
     instr
 }
 
-pub fn mul_reg(rd: Reg, rn: Reg, rm: Reg, size: RegSize) -> u32 {
-    madd_reg(rd, rn, rm, Reg::WZR, size)
+pub fn mul_reg(rd: IReg, rn: IReg, rm: IReg, size: RegSize) -> u32 {
+    madd_reg(rd, rn, rm, IReg::WZR, size)
 }
 
 /// This instruction divides the first signed source register value by the second signed source register value.
@@ -229,7 +243,7 @@ pub fn mul_reg(rd: Reg, rn: Reg, rm: Reg, size: RegSize) -> u32 {
 ///
 /// # Returns
 /// The encoded instruction
-pub fn sdiv(rd: Reg, rn: Reg, rm: Reg, size: RegSize) -> u32 {
+pub fn sdiv(rd: IReg, rn: IReg, rm: IReg, size: RegSize) -> u32 {
     let mut instr = select_instr(0x1AC00C00, 0x9AC00C00, size);
     instr |= (rm & 0x1F) << 16; // Rm (divisor source register)
     instr |= (rn & 0x1F) << 5; // Rn (dividend source register)
@@ -250,7 +264,7 @@ pub fn sdiv(rd: Reg, rn: Reg, rm: Reg, size: RegSize) -> u32 {
 ///
 /// # Returns
 /// The encoded instruction
-pub fn udiv(rd: Reg, rn: Reg, rm: Reg, size: RegSize) -> u32 {
+pub fn udiv(rd: IReg, rn: IReg, rm: IReg, size: RegSize) -> u32 {
     let mut instr = select_instr(0x1AC00800, 0x9AC00800, size);
     instr |= (rm & 0x1F) << 16; // Rm (divisor source register)
     instr |= (rn & 0x1F) << 5; // Rn (dividend source register)
@@ -265,14 +279,21 @@ mod tests {
     #[test]
     fn test_add_shifted_reg() {
         assert_eq!(
-            add_shifted_reg(Reg::W0, Reg::W1, Reg::W0, Shift::Lsl, 0, RegSize::Reg32bit),
+            add_shifted_reg(
+                IReg::W0,
+                IReg::W1,
+                IReg::W0,
+                Shift::Lsl,
+                0,
+                RegSize::Reg32bit
+            ),
             0x0b000020
         );
         assert_eq!(
             add_shifted_reg(
-                Reg::X10,
-                Reg::X11,
-                Reg::X20,
+                IReg::X10,
+                IReg::X11,
+                IReg::X20,
                 Shift::Lsl,
                 4,
                 RegSize::Reg64bit
@@ -285,18 +306,18 @@ mod tests {
     fn test_add_imm() {
         // add sp, sp, #0x40
         assert_eq!(
-            add_imm(Reg::SP, Reg::SP, 0x40, false, RegSize::Reg64bit),
+            add_imm(IReg::SP, IReg::SP, 0x40, false, RegSize::Reg64bit),
             0x910103FF
         );
         // add w1, w0, #10
         assert_eq!(
-            add_imm(Reg::W1, Reg::W0, 10, false, RegSize::Reg32bit),
+            add_imm(IReg::W1, IReg::W0, 10, false, RegSize::Reg32bit),
             0x11002801
         );
 
         // add w1, w10, #0x10, LSL #12
         assert_eq!(
-            add_imm(Reg::W1, Reg::W10, 0x10, true, RegSize::Reg32bit),
+            add_imm(IReg::W1, IReg::W10, 0x10, true, RegSize::Reg32bit),
             0x11404141
         );
     }
@@ -306,9 +327,9 @@ mod tests {
         // SUB X10, X10, X11
         assert_eq!(
             sub_shifted_reg(
-                Reg::X10,
-                Reg::X10,
-                Reg::X11,
+                IReg::X10,
+                IReg::X10,
+                IReg::X11,
                 Shift::Lsl,
                 0,
                 RegSize::Reg64bit
@@ -318,9 +339,9 @@ mod tests {
         // SUB w10, w10, w11, LSL 8
         assert_eq!(
             sub_shifted_reg(
-                Reg::W10,
-                Reg::W10,
-                Reg::W11,
+                IReg::W10,
+                IReg::W10,
+                IReg::W11,
                 Shift::Lsl,
                 8,
                 RegSize::Reg32bit
@@ -334,9 +355,9 @@ mod tests {
         // sub sp, sp, x8
         assert_eq!(
             sub_extended_reg(
-                Reg::SP,
-                Reg::SP,
-                Reg::X8,
+                IReg::SP,
+                IReg::SP,
+                IReg::X8,
                 Extend::Uxtx,
                 0,
                 RegSize::Reg64bit
@@ -349,17 +370,17 @@ mod tests {
     fn test_sub_imm() {
         // sub sp, sp, #0x40
         assert_eq!(
-            sub_imm(Reg::SP, Reg::SP, 0x40, false, RegSize::Reg64bit),
+            sub_imm(IReg::SP, IReg::SP, 0x40, false, RegSize::Reg64bit),
             0xD10103FF
         );
         // sub w0, w0, #1
         assert_eq!(
-            sub_imm(Reg::W0, Reg::W0, 1, false, RegSize::Reg32bit),
+            sub_imm(IReg::W0, IReg::W0, 1, false, RegSize::Reg32bit),
             0x51000400
         );
         // sub x1, x10, #0x100, LSL #12
         assert_eq!(
-            sub_imm(Reg::X1, Reg::X10, 0x100, true, RegSize::Reg64bit),
+            sub_imm(IReg::X1, IReg::X10, 0x100, true, RegSize::Reg64bit),
             0xD1440141
         );
     }
@@ -368,12 +389,12 @@ mod tests {
     fn test_sdiv() {
         // sdiv x1, x5, x11
         assert_eq!(
-            sdiv(Reg::X1, Reg::X5, Reg::X11, RegSize::Reg64bit),
+            sdiv(IReg::X1, IReg::X5, IReg::X11, RegSize::Reg64bit),
             0x9ACB0CA1
         );
         // sdiv w11, w5, w1
         assert_eq!(
-            sdiv(Reg::W11, Reg::W5, Reg::W1, RegSize::Reg32bit),
+            sdiv(IReg::W11, IReg::W5, IReg::W1, RegSize::Reg32bit),
             0x1AC10CAB
         );
     }
@@ -382,12 +403,12 @@ mod tests {
     fn test_udiv() {
         // udiv x1, x5, x11
         assert_eq!(
-            udiv(Reg::X1, Reg::X5, Reg::X11, RegSize::Reg64bit),
+            udiv(IReg::X1, IReg::X5, IReg::X11, RegSize::Reg64bit),
             0x9ACB08A1
         );
         // udiv w11, w5, w1
         assert_eq!(
-            udiv(Reg::W11, Reg::W5, Reg::W1, RegSize::Reg32bit),
+            udiv(IReg::W11, IReg::W5, IReg::W1, RegSize::Reg32bit),
             0x1AC108AB
         );
     }

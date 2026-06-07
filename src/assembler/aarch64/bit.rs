@@ -1,6 +1,6 @@
 use super::*;
 
-pub fn orr_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSize) -> u32 {
+pub fn orr_reg(rd: IReg, rn: IReg, rm: IReg, shift: Shift, amount: u32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x2A000000, 0xAA000000, size);
     instr |= ((shift as u32) & 0x03) << 22; // shift operator on rm
     instr |= (amount & 0x3F) << 10; // shift amount in imm6 field
@@ -15,7 +15,7 @@ pub fn orr_reg(rd: Reg, rn: Reg, rm: Reg, shift: Shift, amount: u32, size: RegSi
 /// If <imms> is greater than or equal to <immr>, this copies a bitfield of (<imms>-<immr>+1) bits starting from bit position <immr> in the source register to the least significant bits of the destination register.
 /// If <imms> is less than <immr>, this copies a bitfield of (<imms>+1) bits from the least significant bits of the source register to bit position (regsize-<immr>) of the destination register, where regsize is the destination register size of 32 or 64 bits.
 /// In both cases, the destination bits below and above the bitfield are set to zero.
-pub fn ubfm(rd: Reg, rn: Reg, immr: u32, imms: u32, size: RegSize) -> u32 {
+pub fn ubfm(rd: IReg, rn: IReg, immr: u32, imms: u32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x53000000, 0xD3400000, size);
     instr |= (immr & 0x3F) << 16; // immr
     instr |= (imms & 0x3F) << 10; // imms
@@ -27,7 +27,7 @@ pub fn ubfm(rd: Reg, rn: Reg, immr: u32, imms: u32, size: RegSize) -> u32 {
 /// Logical Shift Right (immediate).
 ///
 /// This instruction shifts a register value right by an immediate number of bits, shifting in zeros, and writes the result to the destination register.
-pub fn lsr_imm(rd: Reg, rn: Reg, shift: u32, size: RegSize) -> u32 {
+pub fn lsr_imm(rd: IReg, rn: IReg, shift: u32, size: RegSize) -> u32 {
     ubfm(
         rd,
         rn,
@@ -47,7 +47,7 @@ pub fn lsr_imm(rd: Reg, rn: Reg, shift: u32, size: RegSize) -> u32 {
  * @param size 32-bit or 64-bit variant
  * @return the encoded instruction
  */
-pub fn clz(rd: Reg, rn: Reg, size: RegSize) -> u32 {
+pub fn clz(rd: IReg, rn: IReg, size: RegSize) -> u32 {
     let mut instr = select_instr(0x5ac01000, 0xdac01000, size);
     instr |= (rn & 0x1F) << 5; // Rn (dividend source register)
     instr |= rd & 0x1F; // Rd (desination register)
@@ -63,7 +63,7 @@ pub fn clz(rd: Reg, rn: Reg, size: RegSize) -> u32 {
  * @param size 32-bit or 64-bit variant
  * @return the encoded instruction
  */
-pub fn rbit(rd: Reg, rn: Reg, size: RegSize) -> u32 {
+pub fn rbit(rd: IReg, rn: IReg, size: RegSize) -> u32 {
     let mut instr = select_instr(0x5ac00000, 0xdac00000, size);
     instr |= (rn & 0x1F) << 5; // Rn (dividend source register)
     instr |= rd & 0x1F; // Rd (desination register)
@@ -79,9 +79,9 @@ mod tests {
         // orr x10, x11, x12
         assert_eq!(
             orr_reg(
-                Reg::X10,
-                Reg::X11,
-                Reg::X12,
+                IReg::X10,
+                IReg::X11,
+                IReg::X12,
                 Shift::Lsl,
                 0,
                 RegSize::Reg64bit
@@ -91,9 +91,9 @@ mod tests {
         // orr w13, w14, w15, lsl 15
         assert_eq!(
             orr_reg(
-                Reg::W13,
-                Reg::W14,
-                Reg::W15,
+                IReg::W13,
+                IReg::W14,
+                IReg::W15,
                 Shift::Lsl,
                 15,
                 RegSize::Reg32bit
@@ -109,10 +109,13 @@ mod tests {
     fn test_lsr_imm() {
         // lsr x10, x11, #32
         assert_eq!(
-            lsr_imm(Reg::X10, Reg::X11, 32, RegSize::Reg64bit),
+            lsr_imm(IReg::X10, IReg::X11, 32, RegSize::Reg64bit),
             0xD360FD6A
         );
         // lsr w3, w7, #3
-        assert_eq!(lsr_imm(Reg::W3, Reg::W7, 3, RegSize::Reg32bit), 0x53037CE3);
+        assert_eq!(
+            lsr_imm(IReg::W3, IReg::W7, 3, RegSize::Reg32bit),
+            0x53037CE3
+        );
     }
 }

@@ -129,28 +129,33 @@ pub fn compile_brif(
         .get_mut(idx)
         .expect("control stack inconsistent");
 
-    register_pool.free();
+    match cond.reg {
+        Reg::IReg(reg) => {
+            register_pool.free();
 
-    if !frame.end_types.is_empty() && frame.result_register.is_none() {
-        frame.result_register = Some(value_stack.last().unwrap().reg);
-    }
+            if !frame.end_types.is_empty() && frame.result_register.is_none() {
+                frame.result_register = Some(value_stack.last().unwrap().reg);
+            }
 
-    match frame.opcode {
-        Opcode::Loop => {
-            let offset = (frame.machinecode_offset as i32 - machinecode.len() as i32) * 4;
-            machinecode.push(branch::cbnz(cond.reg, offset, RegSize::Reg32bit));
+            match frame.opcode {
+                Opcode::Loop => {
+                    let offset = (frame.machinecode_offset as i32 - machinecode.len() as i32) * 4;
+                    machinecode.push(branch::cbnz(reg, offset, RegSize::Reg32bit));
+                }
+                Opcode::Block => {
+                    frame.patches.push(Patch {
+                        location: machinecode.len(),
+                        instruction: Instruction::Cbz,
+                    });
+                    machinecode.push(branch::cbnz(reg, 0, RegSize::Reg32bit));
+                }
+                _ => panic!(
+                    "unexpected instruction for control stack item {:?}:",
+                    frame.opcode
+                ),
+            }
         }
-        Opcode::Block => {
-            frame.patches.push(Patch {
-                location: machinecode.len(),
-                instruction: Instruction::Cbz,
-            });
-            machinecode.push(branch::cbnz(cond.reg, 0, RegSize::Reg32bit));
-        }
-        _ => panic!(
-            "unexpected instruction for control stack item {:?}:",
-            frame.opcode
-        ),
+        _ => panic!("Unsupported register type for 'brif' condition"),
     }
 }
 
@@ -175,23 +180,27 @@ pub fn compile_if(
         _ => panic!("Unexpected blocktype in 'if'"),
     };
 
-    register_pool.free();
-
-    control_stack.push(ControlFrame {
-        opcode: Opcode::If,
-        start_types: vec![],
-        end_types,
-        stack_height: value_stack.len(),
-        value_stack: Some(value_stack.to_vec()),
-        register_index: Some(register_pool.index),
-        result_register: None,
-        machinecode_offset: machinecode.len(),
-        patches: vec![Patch {
-            location: machinecode.len(),
-            instruction: Instruction::Cbz,
-        }],
-    });
-    machinecode.push(branch::cbz(cond.reg, 0, RegSize::Reg32bit));
+    match cond.reg {
+        Reg::IReg(reg) => {
+            register_pool.free();
+            control_stack.push(ControlFrame {
+                opcode: Opcode::If,
+                start_types: vec![],
+                end_types,
+                stack_height: value_stack.len(),
+                value_stack: Some(value_stack.to_vec()),
+                register_index: Some(register_pool.index),
+                result_register: None,
+                machinecode_offset: machinecode.len(),
+                patches: vec![Patch {
+                    location: machinecode.len(),
+                    instruction: Instruction::Cbz,
+                }],
+            });
+            machinecode.push(branch::cbz(reg, 0, RegSize::Reg32bit));
+        }
+        _ => panic!("Unsupported register type for 'if' condition"),
+    }
 }
 
 pub fn compile_else(
@@ -288,11 +297,16 @@ pub fn compile_end(
                 reg: expected_reg,
                 valtype: *result_type,
             });
-            machinecode.push(processing::mov_reg(
-                expected_reg,
-                stack_element.reg,
-                map_valtype_to_regsize(result_type),
-            ));
+            match (stack_element.reg, expected_reg) {
+                (Reg::IReg(reg), Reg::IReg(expected_reg)) => {
+                    machinecode.push(processing::mov_reg(
+                        expected_reg,
+                        reg,
+                        map_valtype_to_regsize(result_type),
+                    ));
+                }
+                _ => panic!("Unsupported register type for block result"),
+            }
         }
     }
 

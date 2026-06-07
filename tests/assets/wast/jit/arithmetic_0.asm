@@ -10,14 +10,14 @@ SYMBOL TABLE:
 Contents of section .text:
  0000 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
  0010 e10700b9 e80340b9 e90740b9 0801090b  ......@...@.....
- 0020 00008052 e103082a ff430091 fd7bc1a8  ...R...*.C...{..
+ 0020 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
  0030 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
  0040 ff4300d1 e00300b9 e10700b9 e80340b9  .C............@.
- 0050 e90740b9 0801094b 00008052 e103082a  ..@....K...R...*
+ 0050 e90740b9 0801094b 000080d2 e10308aa  ..@....K........
  0060 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
  0070 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
  0080 e10700b9 e80340b9 e90740b9 087d091b  ......@...@..}..
- 0090 00008052 e103082a ff430091 fd7bc1a8  ...R...*.C...{..
+ 0090 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
  00a0 c0035fd6 1f2003d5                    .._.. ..        
 
 Disassembly of section .text:
@@ -31,8 +31,8 @@ Disassembly of section .text:
   14:	b94003e8 	ldr	w8, [sp]
   18:	b94007e9 	ldr	w9, [sp, #4]
   1c:	0b090108 	add	w8, w8, w9
-  20:	52800000 	mov	w0, #0x0                   	// #0
-  24:	2a0803e1 	mov	w1, w8
+  20:	d2800000 	mov	x0, #0x0                   	// #0
+  24:	aa0803e1 	mov	x1, x8
   28:	910043ff 	add	sp, sp, #0x10
   2c:	a8c17bfd 	ldp	x29, x30, [sp], #16
   30:	d65f03c0 	ret
@@ -47,8 +47,8 @@ Disassembly of section .text:
   4c:	b94003e8 	ldr	w8, [sp]
   50:	b94007e9 	ldr	w9, [sp, #4]
   54:	4b090108 	sub	w8, w8, w9
-  58:	52800000 	mov	w0, #0x0                   	// #0
-  5c:	2a0803e1 	mov	w1, w8
+  58:	d2800000 	mov	x0, #0x0                   	// #0
+  5c:	aa0803e1 	mov	x1, x8
   60:	910043ff 	add	sp, sp, #0x10
   64:	a8c17bfd 	ldp	x29, x30, [sp], #16
   68:	d65f03c0 	ret
@@ -63,8 +63,8 @@ Disassembly of section .text:
   84:	b94003e8 	ldr	w8, [sp]
   88:	b94007e9 	ldr	w9, [sp, #4]
   8c:	1b097d08 	mul	w8, w8, w9
-  90:	52800000 	mov	w0, #0x0                   	// #0
-  94:	2a0803e1 	mov	w1, w8
+  90:	d2800000 	mov	x0, #0x0                   	// #0
+  94:	aa0803e1 	mov	x1, x8
   98:	910043ff 	add	sp, sp, #0x10
   9c:	a8c17bfd 	ldp	x29, x30, [sp], #16
   a0:	d65f03c0 	ret

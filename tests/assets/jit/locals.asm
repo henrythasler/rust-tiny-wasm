@@ -39,8 +39,8 @@ Contents of section .text:
  01b0 e83340b9 e85300b9 e85340b9 e85700b9  .3@..S...S@..W..
  01c0 e85740b9 e85b00b9 e85b40b9 e85f00b9  .W@..[...[@.._..
  01d0 e85f40b9 e86300b9 e86340b9 e86700b9  ._@..c...c@..g..
- 01e0 e86740b9 e86b00b9 e86b40b9 00008052  .g@..k...k@....R
- 01f0 e103082a ffc30191 fd7bc1a8 c0035fd6  ...*.....{...._.
+ 01e0 e86740b9 e86b00b9 e86b40b9 000080d2  .g@..k...k@.....
+ 01f0 e10308aa ffc30191 fd7bc1a8 c0035fd6  .........{...._.
 
 Disassembly of section .text:
 
@@ -174,8 +174,8 @@ Disassembly of section .text:
  1e0:	b94067e8 	ldr	w8, [sp, #100]
  1e4:	b9006be8 	str	w8, [sp, #104]
  1e8:	b9406be8 	ldr	w8, [sp, #104]
- 1ec:	52800000 	mov	w0, #0x0                   	// #0
- 1f0:	2a0803e1 	mov	w1, w8
+ 1ec:	d2800000 	mov	x0, #0x0                   	// #0
+ 1f0:	aa0803e1 	mov	x1, x8
  1f4:	9101c3ff 	add	sp, sp, #0x70
  1f8:	a8c17bfd 	ldp	x29, x30, [sp], #16
  1fc:	d65f03c0 	ret

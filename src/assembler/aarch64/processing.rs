@@ -1,18 +1,18 @@
 use super::*;
 
-pub fn mov_reg(rd: Reg, rm: Reg, size: RegSize) -> u32 {
-    bit::orr_reg(rd, Reg::XZR, rm, Shift::Lsl, 0, size)
+pub fn mov_reg(rd: IReg, rm: IReg, size: RegSize) -> u32 {
+    bit::orr_reg(rd, IReg::XZR, rm, Shift::Lsl, 0, size)
 }
 
-pub fn mov_sp(rd: Reg, rn: Reg, size: RegSize) -> u32 {
+pub fn mov_sp(rd: IReg, rn: IReg, size: RegSize) -> u32 {
     arithmetic::add_imm(rd, rn, 0, false, size)
 }
 
-pub fn mov_imm(rd: Reg, imm16: u32, size: RegSize) -> u32 {
+pub fn mov_imm(rd: IReg, imm16: u32, size: RegSize) -> u32 {
     movz(rd, imm16, 0, size)
 }
 
-pub fn movn(rd: Reg, imm16: u32, shift: u32, size: RegSize) -> u32 {
+pub fn movn(rd: IReg, imm16: u32, shift: u32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x12800000, 0x92800000, size);
     instr |= ((shift >> 4) & 0x3) << 21; // hw field (0-3 for 64-bit, 0-1 for 32-bit)
     instr |= (imm16 & 0xFFFF) << 5; // imm16 field
@@ -20,7 +20,7 @@ pub fn movn(rd: Reg, imm16: u32, shift: u32, size: RegSize) -> u32 {
     instr
 }
 
-pub fn movz(rd: Reg, imm16: u32, shift: u32, size: RegSize) -> u32 {
+pub fn movz(rd: IReg, imm16: u32, shift: u32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x52800000, 0xD2800000, size);
     instr |= ((shift >> 4) & 0x3) << 21; // hw field (0-3 for 64-bit, 0-1 for 32-bit)
     instr |= (imm16 & 0xFFFF) << 5; // imm16 field
@@ -28,12 +28,28 @@ pub fn movz(rd: Reg, imm16: u32, shift: u32, size: RegSize) -> u32 {
     instr
 }
 
-pub fn movk(rd: Reg, imm16: u32, shift: u32, size: RegSize) -> u32 {
+pub fn movk(rd: IReg, imm16: u32, shift: u32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x72800000, 0xF2800000, size);
     instr |= ((shift >> 4) & 0x3) << 21; // hw field (0-3 for 64-bit, 0-1 for 32-bit)
     instr |= (imm16 & 0xFFFF) << 5; // imm16 field
     instr |= rd & 0x1F; // Rd (destination register)
     instr
+}
+
+pub fn fmov(rd: Reg, rn: Reg, size_rn: RegSize) -> u32 {
+    match (rd, rn) {
+        (Reg::IReg(rd), Reg::FReg(rn)) => match size_rn {
+            RegSize::Float32bit => 0x1E260000 | (rn & 0x1F) << 5 | rd & 0x1F,
+            RegSize::Float64bit => 0x9E660000 | (rn & 0x1F) << 5 | rd & 0x1F,
+            _ => panic!("Invalid register sizes for fmov"),
+        },
+        (Reg::FReg(rd), Reg::IReg(rn)) => match size_rn {
+            RegSize::Float32bit => 0x1E270000 | (rn & 0x1F) << 5 | rd & 0x1F,
+            RegSize::Float64bit => 0x9E670000 | (rn & 0x1F) << 5 | rd & 0x1F,
+            _ => panic!("Invalid register sizes for fmov"),
+        },
+        _ => panic!("Invalid register types for fmov"),
+    }
 }
 
 #[cfg(test)]
@@ -43,31 +59,31 @@ mod tests {
     #[test]
     fn test_mov_reg() {
         // mov x10, x11
-        assert_eq!(mov_reg(Reg::X10, Reg::X11, RegSize::Reg64bit), 0xAA0B03EA);
+        assert_eq!(mov_reg(IReg::X10, IReg::X11, RegSize::Reg64bit), 0xAA0B03EA);
     }
 
     #[test]
     fn test_movz() {
         // MOVZ X3, #0x1234, LSL #16
-        assert_eq!(movz(Reg::X3, 0x1234, 16, RegSize::Reg64bit), 0xD2A24683);
+        assert_eq!(movz(IReg::X3, 0x1234, 16, RegSize::Reg64bit), 0xD2A24683);
         // MOVZ X7, 0xABCD, LSL #48
-        assert_eq!(movz(Reg::X7, 0xabcd, 48, RegSize::Reg64bit), 0xD2F579A7);
+        assert_eq!(movz(IReg::X7, 0xabcd, 48, RegSize::Reg64bit), 0xD2F579A7);
         // MOV X8, #0xdef0
-        assert_eq!(mov_imm(Reg::X8, 0xdef0, RegSize::Reg64bit), 0xD29BDE08);
+        assert_eq!(mov_imm(IReg::X8, 0xdef0, RegSize::Reg64bit), 0xD29BDE08);
     }
 
     #[test]
     fn test_movk() {
         // MOVK X15, #0xffff, LSL #32
-        assert_eq!(movk(Reg::X15, 0xffff, 32, RegSize::Reg64bit), 0xF2DFFFEF);
+        assert_eq!(movk(IReg::X15, 0xffff, 32, RegSize::Reg64bit), 0xF2DFFFEF);
         // MOVK W0, #0x80, LSL #16
-        assert_eq!(movk(Reg::W0, 0x80, 16, RegSize::Reg32bit), 0x72A01000);
+        assert_eq!(movk(IReg::W0, 0x80, 16, RegSize::Reg32bit), 0x72A01000);
         //   EXPECT_THROW(encode_movk(X15, 0xFFFF, 32, reg_size_t::SIZE_8BIT), std::runtime_error);
     }
 
     #[test]
     fn test_movn() {
         // movn x11, #0x10, lsl #32
-        assert_eq!(movn(Reg::X11, 0x10, 32, RegSize::Reg64bit), 0x92C0020B);
+        assert_eq!(movn(IReg::X11, 0x10, 32, RegSize::Reg64bit), 0x92C0020B);
     }
 }

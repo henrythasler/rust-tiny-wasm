@@ -69,8 +69,8 @@ pub fn save_locals_to_stack(
             });
 
             machinecode.push(memory::str_imm_unsigned_offset(
-                Reg::XZR,
-                Reg::SP,
+                IReg::XZR,
+                IReg::SP,
                 *offset as u32,
                 map_valtype_to_memsize(valtype),
                 map_valtype_to_regsize(valtype),
@@ -95,8 +95,8 @@ pub fn save_parameters_to_stack(
             valtype: *valtype,
         });
         machinecode.push(memory::str_imm_unsigned_offset(
-            Reg::try_from(i as u32).unwrap(),
-            Reg::SP,
+            IReg::try_from(i as u32).unwrap(),
+            IReg::SP,
             *offset as u32,
             map_valtype_to_memsize(valtype),
             map_valtype_to_regsize(valtype),

@@ -230,6 +230,22 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 ## Chapter 14 - Division and Trap Handling
 
+### Goals
+
+- [x] Implement the `i32.div_s`, `i32.div_u`, `i64.div_s`, `i64.div_u` instruction.
+- [x] Research means to abort JIT execution and pass error values to the rust caller.
+- [x] Implement a trap mechanism that supports `IntegerDivisionByZero` and `IntegerOverflow`.
+- [x] Pass all test-cases in `tests/division_test.rs`.
+
+## Chapter 15 - Floating Point Instructions
+
+### Goals
+
+- [ ] Research how floating point values are processed in ARM64 architecture and what corresponding instructions exist.
+- [ ] Implement floating point support for parameters and return values.
+- [ ] Implement floating point support for `f32.const`, `f64.const`.
+- [ ] Implement floating point support for `local.get`, `local.set` and `local.tee`.
+
 ## Chapter xx - Rust to Wasm
 
 ### Goals
@@ -247,6 +263,7 @@ Use [The rustc book - wasm32v1-none](https://doc.rust-lang.org/rustc/platform-su
  ## References
 
 - [WebAssembly 1.0 Core Specification](https://www.w3.org/TR/wasm-core-1/)
+- [Learn the architecture - A64 Instruction Set Architecture Guide](https://developer.arm.com/documentation/102374/latest/)
 - [Arm A-profile A64 Instruction Set Architecture](https://developer.arm.com/documentation/ddi0602/2025-09?lang=en)
 - [godbolt - Compiler Explorer](https://godbolt.org/)
 - [ARMConverter.com - Online ARM to HEX Converter](https://armconverter.com/?lock=arm64)

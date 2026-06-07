@@ -7,8 +7,8 @@ SYMBOL TABLE:
 
 Contents of section .text:
  0000 fd7bbfa9 fd030091 08028052 09038052  .{.........R...R
- 0010 0801090b 49018052 0801090b 00008052  ....I..R.......R
- 0020 e103082a fd7bc1a8 c0035fd6 1f2003d5  ...*.{...._.. ..
+ 0010 0801090b 49018052 0801090b 000080d2  ....I..R........
+ 0020 e10308aa fd7bc1a8 c0035fd6 1f2003d5  .....{...._.. ..
 
 Disassembly of section .text:
 
@@ -20,8 +20,8 @@ Disassembly of section .text:
   10:	0b090108 	add	w8, w8, w9
   14:	52800149 	mov	w9, #0xa                   	// #10
   18:	0b090108 	add	w8, w8, w9
-  1c:	52800000 	mov	w0, #0x0                   	// #0
-  20:	2a0803e1 	mov	w1, w8
+  1c:	d2800000 	mov	x0, #0x0                   	// #0
+  20:	aa0803e1 	mov	x1, x8
   24:	a8c17bfd 	ldp	x29, x30, [sp], #16
   28:	d65f03c0 	ret
   2c:	d503201f 	nop

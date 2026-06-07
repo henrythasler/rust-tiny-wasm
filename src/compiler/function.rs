@@ -144,6 +144,24 @@ pub fn compile_function(
                     machinecode,
                 );
             }
+            Operator::F32Const { value } => {
+                compile_f32_const(
+                    &op,
+                    value,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
+            Operator::F64Const { value } => {
+                compile_f64_const(
+                    &op,
+                    value,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
             Operator::LocalGet { local_index } => {
                 let var = variables.get(local_index as usize).unwrap();
                 compile_local_get(
@@ -204,12 +222,12 @@ pub fn compile_function(
     if func_type.results().is_empty() {
         // Return Code =Ok (0)
         machinecode.push(processing::mov_imm(
-            Reg::X0,
+            IReg::X0,
             WasmReturnCode::Ok as u32,
             RegSize::Reg64bit,
         ));
         // Result=0
-        machinecode.push(processing::mov_reg(Reg::X1, Reg::XZR, RegSize::Reg64bit));
+        machinecode.push(processing::mov_reg(IReg::X1, IReg::XZR, RegSize::Reg64bit));
     } else {
         load_results(&mut value_stack, func_type.results().len(), machinecode)?;
     }
@@ -262,6 +280,8 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I64Eqz
         | Operator::I64DivS
         | Operator::I64DivU => ValType::I64,
+        Operator::F32Const { .. } => ValType::F32,
+        Operator::F64Const { .. } => ValType::F64,
         _ => panic!("Operator '{:?}' not supported", op),
     }
 }
