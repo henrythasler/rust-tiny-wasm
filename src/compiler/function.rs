@@ -145,18 +145,18 @@ pub fn compile_function(
                 );
             }
             Operator::F32Const { value } => {
-                compile_f32_const(
+                compile_float_const(
                     &op,
-                    value,
+                    IeeeFloat::F32(value),
                     &mut value_stack,
                     &mut register_pool,
                     machinecode,
                 );
             }
             Operator::F64Const { value } => {
-                compile_f64_const(
+                compile_float_const(
                     &op,
-                    value,
+                    IeeeFloat::F64(value),
                     &mut value_stack,
                     &mut register_pool,
                     machinecode,

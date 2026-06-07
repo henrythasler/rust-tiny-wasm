@@ -2,6 +2,39 @@ use wasmparser::{Ieee32, Ieee64};
 
 use super::*;
 
+pub enum IeeeFloat {
+    F32(Ieee32),
+    F64(Ieee64),
+}
+
+pub trait RegisterInfo: Sized {
+    fn to_reg_size(&self) -> RegSize;
+    fn to_ireg_size(&self) -> RegSize;
+    fn bits(&self) -> u64;
+}
+
+impl RegisterInfo for IeeeFloat {
+    fn to_reg_size(&self) -> RegSize {
+        match self {
+            IeeeFloat::F32(_) => RegSize::Float32bit,
+            IeeeFloat::F64(_) => RegSize::Float64bit,
+        }
+    }
+    fn to_ireg_size(&self) -> RegSize {
+        match self {
+            IeeeFloat::F32(_) => RegSize::Reg32bit,
+            IeeeFloat::F64(_) => RegSize::Reg64bit,
+        }
+    }
+
+    fn bits(&self) -> u64 {
+        match self {
+            IeeeFloat::F32(f) => f.bits() as u64,
+            IeeeFloat::F64(f) => f.bits(),
+        }
+    }
+}
+
 pub fn compile_unop(
     op: &Operator,
     value_stack: &mut Vec<StackElement>,
@@ -265,9 +298,9 @@ pub fn compile_const<T: Into<i64>>(
     );
 }
 
-pub fn compile_f32_const(
+pub fn compile_float_const(
     op: &Operator,
-    value: Ieee32,
+    value: IeeeFloat,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
     machinecode: &mut Vec<u32>,
@@ -284,43 +317,13 @@ pub fn compile_f32_const(
     compound::mov_large_immediate(
         temp_reg,
         value.bits() as i64,
-        RegSize::Reg32bit,
+        value.to_ireg_size(),
         machinecode,
     );
     machinecode.push(processing::fmov(
         Reg::FReg(reg),
         Reg::IReg(temp_reg),
-        RegSize::Float32bit,
-    ));
-    register_pool.free();
-}
-
-pub fn compile_f64_const(
-    op: &Operator,
-    value: Ieee64,
-    value_stack: &mut Vec<StackElement>,
-    register_pool: &mut RegisterPool,
-    machinecode: &mut Vec<u32>,
-) {
-    let reg = register_pool.alloc_float();
-    let valtype = map_op_to_valtype(op);
-
-    value_stack.push(StackElement {
-        reg: Reg::FReg(reg),
-        valtype,
-    });
-
-    let temp_reg = register_pool.alloc();
-    compound::mov_large_immediate(
-        temp_reg,
-        value.bits() as i64,
-        RegSize::Reg64bit,
-        machinecode,
-    );
-    machinecode.push(processing::fmov(
-        Reg::FReg(reg),
-        Reg::IReg(temp_reg),
-        RegSize::Float64bit,
+        value.to_reg_size(),
     ));
     register_pool.free();
 }
