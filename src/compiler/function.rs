@@ -144,6 +144,24 @@ pub fn compile_function(
                     machinecode,
                 );
             }
+            Operator::F32Const { value } => {
+                compile_float_const(
+                    &op,
+                    IeeeFloat::F32(value),
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
+            Operator::F64Const { value } => {
+                compile_float_const(
+                    &op,
+                    IeeeFloat::F64(value),
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
             Operator::LocalGet { local_index } => {
                 let var = variables.get(local_index as usize).unwrap();
                 compile_local_get(
@@ -177,7 +195,9 @@ pub fn compile_function(
             | Operator::I32DivU
             | Operator::I64DivU
             | Operator::I32DivS
-            | Operator::I64DivS => {
+            | Operator::I64DivS
+            | Operator::F32Add
+            | Operator::F64Add => {
                 compile_binop(
                     &op,
                     &mut value_stack,
@@ -204,12 +224,12 @@ pub fn compile_function(
     if func_type.results().is_empty() {
         // Return Code =Ok (0)
         machinecode.push(processing::mov_imm(
-            Reg::X0,
+            IReg::X0,
             WasmReturnCode::Ok as u32,
-            RegSize::Reg64bit,
+            RegSize::Int64bit,
         ));
         // Result=0
-        machinecode.push(processing::mov_reg(Reg::X1, Reg::XZR, RegSize::Reg64bit));
+        machinecode.push(processing::mov_reg(IReg::X1, IReg::XZR, RegSize::Int64bit));
     } else {
         load_results(&mut value_stack, func_type.results().len(), machinecode)?;
     }
@@ -262,6 +282,10 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I64Eqz
         | Operator::I64DivS
         | Operator::I64DivU => ValType::I64,
+        Operator::F32Const { .. } => ValType::F32,
+        Operator::F64Const { .. } => ValType::F64,
+        Operator::F32Add => ValType::F32,
+        Operator::F64Add => ValType::F64,
         _ => panic!("Operator '{:?}' not supported", op),
     }
 }

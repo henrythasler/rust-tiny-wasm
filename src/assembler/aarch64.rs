@@ -12,6 +12,10 @@ pub mod hint;
 pub mod memory;
 pub mod processing;
 
+// floating point instructions
+pub mod fp_memory;
+pub mod fp_processing;
+
 pub const INSTRUCTION_SIZE: usize = std::mem::size_of::<u32>();
 
 pub const INT32_SIZE: usize = std::mem::size_of::<i32>();
@@ -21,10 +25,16 @@ pub const FLOAT64_SIZE: usize = std::mem::size_of::<f64>();
 
 pub const STACK_ALIGNMENT: usize = 16;
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
+pub enum Reg {
+    FReg(FReg),
+    IReg(IReg),
+}
+
 #[repr(u32)]
 #[derive(TryFromPrimitive, Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[allow(clippy::upper_case_acronyms)]
-pub enum Reg {
+pub enum IReg {
     X0 = 0,
     X1,
     X2,
@@ -59,50 +69,235 @@ pub enum Reg {
     XZR = 31, // Zero Register (context dependent)
 }
 
-impl Reg {
+impl IReg {
     // 32-bit register aliases
-    pub const W0: Reg = Reg::X0;
-    pub const W1: Reg = Reg::X1;
-    pub const W2: Reg = Reg::X2;
-    pub const W3: Reg = Reg::X3;
-    pub const W4: Reg = Reg::X4;
-    pub const W5: Reg = Reg::X5;
-    pub const W6: Reg = Reg::X6;
-    pub const W7: Reg = Reg::X7;
-    pub const W8: Reg = Reg::X8;
-    pub const W9: Reg = Reg::X9;
-    pub const W10: Reg = Reg::X10;
-    pub const W11: Reg = Reg::X11;
-    pub const W12: Reg = Reg::X12;
-    pub const W13: Reg = Reg::X13;
-    pub const W14: Reg = Reg::X14;
-    pub const W15: Reg = Reg::X15;
-    pub const W16: Reg = Reg::X16;
-    pub const W17: Reg = Reg::X17;
-    pub const W18: Reg = Reg::X18;
-    pub const W19: Reg = Reg::X19;
-    pub const W20: Reg = Reg::X20;
-    pub const W21: Reg = Reg::X21;
-    pub const W22: Reg = Reg::X22;
-    pub const W23: Reg = Reg::X23;
-    pub const W24: Reg = Reg::X24;
-    pub const W25: Reg = Reg::X25;
-    pub const W26: Reg = Reg::X26;
-    pub const W27: Reg = Reg::X27;
-    pub const W28: Reg = Reg::X28;
-    pub const W29: Reg = Reg::X29;
-    pub const W30: Reg = Reg::X30;
-    pub const WZR: Reg = Reg::XZR;
+    pub const W0: IReg = IReg::X0;
+    pub const W1: IReg = IReg::X1;
+    pub const W2: IReg = IReg::X2;
+    pub const W3: IReg = IReg::X3;
+    pub const W4: IReg = IReg::X4;
+    pub const W5: IReg = IReg::X5;
+    pub const W6: IReg = IReg::X6;
+    pub const W7: IReg = IReg::X7;
+    pub const W8: IReg = IReg::X8;
+    pub const W9: IReg = IReg::X9;
+    pub const W10: IReg = IReg::X10;
+    pub const W11: IReg = IReg::X11;
+    pub const W12: IReg = IReg::X12;
+    pub const W13: IReg = IReg::X13;
+    pub const W14: IReg = IReg::X14;
+    pub const W15: IReg = IReg::X15;
+    pub const W16: IReg = IReg::X16;
+    pub const W17: IReg = IReg::X17;
+    pub const W18: IReg = IReg::X18;
+    pub const W19: IReg = IReg::X19;
+    pub const W20: IReg = IReg::X20;
+    pub const W21: IReg = IReg::X21;
+    pub const W22: IReg = IReg::X22;
+    pub const W23: IReg = IReg::X23;
+    pub const W24: IReg = IReg::X24;
+    pub const W25: IReg = IReg::X25;
+    pub const W26: IReg = IReg::X26;
+    pub const W27: IReg = IReg::X27;
+    pub const W28: IReg = IReg::X28;
+    pub const W29: IReg = IReg::X29;
+    pub const W30: IReg = IReg::X30;
+    pub const WZR: IReg = IReg::XZR;
 
     // Special register aliases
-    pub const SP: Reg = Reg::XZR; // Stack Pointer
-    pub const WSP: Reg = Reg::XZR;
+    pub const SP: IReg = IReg::XZR; // Stack Pointer
+    pub const WSP: IReg = IReg::XZR;
 
-    pub const FP: Reg = Reg::X29; // Frame Pointer (X29)
-    pub const LR: Reg = Reg::X30; // Link Register (X30)
+    pub const FP: IReg = IReg::X29; // Frame Pointer (X29)
+    pub const LR: IReg = IReg::X30; // Link Register (X30)
 }
 
-impl BitAnd<u32> for Reg {
+impl BitAnd<u32> for IReg {
+    type Output = u32;
+
+    fn bitand(self, rhs: u32) -> Self::Output {
+        (self as u32) & rhs
+    }
+}
+
+/// double-precision floating-point registers (D0-D31) and their single-precision aliases (S0-S31)
+#[repr(u32)]
+#[derive(TryFromPrimitive, Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
+#[allow(clippy::upper_case_acronyms)]
+pub enum FReg {
+    D0 = 0,
+    D1,
+    D2,
+    D3,
+    D4,
+    D5,
+    D6,
+    D7,
+    D8,
+    D9,
+    D10,
+    D11,
+    D12,
+    D13,
+    D14,
+    D15,
+    D16,
+    D17,
+    D18,
+    D19,
+    D20,
+    D21,
+    D22,
+    D23,
+    D24,
+    D25,
+    D26,
+    D27,
+    D28,
+    D29,
+    D30,
+    D31 = 31,
+}
+
+impl FReg {
+    // byte (float8) register aliases
+    pub const B0: FReg = FReg::D0;
+    pub const B1: FReg = FReg::D1;
+    pub const B2: FReg = FReg::D2;
+    pub const B3: FReg = FReg::D3;
+    pub const B4: FReg = FReg::D4;
+    pub const B5: FReg = FReg::D5;
+    pub const B6: FReg = FReg::D6;
+    pub const B7: FReg = FReg::D7;
+    pub const B8: FReg = FReg::D8;
+    pub const B9: FReg = FReg::D9;
+    pub const B10: FReg = FReg::D10;
+    pub const B11: FReg = FReg::D11;
+    pub const B12: FReg = FReg::D12;
+    pub const B13: FReg = FReg::D13;
+    pub const B14: FReg = FReg::D14;
+    pub const B15: FReg = FReg::D15;
+    pub const B16: FReg = FReg::D16;
+    pub const B17: FReg = FReg::D17;
+    pub const B18: FReg = FReg::D18;
+    pub const B19: FReg = FReg::D19;
+    pub const B20: FReg = FReg::D20;
+    pub const B21: FReg = FReg::D21;
+    pub const B22: FReg = FReg::D22;
+    pub const B23: FReg = FReg::D23;
+    pub const B24: FReg = FReg::D24;
+    pub const B25: FReg = FReg::D25;
+    pub const B26: FReg = FReg::D26;
+    pub const B27: FReg = FReg::D27;
+    pub const B28: FReg = FReg::D28;
+    pub const B29: FReg = FReg::D29;
+    pub const B30: FReg = FReg::D30;
+    pub const B31: FReg = FReg::D31;
+
+    // halfword (float16) register aliases
+    pub const H0: FReg = FReg::D0;
+    pub const H1: FReg = FReg::D1;
+    pub const H2: FReg = FReg::D2;
+    pub const H3: FReg = FReg::D3;
+    pub const H4: FReg = FReg::D4;
+    pub const H5: FReg = FReg::D5;
+    pub const H6: FReg = FReg::D6;
+    pub const H7: FReg = FReg::D7;
+    pub const H8: FReg = FReg::D8;
+    pub const H9: FReg = FReg::D9;
+    pub const H10: FReg = FReg::D10;
+    pub const H11: FReg = FReg::D11;
+    pub const H12: FReg = FReg::D12;
+    pub const H13: FReg = FReg::D13;
+    pub const H14: FReg = FReg::D14;
+    pub const H15: FReg = FReg::D15;
+    pub const H16: FReg = FReg::D16;
+    pub const H17: FReg = FReg::D17;
+    pub const H18: FReg = FReg::D18;
+    pub const H19: FReg = FReg::D19;
+    pub const H20: FReg = FReg::D20;
+    pub const H21: FReg = FReg::D21;
+    pub const H22: FReg = FReg::D22;
+    pub const H23: FReg = FReg::D23;
+    pub const H24: FReg = FReg::D24;
+    pub const H25: FReg = FReg::D25;
+    pub const H26: FReg = FReg::D26;
+    pub const H27: FReg = FReg::D27;
+    pub const H28: FReg = FReg::D28;
+    pub const H29: FReg = FReg::D29;
+    pub const H30: FReg = FReg::D30;
+    pub const H31: FReg = FReg::D31;
+
+    // single precision (float32) register aliases
+    pub const S0: FReg = FReg::D0;
+    pub const S1: FReg = FReg::D1;
+    pub const S2: FReg = FReg::D2;
+    pub const S3: FReg = FReg::D3;
+    pub const S4: FReg = FReg::D4;
+    pub const S5: FReg = FReg::D5;
+    pub const S6: FReg = FReg::D6;
+    pub const S7: FReg = FReg::D7;
+    pub const S8: FReg = FReg::D8;
+    pub const S9: FReg = FReg::D9;
+    pub const S10: FReg = FReg::D10;
+    pub const S11: FReg = FReg::D11;
+    pub const S12: FReg = FReg::D12;
+    pub const S13: FReg = FReg::D13;
+    pub const S14: FReg = FReg::D14;
+    pub const S15: FReg = FReg::D15;
+    pub const S16: FReg = FReg::D16;
+    pub const S17: FReg = FReg::D17;
+    pub const S18: FReg = FReg::D18;
+    pub const S19: FReg = FReg::D19;
+    pub const S20: FReg = FReg::D20;
+    pub const S21: FReg = FReg::D21;
+    pub const S22: FReg = FReg::D22;
+    pub const S23: FReg = FReg::D23;
+    pub const S24: FReg = FReg::D24;
+    pub const S25: FReg = FReg::D25;
+    pub const S26: FReg = FReg::D26;
+    pub const S27: FReg = FReg::D27;
+    pub const S28: FReg = FReg::D28;
+    pub const S29: FReg = FReg::D29;
+    pub const S30: FReg = FReg::D30;
+    pub const S31: FReg = FReg::D31;
+
+    // quadword (float128) register aliases
+    pub const Q0: FReg = FReg::D0;
+    pub const Q1: FReg = FReg::D1;
+    pub const Q2: FReg = FReg::D2;
+    pub const Q3: FReg = FReg::D3;
+    pub const Q4: FReg = FReg::D4;
+    pub const Q5: FReg = FReg::D5;
+    pub const Q6: FReg = FReg::D6;
+    pub const Q7: FReg = FReg::D7;
+    pub const Q8: FReg = FReg::D8;
+    pub const Q9: FReg = FReg::D9;
+    pub const Q10: FReg = FReg::D10;
+    pub const Q11: FReg = FReg::D11;
+    pub const Q12: FReg = FReg::D12;
+    pub const Q13: FReg = FReg::D13;
+    pub const Q14: FReg = FReg::D14;
+    pub const Q15: FReg = FReg::D15;
+    pub const Q16: FReg = FReg::D16;
+    pub const Q17: FReg = FReg::D17;
+    pub const Q18: FReg = FReg::D18;
+    pub const Q19: FReg = FReg::D19;
+    pub const Q20: FReg = FReg::D20;
+    pub const Q21: FReg = FReg::D21;
+    pub const Q22: FReg = FReg::D22;
+    pub const Q23: FReg = FReg::D23;
+    pub const Q24: FReg = FReg::D24;
+    pub const Q25: FReg = FReg::D25;
+    pub const Q26: FReg = FReg::D26;
+    pub const Q27: FReg = FReg::D27;
+    pub const Q28: FReg = FReg::D28;
+    pub const Q29: FReg = FReg::D29;
+    pub const Q30: FReg = FReg::D30;
+    pub const Q31: FReg = FReg::D31;
+}
+
+impl BitAnd<u32> for FReg {
     type Output = u32;
 
     fn bitand(self, rhs: u32) -> Self::Output {
@@ -113,8 +308,13 @@ impl BitAnd<u32> for Reg {
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RegSize {
-    Reg32bit,
-    Reg64bit,
+    Int32bit,
+    Int64bit,
+    Float8bit,
+    Float16bit,
+    Float32bit,
+    Float64bit,
+    Float128bit,
 }
 
 #[repr(u32)]
@@ -124,6 +324,7 @@ pub enum MemSize {
     Mem16bit,
     Mem32bit,
     Mem64bit,
+    Mem128bit,
 }
 
 #[repr(u32)]
@@ -229,8 +430,10 @@ impl BitXor<u32> for Condition {
 
 #[derive(Debug, Clone)]
 pub struct RegisterPool {
-    registers: Vec<Reg>,
+    registers: Vec<IReg>,
+    float_registers: Vec<FReg>,
     pub index: i32,
+    pub float_index: i32,
 }
 
 impl Default for RegisterPool {
@@ -243,52 +446,80 @@ impl RegisterPool {
     pub fn new() -> Self {
         Self {
             registers: vec![
-                Reg::X8,
-                Reg::X9,
-                Reg::X10,
-                Reg::X11,
-                Reg::X12,
-                Reg::X13,
-                Reg::X14,
-                Reg::X15,
+                IReg::X8,
+                IReg::X9,
+                IReg::X10,
+                IReg::X11,
+                IReg::X12,
+                IReg::X13,
+                IReg::X14,
+                IReg::X15,
+            ],
+            float_registers: vec![
+                FReg::D0,
+                FReg::D1,
+                FReg::D2,
+                FReg::D3,
+                FReg::D4,
+                FReg::D5,
+                FReg::D6,
+                FReg::D7,
             ],
             index: 0,
+            float_index: 0,
         }
     }
 
-    pub fn current(&self) -> Reg {
-        self.registers[self.index as usize]
-    }
-
-    pub fn from_i32(&self, index: &i32) -> Reg {
-        self.registers[*index as usize]
-    }
-
-    pub fn alloc(&mut self) -> Reg {
+    pub fn alloc(&mut self) -> IReg {
         let reg = self.registers[self.index as usize];
         self.index += 1;
         assert!(self.index < self.registers.len() as i32);
         reg
     }
 
+    pub fn alloc_float(&mut self) -> FReg {
+        let freg = self.float_registers[self.float_index as usize];
+        self.float_index += 1;
+        assert!(self.float_index < self.float_registers.len() as i32);
+        freg
+    }
+
     pub fn free(&mut self) {
         assert!(self.index > 0);
         self.index -= 1;
+    }
+
+    pub fn free_float(&mut self) {
+        assert!(self.float_index > 0);
+        self.float_index -= 1;
     }
 }
 
 fn select_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 {
     match size {
-        RegSize::Reg32bit => instr_32bit,
-        RegSize::Reg64bit => instr_64bit,
+        RegSize::Int32bit => instr_32bit,
+        RegSize::Int64bit => instr_64bit,
+        _ => panic!("unsupported register size for select_instr"),
+    }
+}
+
+fn select_float_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 {
+    match size {
+        RegSize::Float32bit => instr_32bit,
+        RegSize::Float64bit => instr_64bit,
+        _ => panic!("unsupported register size for select_float_instr"),
     }
 }
 
 pub fn map_valtype_to_regsize(item: &wasmparser::ValType) -> RegSize {
     if *item == wasmparser::ValType::I32 {
-        RegSize::Reg32bit
+        RegSize::Int32bit
     } else if *item == wasmparser::ValType::I64 {
-        RegSize::Reg64bit
+        RegSize::Int64bit
+    } else if *item == wasmparser::ValType::F32 {
+        RegSize::Float32bit
+    } else if *item == wasmparser::ValType::F64 {
+        RegSize::Float64bit
     } else {
         panic!("can't map {} to RegSize", item)
     }
@@ -308,23 +539,23 @@ mod tests {
 
     #[test]
     fn test_select_instr() {
-        assert_eq!(select_instr(32, 64, RegSize::Reg32bit), 32);
-        assert_eq!(select_instr(32, 64, RegSize::Reg64bit), 64);
+        assert_eq!(select_instr(32, 64, RegSize::Int32bit), 32);
+        assert_eq!(select_instr(32, 64, RegSize::Int64bit), 64);
     }
 
     #[test]
     fn test_registerpool() {
         let mut pool = RegisterPool::new();
-        assert_eq!(pool.alloc(), Reg::X8);
-        assert_eq!(pool.alloc(), Reg::X9);
-        assert_eq!(pool.alloc(), Reg::X10);
-        assert_eq!(pool.alloc(), Reg::X11);
+        assert_eq!(pool.alloc(), IReg::X8);
+        assert_eq!(pool.alloc(), IReg::X9);
+        assert_eq!(pool.alloc(), IReg::X10);
+        assert_eq!(pool.alloc(), IReg::X11);
         pool.free();
         pool.free();
         pool.free();
-        assert_eq!(pool.alloc(), Reg::X9);
-        assert_eq!(pool.alloc(), Reg::X10);
-        assert_eq!(pool.alloc(), Reg::X11);
+        assert_eq!(pool.alloc(), IReg::X9);
+        assert_eq!(pool.alloc(), IReg::X10);
+        assert_eq!(pool.alloc(), IReg::X11);
     }
 
     #[test]

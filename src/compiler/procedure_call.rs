@@ -21,15 +21,30 @@ pub fn load_results(
         line!()
     );
 
+    machinecode.push(processing::mov_imm(
+        IReg::X0,
+        WasmReturnCode::Ok as u32,
+        RegSize::Int64bit,
+    ));
+
     for _ in 0..num_results {
         let item = value_stack.pop().unwrap();
-        let reg_size = map_valtype_to_regsize(&item.valtype);
-        machinecode.push(processing::mov_imm(
-            Reg::X0,
-            WasmReturnCode::Ok as u32,
-            reg_size,
-        ));
-        machinecode.push(processing::mov_reg(Reg::X1, item.reg, reg_size));
+        match item.valtype {
+            wasmparser::ValType::I32 | wasmparser::ValType::I64 => match item.reg {
+                Reg::IReg(reg) => {
+                    machinecode.push(processing::mov_reg(IReg::X1, reg, RegSize::Int64bit))
+                }
+                _ => panic!("Unsupported register type for return value"),
+            },
+            wasmparser::ValType::F32 | wasmparser::ValType::F64 => {
+                machinecode.push(fp_processing::fmov(
+                    Reg::IReg(IReg::X1),
+                    item.reg,
+                    map_valtype_to_regsize(&item.valtype),
+                ))
+            }
+            _ => panic!("Unsupported return value type"),
+        }
         // the source register should be released but since the function returns anyway, we skip this here
     }
 

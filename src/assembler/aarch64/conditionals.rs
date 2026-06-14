@@ -1,6 +1,6 @@
 use super::*;
 
-pub fn csinc(rd: Reg, rn: Reg, rm: Reg, cond: Condition, size: RegSize) -> u32 {
+pub fn csinc(rd: IReg, rn: IReg, rm: IReg, cond: Condition, size: RegSize) -> u32 {
     let mut instr = select_instr(0x1A800400, 0x9A800400, size);
     instr |= ((cond as u32) & 0x0F) << 12; // standard condition
     instr |= (rm & 0x1F) << 16; // Rm (second source register)
@@ -9,8 +9,8 @@ pub fn csinc(rd: Reg, rn: Reg, rm: Reg, cond: Condition, size: RegSize) -> u32 {
     instr
 }
 
-pub fn cset(rd: Reg, cond: Condition, size: RegSize) -> u32 {
-    csinc(rd, Reg::XZR, Reg::XZR, cond, size)
+pub fn cset(rd: IReg, cond: Condition, size: RegSize) -> u32 {
+    csinc(rd, IReg::XZR, IReg::XZR, cond, size)
 }
 
 #[cfg(test)]
@@ -21,17 +21,23 @@ mod tests {
     fn test_csinc() {
         // csinc x7, x8, x9, le
         assert_eq!(
-            csinc(Reg::X7, Reg::X8, Reg::X9, Condition::LE, RegSize::Reg64bit),
+            csinc(
+                IReg::X7,
+                IReg::X8,
+                IReg::X9,
+                Condition::LE,
+                RegSize::Int64bit
+            ),
             0x9A89D507
         );
         // csinc w2, w18, w19, hi
         assert_eq!(
             csinc(
-                Reg::W2,
-                Reg::W18,
-                Reg::W19,
+                IReg::W2,
+                IReg::W18,
+                IReg::W19,
                 Condition::HI,
-                RegSize::Reg32bit
+                RegSize::Int32bit
             ),
             0x1A938642
         );
@@ -42,18 +48,18 @@ mod tests {
         // cset x15, le
         assert_eq!(
             cset(
-                Reg::X15,
+                IReg::X15,
                 Condition::from_u32(Condition::LE ^ 1).unwrap(),
-                RegSize::Reg64bit
+                RegSize::Int64bit
             ),
             0x9A9FC7EF
         );
         // cset w25, eq
         assert_eq!(
             cset(
-                Reg::W25,
+                IReg::W25,
                 Condition::from_u32(Condition::EQ ^ 1).unwrap(),
-                RegSize::Reg32bit
+                RegSize::Int32bit
             ),
             0x1A9F17F9
         );

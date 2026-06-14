@@ -11,19 +11,19 @@ Contents of section .text:
  0000 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
  0010 ff0700b9 e80740b9 29008052 0801090b  ......@.)..R....
  0020 e80700b9 e80740b9 e90340b9 1f01096b  ......@...@....k
- 0030 e8a79f1a 08ffff35 e80740b9 00008052  .......5..@....R
- 0040 e103082a ff430091 fd7bc1a8 c0035fd6  ...*.C...{...._.
+ 0030 e8a79f1a 08ffff35 e80740b9 000080d2  .......5..@.....
+ 0040 e10308aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
  0050 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
  0060 ff0700b9 e80740b9 29008052 0801090b  ......@.)..R....
  0070 e80700b9 e90340b9 1f01096b e8a79f1a  ......@....k....
- 0080 28ffff35 e80740b9 00008052 e103082a  (..5..@....R...*
+ 0080 28ffff35 e80740b9 000080d2 e10308aa  (..5..@.........
  0090 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
  00a0 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
  00b0 e10700b9 ff0b00b9 e80b40b9 29008052  ..........@.)..R
  00c0 0801090b e80b00b9 e80340b9 29008052  ..........@.)..R
  00d0 0801090b e80300b9 e80340b9 e90740b9  ..........@...@.
  00e0 1f01096b e8a79f1a 88feff35 e80b40b9  ...k.......5..@.
- 00f0 00008052 e103082a ff430091 fd7bc1a8  ...R...*.C...{..
+ 00f0 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
  0100 c0035fd6 1f2003d5                    .._.. ..        
 
 Disassembly of section .text:
@@ -44,8 +44,8 @@ Disassembly of section .text:
   30:	1a9fa7e8 	cset	w8, lt	// lt = tstop
   34:	35ffff08 	cbnz	w8, 14 <loop_n+0x14>
   38:	b94007e8 	ldr	w8, [sp, #4]
-  3c:	52800000 	mov	w0, #0x0                   	// #0
-  40:	2a0803e1 	mov	w1, w8
+  3c:	d2800000 	mov	x0, #0x0                   	// #0
+  40:	aa0803e1 	mov	x1, x8
   44:	910043ff 	add	sp, sp, #0x10
   48:	a8c17bfd 	ldp	x29, x30, [sp], #16
   4c:	d65f03c0 	ret
@@ -65,8 +65,8 @@ Disassembly of section .text:
   7c:	1a9fa7e8 	cset	w8, lt	// lt = tstop
   80:	35ffff28 	cbnz	w8, 64 <loop_n_tee+0x14>
   84:	b94007e8 	ldr	w8, [sp, #4]
-  88:	52800000 	mov	w0, #0x0                   	// #0
-  8c:	2a0803e1 	mov	w1, w8
+  88:	d2800000 	mov	x0, #0x0                   	// #0
+  8c:	aa0803e1 	mov	x1, x8
   90:	910043ff 	add	sp, sp, #0x10
   94:	a8c17bfd 	ldp	x29, x30, [sp], #16
   98:	d65f03c0 	ret
@@ -93,8 +93,8 @@ Disassembly of section .text:
   e4:	1a9fa7e8 	cset	w8, lt	// lt = tstop
   e8:	35fffe88 	cbnz	w8, b8 <loop_nm+0x18>
   ec:	b9400be8 	ldr	w8, [sp, #8]
-  f0:	52800000 	mov	w0, #0x0                   	// #0
-  f4:	2a0803e1 	mov	w1, w8
+  f0:	d2800000 	mov	x0, #0x0                   	// #0
+  f4:	aa0803e1 	mov	x1, x8
   f8:	910043ff 	add	sp, sp, #0x10
   fc:	a8c17bfd 	ldp	x29, x30, [sp], #16
  100:	d65f03c0 	ret

@@ -101,7 +101,7 @@ unsafe fn clear_cache(addr: *mut u8, len: usize) {
 
 #[repr(C)]
 pub struct CallableRawResult {
-    pub status: u64,
+    pub status: i64,
     pub value: i64,
 }
 
@@ -143,7 +143,7 @@ macro_rules! impl_call {
                 };
                 let result: Result<R> = match res.status {
                     0 => Ok(R::from_value(res.value)),
-                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.value.into()))),
+                    1 => Err(TinyWasmError::Trap(TrapCode::from_code(res.value))),
                     _ => Err(TinyWasmError::Runtime(format!(
                         "Invalid result tag: {:?}",
                         res.status
@@ -213,6 +213,18 @@ impl FromValue for i32 {
 impl FromValue for i64 {
     fn from_value(value: i64) -> Self {
         value
+    }
+}
+
+impl FromValue for f32 {
+    fn from_value(value: i64) -> Self {
+        f32::from_bits(value as u32)
+    }
+}
+
+impl FromValue for f64 {
+    fn from_value(value: i64) -> Self {
+        f64::from_bits(value as u64)
     }
 }
 
