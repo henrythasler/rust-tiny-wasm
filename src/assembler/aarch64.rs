@@ -12,6 +12,10 @@ pub mod hint;
 pub mod memory;
 pub mod processing;
 
+// floating point instructions
+pub mod fp_memory;
+pub mod fp_processing;
+
 pub const INSTRUCTION_SIZE: usize = std::mem::size_of::<u32>();
 
 pub const INT32_SIZE: usize = std::mem::size_of::<i32>();
@@ -156,6 +160,74 @@ pub enum FReg {
 }
 
 impl FReg {
+    // byte (float8) register aliases
+    pub const B0: FReg = FReg::D0;
+    pub const B1: FReg = FReg::D1;
+    pub const B2: FReg = FReg::D2;
+    pub const B3: FReg = FReg::D3;
+    pub const B4: FReg = FReg::D4;
+    pub const B5: FReg = FReg::D5;
+    pub const B6: FReg = FReg::D6;
+    pub const B7: FReg = FReg::D7;
+    pub const B8: FReg = FReg::D8;
+    pub const B9: FReg = FReg::D9;
+    pub const B10: FReg = FReg::D10;
+    pub const B11: FReg = FReg::D11;
+    pub const B12: FReg = FReg::D12;
+    pub const B13: FReg = FReg::D13;
+    pub const B14: FReg = FReg::D14;
+    pub const B15: FReg = FReg::D15;
+    pub const B16: FReg = FReg::D16;
+    pub const B17: FReg = FReg::D17;
+    pub const B18: FReg = FReg::D18;
+    pub const B19: FReg = FReg::D19;
+    pub const B20: FReg = FReg::D20;
+    pub const B21: FReg = FReg::D21;
+    pub const B22: FReg = FReg::D22;
+    pub const B23: FReg = FReg::D23;
+    pub const B24: FReg = FReg::D24;
+    pub const B25: FReg = FReg::D25;
+    pub const B26: FReg = FReg::D26;
+    pub const B27: FReg = FReg::D27;
+    pub const B28: FReg = FReg::D28;
+    pub const B29: FReg = FReg::D29;
+    pub const B30: FReg = FReg::D30;
+    pub const B31: FReg = FReg::D31;
+
+    // halfword (float16) register aliases
+    pub const H0: FReg = FReg::D0;
+    pub const H1: FReg = FReg::D1;
+    pub const H2: FReg = FReg::D2;
+    pub const H3: FReg = FReg::D3;
+    pub const H4: FReg = FReg::D4;
+    pub const H5: FReg = FReg::D5;
+    pub const H6: FReg = FReg::D6;
+    pub const H7: FReg = FReg::D7;
+    pub const H8: FReg = FReg::D8;
+    pub const H9: FReg = FReg::D9;
+    pub const H10: FReg = FReg::D10;
+    pub const H11: FReg = FReg::D11;
+    pub const H12: FReg = FReg::D12;
+    pub const H13: FReg = FReg::D13;
+    pub const H14: FReg = FReg::D14;
+    pub const H15: FReg = FReg::D15;
+    pub const H16: FReg = FReg::D16;
+    pub const H17: FReg = FReg::D17;
+    pub const H18: FReg = FReg::D18;
+    pub const H19: FReg = FReg::D19;
+    pub const H20: FReg = FReg::D20;
+    pub const H21: FReg = FReg::D21;
+    pub const H22: FReg = FReg::D22;
+    pub const H23: FReg = FReg::D23;
+    pub const H24: FReg = FReg::D24;
+    pub const H25: FReg = FReg::D25;
+    pub const H26: FReg = FReg::D26;
+    pub const H27: FReg = FReg::D27;
+    pub const H28: FReg = FReg::D28;
+    pub const H29: FReg = FReg::D29;
+    pub const H30: FReg = FReg::D30;
+    pub const H31: FReg = FReg::D31;
+
     // single precision (float32) register aliases
     pub const S0: FReg = FReg::D0;
     pub const S1: FReg = FReg::D1;
@@ -189,6 +261,40 @@ impl FReg {
     pub const S29: FReg = FReg::D29;
     pub const S30: FReg = FReg::D30;
     pub const S31: FReg = FReg::D31;
+
+    // quadword (float128) register aliases
+    pub const Q0: FReg = FReg::D0;
+    pub const Q1: FReg = FReg::D1;
+    pub const Q2: FReg = FReg::D2;
+    pub const Q3: FReg = FReg::D3;
+    pub const Q4: FReg = FReg::D4;
+    pub const Q5: FReg = FReg::D5;
+    pub const Q6: FReg = FReg::D6;
+    pub const Q7: FReg = FReg::D7;
+    pub const Q8: FReg = FReg::D8;
+    pub const Q9: FReg = FReg::D9;
+    pub const Q10: FReg = FReg::D10;
+    pub const Q11: FReg = FReg::D11;
+    pub const Q12: FReg = FReg::D12;
+    pub const Q13: FReg = FReg::D13;
+    pub const Q14: FReg = FReg::D14;
+    pub const Q15: FReg = FReg::D15;
+    pub const Q16: FReg = FReg::D16;
+    pub const Q17: FReg = FReg::D17;
+    pub const Q18: FReg = FReg::D18;
+    pub const Q19: FReg = FReg::D19;
+    pub const Q20: FReg = FReg::D20;
+    pub const Q21: FReg = FReg::D21;
+    pub const Q22: FReg = FReg::D22;
+    pub const Q23: FReg = FReg::D23;
+    pub const Q24: FReg = FReg::D24;
+    pub const Q25: FReg = FReg::D25;
+    pub const Q26: FReg = FReg::D26;
+    pub const Q27: FReg = FReg::D27;
+    pub const Q28: FReg = FReg::D28;
+    pub const Q29: FReg = FReg::D29;
+    pub const Q30: FReg = FReg::D30;
+    pub const Q31: FReg = FReg::D31;
 }
 
 impl BitAnd<u32> for FReg {
@@ -204,8 +310,11 @@ impl BitAnd<u32> for FReg {
 pub enum RegSize {
     Reg32bit,
     Reg64bit,
+    Float8bit,
+    Float16bit,
     Float32bit,
     Float64bit,
+    Float128bit,
 }
 
 #[repr(u32)]
@@ -215,6 +324,7 @@ pub enum MemSize {
     Mem16bit,
     Mem32bit,
     Mem64bit,
+    Mem128bit,
 }
 
 #[repr(u32)]

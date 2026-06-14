@@ -36,22 +36,6 @@ pub fn movk(rd: IReg, imm16: u32, shift: u32, size: RegSize) -> u32 {
     instr
 }
 
-pub fn fmov(rd: Reg, rn: Reg, size_rn: RegSize) -> u32 {
-    match (rd, rn) {
-        (Reg::IReg(rd), Reg::FReg(rn)) => match size_rn {
-            RegSize::Float32bit => 0x1E260000 | (rn & 0x1F) << 5 | rd & 0x1F,
-            RegSize::Float64bit => 0x9E660000 | (rn & 0x1F) << 5 | rd & 0x1F,
-            _ => panic!("Invalid register sizes for fmov"),
-        },
-        (Reg::FReg(rd), Reg::IReg(rn)) => match size_rn {
-            RegSize::Float32bit => 0x1E270000 | (rn & 0x1F) << 5 | rd & 0x1F,
-            RegSize::Float64bit => 0x9E670000 | (rn & 0x1F) << 5 | rd & 0x1F,
-            _ => panic!("Invalid register sizes for fmov"),
-        },
-        _ => panic!("Invalid register types for fmov"),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

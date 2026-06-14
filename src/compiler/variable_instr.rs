@@ -22,6 +22,19 @@ pub fn compile_local_get(
                 map_valtype_to_regsize(&variable.valtype),
             ));
         }
+        ValType::F32 | ValType::F64 => {
+            let reg = register_pool.alloc_float();
+            value_stack.push(StackElement {
+                reg: Reg::FReg(reg),
+                valtype: variable.valtype,
+            });
+            machinecode.push(fp_memory::ldr_imm_unsigned_offset(
+                reg,
+                IReg::SP,
+                offset as u32,
+                map_valtype_to_regsize(&variable.valtype),
+            ));
+        }
         _ => panic!("Unsupported variable type for local.get"),
     }
 }
@@ -39,7 +52,7 @@ pub fn compile_local_set(
 
     assert_eq!(
         variable.valtype, element.valtype,
-        "ValType mismatch on 'local.tee'"
+        "ValType mismatch on 'local.set'"
     );
 
     match element.reg {
@@ -63,7 +76,7 @@ pub fn compile_local_tee(
 ) {
     let element = value_stack
         .pop()
-        .expect("value stack should contain at least one element on 'local.set' opcode");
+        .expect("value stack should contain at least one element on 'local.tee' opcode");
 
     assert_eq!(
         variable.valtype, element.valtype,

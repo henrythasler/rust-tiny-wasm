@@ -37,7 +37,7 @@ pub fn load_results(
                 _ => panic!("Unsupported register type for return value"),
             },
             wasmparser::ValType::F32 | wasmparser::ValType::F64 => {
-                machinecode.push(processing::fmov(
+                machinecode.push(fp_processing::fmov(
                     Reg::IReg(IReg::X1),
                     item.reg,
                     map_valtype_to_regsize(&item.valtype),

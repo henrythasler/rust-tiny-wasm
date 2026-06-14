@@ -119,37 +119,62 @@ pub fn compile_binop(
     assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for binop");
 
     match op {
-        Operator::I32Add | Operator::I64Add => match (op1.reg, op2.reg) {
-            (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(arithmetic::add_shifted_reg(
-                reg1,
-                reg1,
-                reg2,
-                Shift::Lsl,
-                0,
-                map_valtype_to_regsize(&valtype),
-            )),
-            _ => panic!("add operator only supports integer registers"),
-        },
-        Operator::I32Sub | Operator::I64Sub => match (op1.reg, op2.reg) {
-            (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(arithmetic::sub_shifted_reg(
-                reg1,
-                reg1,
-                reg2,
-                Shift::Lsl,
-                0,
-                map_valtype_to_regsize(&valtype),
-            )),
-            _ => panic!("sub operator only supports integer registers"),
-        },
-        Operator::I32Mul | Operator::I64Mul => match (op1.reg, op2.reg) {
-            (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(arithmetic::mul_reg(
-                reg1,
-                reg1,
-                reg2,
-                map_valtype_to_regsize(&valtype),
-            )),
-            _ => panic!("mul operator only supports integer registers"),
-        },
+        Operator::I32Add | Operator::I64Add => {
+            match (op1.reg, op2.reg) {
+                (Reg::IReg(reg1), Reg::IReg(reg2)) => {
+                    machinecode.push(arithmetic::add_shifted_reg(
+                        reg1,
+                        reg1,
+                        reg2,
+                        Shift::Lsl,
+                        0,
+                        map_valtype_to_regsize(&valtype),
+                    ))
+                }
+                _ => panic!("add operator only supports integer registers"),
+            }
+            register_pool.free();
+        }
+        Operator::F32Add | Operator::F64Add => {
+            match (op1.reg, op2.reg) {
+                (Reg::FReg(reg1), Reg::FReg(reg2)) => machinecode.push(fp_processing::fadd_scalar(
+                    reg1,
+                    reg1,
+                    reg2,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("add operator only supports float registers"),
+            }
+            register_pool.free_float();
+        }
+        Operator::I32Sub | Operator::I64Sub => {
+            match (op1.reg, op2.reg) {
+                (Reg::IReg(reg1), Reg::IReg(reg2)) => {
+                    machinecode.push(arithmetic::sub_shifted_reg(
+                        reg1,
+                        reg1,
+                        reg2,
+                        Shift::Lsl,
+                        0,
+                        map_valtype_to_regsize(&valtype),
+                    ))
+                }
+                _ => panic!("sub operator only supports integer registers"),
+            }
+            register_pool.free();
+        }
+        Operator::I32Mul | Operator::I64Mul => {
+            match (op1.reg, op2.reg) {
+                (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(arithmetic::mul_reg(
+                    reg1,
+                    reg1,
+                    reg2,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("mul operator only supports integer registers"),
+            }
+            register_pool.free();
+        }
         Operator::I32DivS | Operator::I64DivS | Operator::I32DivU | Operator::I64DivU => {
             match (op1.reg, op2.reg) {
                 (Reg::IReg(reg1), Reg::IReg(reg2)) => {
@@ -216,12 +241,12 @@ pub fn compile_binop(
                 }
                 _ => panic!("div operator only supports integer registers"),
             }
+            register_pool.free();
         }
         _ => panic!("Binary operator '{:?}' not supported", op),
     }
 
     value_stack.push(op1);
-    register_pool.free();
 }
 
 pub fn compile_relop(
@@ -320,7 +345,7 @@ pub fn compile_float_const(
         value.to_ireg_size(),
         machinecode,
     );
-    machinecode.push(processing::fmov(
+    machinecode.push(fp_processing::fmov(
         Reg::FReg(reg),
         Reg::IReg(temp_reg),
         value.to_reg_size(),

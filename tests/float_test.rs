@@ -15,5 +15,9 @@ fn test_constants() -> Result<()> {
     let res = entrypoint.call()?;
     assert_eq!(res, std::f64::consts::E);
 
+    let entrypoint = instance.get_function::<(f32, f32), f32>("add_f32")?;
+    let res = entrypoint.call(std::f32::consts::PI, std::f32::consts::E)?;
+    assert_eq!(res, std::f32::consts::PI + std::f32::consts::E);
+
     Ok(())
 }

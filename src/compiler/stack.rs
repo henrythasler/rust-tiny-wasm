@@ -94,13 +94,28 @@ pub fn save_parameters_to_stack(
             offset: *offset,
             valtype: *valtype,
         });
-        machinecode.push(memory::str_imm_unsigned_offset(
-            IReg::try_from(i as u32).unwrap(),
-            IReg::SP,
-            *offset as u32,
-            map_valtype_to_memsize(valtype),
-            map_valtype_to_regsize(valtype),
-        ));
+        let src_reg = match valtype {
+            ValType::I32 | ValType::I64 => Reg::IReg(IReg::try_from(i as u32).unwrap()),
+            ValType::F32 | ValType::F64 => Reg::FReg(FReg::try_from(i as u32).unwrap()),
+            _ => panic!("valtype not supported"),
+        };
+
+        match src_reg {
+            Reg::IReg(reg) => machinecode.push(memory::str_imm_unsigned_offset(
+                reg,
+                IReg::SP,
+                *offset as u32,
+                map_valtype_to_memsize(valtype),
+                map_valtype_to_regsize(valtype),
+            )),
+
+            Reg::FReg(reg) => machinecode.push(fp_memory::str_imm_unsigned_offset(
+                reg,
+                IReg::SP,
+                *offset as u32,
+                map_valtype_to_regsize(valtype),
+            )),
+        }
         *offset += size;
     }
     variables
