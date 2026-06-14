@@ -140,14 +140,14 @@ pub fn compile_brif(
             match frame.opcode {
                 Opcode::Loop => {
                     let offset = (frame.machinecode_offset as i32 - machinecode.len() as i32) * 4;
-                    machinecode.push(branch::cbnz(reg, offset, RegSize::Reg32bit));
+                    machinecode.push(branch::cbnz(reg, offset, RegSize::Int32bit));
                 }
                 Opcode::Block => {
                     frame.patches.push(Patch {
                         location: machinecode.len(),
                         instruction: Instruction::Cbz,
                     });
-                    machinecode.push(branch::cbnz(reg, 0, RegSize::Reg32bit));
+                    machinecode.push(branch::cbnz(reg, 0, RegSize::Int32bit));
                 }
                 _ => panic!(
                     "unexpected instruction for control stack item {:?}:",
@@ -197,7 +197,7 @@ pub fn compile_if(
                     instruction: Instruction::Cbz,
                 }],
             });
-            machinecode.push(branch::cbz(reg, 0, RegSize::Reg32bit));
+            machinecode.push(branch::cbz(reg, 0, RegSize::Int32bit));
         }
         _ => panic!("Unsupported register type for 'if' condition"),
     }

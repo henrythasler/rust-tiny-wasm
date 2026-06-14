@@ -308,8 +308,8 @@ impl BitAnd<u32> for FReg {
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RegSize {
-    Reg32bit,
-    Reg64bit,
+    Int32bit,
+    Int64bit,
     Float8bit,
     Float16bit,
     Float32bit,
@@ -470,18 +470,6 @@ impl RegisterPool {
         }
     }
 
-    pub fn current(&self) -> IReg {
-        self.registers[self.index as usize]
-    }
-
-    pub fn current_float(&self) -> FReg {
-        self.float_registers[self.float_index as usize]
-    }
-
-    pub fn from_i32(&self, index: &i32) -> IReg {
-        self.registers[*index as usize]
-    }
-
     pub fn alloc(&mut self) -> IReg {
         let reg = self.registers[self.index as usize];
         self.index += 1;
@@ -509,8 +497,8 @@ impl RegisterPool {
 
 fn select_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 {
     match size {
-        RegSize::Reg32bit => instr_32bit,
-        RegSize::Reg64bit => instr_64bit,
+        RegSize::Int32bit => instr_32bit,
+        RegSize::Int64bit => instr_64bit,
         _ => panic!("unsupported register size for select_instr"),
     }
 }
@@ -525,9 +513,9 @@ fn select_float_instr(instr_32bit: u32, instr_64bit: u32, size: RegSize) -> u32 
 
 pub fn map_valtype_to_regsize(item: &wasmparser::ValType) -> RegSize {
     if *item == wasmparser::ValType::I32 {
-        RegSize::Reg32bit
+        RegSize::Int32bit
     } else if *item == wasmparser::ValType::I64 {
-        RegSize::Reg64bit
+        RegSize::Int64bit
     } else if *item == wasmparser::ValType::F32 {
         RegSize::Float32bit
     } else if *item == wasmparser::ValType::F64 {
@@ -551,8 +539,8 @@ mod tests {
 
     #[test]
     fn test_select_instr() {
-        assert_eq!(select_instr(32, 64, RegSize::Reg32bit), 32);
-        assert_eq!(select_instr(32, 64, RegSize::Reg64bit), 64);
+        assert_eq!(select_instr(32, 64, RegSize::Int32bit), 32);
+        assert_eq!(select_instr(32, 64, RegSize::Int64bit), 64);
     }
 
     #[test]

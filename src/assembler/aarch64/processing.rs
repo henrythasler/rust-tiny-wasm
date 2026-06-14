@@ -43,31 +43,31 @@ mod tests {
     #[test]
     fn test_mov_reg() {
         // mov x10, x11
-        assert_eq!(mov_reg(IReg::X10, IReg::X11, RegSize::Reg64bit), 0xAA0B03EA);
+        assert_eq!(mov_reg(IReg::X10, IReg::X11, RegSize::Int64bit), 0xAA0B03EA);
     }
 
     #[test]
     fn test_movz() {
         // MOVZ X3, #0x1234, LSL #16
-        assert_eq!(movz(IReg::X3, 0x1234, 16, RegSize::Reg64bit), 0xD2A24683);
+        assert_eq!(movz(IReg::X3, 0x1234, 16, RegSize::Int64bit), 0xD2A24683);
         // MOVZ X7, 0xABCD, LSL #48
-        assert_eq!(movz(IReg::X7, 0xabcd, 48, RegSize::Reg64bit), 0xD2F579A7);
+        assert_eq!(movz(IReg::X7, 0xabcd, 48, RegSize::Int64bit), 0xD2F579A7);
         // MOV X8, #0xdef0
-        assert_eq!(mov_imm(IReg::X8, 0xdef0, RegSize::Reg64bit), 0xD29BDE08);
+        assert_eq!(mov_imm(IReg::X8, 0xdef0, RegSize::Int64bit), 0xD29BDE08);
     }
 
     #[test]
     fn test_movk() {
         // MOVK X15, #0xffff, LSL #32
-        assert_eq!(movk(IReg::X15, 0xffff, 32, RegSize::Reg64bit), 0xF2DFFFEF);
+        assert_eq!(movk(IReg::X15, 0xffff, 32, RegSize::Int64bit), 0xF2DFFFEF);
         // MOVK W0, #0x80, LSL #16
-        assert_eq!(movk(IReg::W0, 0x80, 16, RegSize::Reg32bit), 0x72A01000);
+        assert_eq!(movk(IReg::W0, 0x80, 16, RegSize::Int32bit), 0x72A01000);
         //   EXPECT_THROW(encode_movk(X15, 0xFFFF, 32, reg_size_t::SIZE_8BIT), std::runtime_error);
     }
 
     #[test]
     fn test_movn() {
         // movn x11, #0x10, lsl #32
-        assert_eq!(movn(IReg::X11, 0x10, 32, RegSize::Reg64bit), 0x92C0020B);
+        assert_eq!(movn(IReg::X11, 0x10, 32, RegSize::Int64bit), 0x92C0020B);
     }
 }

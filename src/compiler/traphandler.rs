@@ -11,12 +11,12 @@ pub fn trap_inline(
     machinecode.push(processing::mov_imm(
         IReg::X1,
         trap_code as u32,
-        RegSize::Reg64bit,
+        RegSize::Int64bit,
     ));
     machinecode.push(processing::mov_imm(
         IReg::X0,
         WasmReturnCode::Trap as u32,
-        RegSize::Reg64bit,
+        RegSize::Int64bit,
     ));
 
     trap_locations.push(Patch {

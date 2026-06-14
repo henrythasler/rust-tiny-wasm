@@ -26,7 +26,7 @@ mod tests {
                 IReg::X8,
                 IReg::X9,
                 Condition::LE,
-                RegSize::Reg64bit
+                RegSize::Int64bit
             ),
             0x9A89D507
         );
@@ -37,7 +37,7 @@ mod tests {
                 IReg::W18,
                 IReg::W19,
                 Condition::HI,
-                RegSize::Reg32bit
+                RegSize::Int32bit
             ),
             0x1A938642
         );
@@ -50,7 +50,7 @@ mod tests {
             cset(
                 IReg::X15,
                 Condition::from_u32(Condition::LE ^ 1).unwrap(),
-                RegSize::Reg64bit
+                RegSize::Int64bit
             ),
             0x9A9FC7EF
         );
@@ -59,7 +59,7 @@ mod tests {
             cset(
                 IReg::W25,
                 Condition::from_u32(Condition::EQ ^ 1).unwrap(),
-                RegSize::Reg32bit
+                RegSize::Int32bit
             ),
             0x1A9F17F9
         );

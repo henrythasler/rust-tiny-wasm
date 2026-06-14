@@ -24,7 +24,7 @@ pub fn load_results(
     machinecode.push(processing::mov_imm(
         IReg::X0,
         WasmReturnCode::Ok as u32,
-        RegSize::Reg64bit,
+        RegSize::Int64bit,
     ));
 
     for _ in 0..num_results {
@@ -32,7 +32,7 @@ pub fn load_results(
         match item.valtype {
             wasmparser::ValType::I32 | wasmparser::ValType::I64 => match item.reg {
                 Reg::IReg(reg) => {
-                    machinecode.push(processing::mov_reg(IReg::X1, reg, RegSize::Reg64bit))
+                    machinecode.push(processing::mov_reg(IReg::X1, reg, RegSize::Int64bit))
                 }
                 _ => panic!("Unsupported register type for return value"),
             },

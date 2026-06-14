@@ -32,7 +32,7 @@ pub fn lsr_imm(rd: IReg, rn: IReg, shift: u32, size: RegSize) -> u32 {
         rd,
         rn,
         shift,
-        if size == RegSize::Reg32bit { 31 } else { 63 },
+        if size == RegSize::Int32bit { 31 } else { 63 },
         size,
     )
 }
@@ -84,7 +84,7 @@ mod tests {
                 IReg::X12,
                 Shift::Lsl,
                 0,
-                RegSize::Reg64bit
+                RegSize::Int64bit
             ),
             0xAA0C016A
         );
@@ -96,7 +96,7 @@ mod tests {
                 IReg::W15,
                 Shift::Lsl,
                 15,
-                RegSize::Reg32bit
+                RegSize::Int32bit
             ),
             0x2A0F3DCD
         );
@@ -109,12 +109,12 @@ mod tests {
     fn test_lsr_imm() {
         // lsr x10, x11, #32
         assert_eq!(
-            lsr_imm(IReg::X10, IReg::X11, 32, RegSize::Reg64bit),
+            lsr_imm(IReg::X10, IReg::X11, 32, RegSize::Int64bit),
             0xD360FD6A
         );
         // lsr w3, w7, #3
         assert_eq!(
-            lsr_imm(IReg::W3, IReg::W7, 3, RegSize::Reg32bit),
+            lsr_imm(IReg::W3, IReg::W7, 3, RegSize::Int32bit),
             0x53037CE3
         );
     }

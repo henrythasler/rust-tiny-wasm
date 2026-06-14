@@ -226,10 +226,10 @@ pub fn compile_function(
         machinecode.push(processing::mov_imm(
             IReg::X0,
             WasmReturnCode::Ok as u32,
-            RegSize::Reg64bit,
+            RegSize::Int64bit,
         ));
         // Result=0
-        machinecode.push(processing::mov_reg(IReg::X1, IReg::XZR, RegSize::Reg64bit));
+        machinecode.push(processing::mov_reg(IReg::X1, IReg::XZR, RegSize::Int64bit));
     } else {
         load_results(&mut value_stack, func_type.results().len(), machinecode)?;
     }

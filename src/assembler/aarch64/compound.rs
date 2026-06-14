@@ -13,7 +13,7 @@ use super::*;
 /// * `size` - The size of the register (32-bit or 64-bit).
 /// * `machinecode` - A mutable reference to a vector where the generated machine code will be stored.
 pub fn mov_large_immediate(rd: IReg, value: i64, size: RegSize, machinecode: &mut Vec<u32>) {
-    let chunk_limit = if size == RegSize::Reg32bit { 2 } else { 4 };
+    let chunk_limit = if size == RegSize::Int32bit { 2 } else { 4 };
     let negative = value < 0;
     let uval = if negative {
         !value as u64
@@ -58,7 +58,7 @@ mod tests {
         mov_large_immediate(
             IReg::X8,
             0x123456789abcdef0,
-            RegSize::Reg64bit,
+            RegSize::Int64bit,
             &mut machinecode,
         );
         assert_eq!(
@@ -70,21 +70,21 @@ mod tests {
     #[test]
     fn test_mov_large_immediate2() {
         let mut machinecode: Vec<u32> = Vec::new();
-        mov_large_immediate(IReg::X8, 0x80000, RegSize::Reg64bit, &mut machinecode);
+        mov_large_immediate(IReg::X8, 0x80000, RegSize::Int64bit, &mut machinecode);
         assert_eq!(machinecode, vec![0xD2800008, 0xF2A00108]);
     }
 
     #[test]
     fn test_mov_negative() {
         let mut machinecode: Vec<u32> = Vec::new();
-        mov_large_immediate(IReg::X0, -1, RegSize::Reg64bit, &mut machinecode);
+        mov_large_immediate(IReg::X0, -1, RegSize::Int64bit, &mut machinecode);
         assert_eq!(machinecode, vec![0x92800000]);
     }
 
     #[test]
     fn test_mov_large_negative() {
         let mut machinecode: Vec<u32> = Vec::new();
-        mov_large_immediate(IReg::X0, -0x10002, RegSize::Reg64bit, &mut machinecode);
+        mov_large_immediate(IReg::X0, -0x10002, RegSize::Int64bit, &mut machinecode);
         assert_eq!(machinecode, vec![0x92800020, 0xF2BFFFC0]);
     }
 
@@ -94,7 +94,7 @@ mod tests {
         mov_large_immediate(
             IReg::X0,
             -0x0001_0002_0003_0004_i64,
-            RegSize::Reg64bit,
+            RegSize::Int64bit,
             &mut machinecode,
         );
         assert_eq!(

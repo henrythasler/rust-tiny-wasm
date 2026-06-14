@@ -22,8 +22,8 @@ impl RegisterInfo for IeeeFloat {
     }
     fn to_ireg_size(&self) -> RegSize {
         match self {
-            IeeeFloat::F32(_) => RegSize::Reg32bit,
-            IeeeFloat::F64(_) => RegSize::Reg64bit,
+            IeeeFloat::F32(_) => RegSize::Int32bit,
+            IeeeFloat::F64(_) => RegSize::Int64bit,
         }
     }
 
@@ -91,7 +91,7 @@ pub fn compile_testop(
                 machinecode.push(conditionals::cset(
                     reg,
                     Condition::from_u32(Condition::EQ ^ 1).unwrap(),
-                    RegSize::Reg32bit,
+                    RegSize::Int32bit,
                 ));
             }
             _ => panic!("eqz operator only supports integer registers"),
@@ -205,7 +205,7 @@ pub fn compile_binop(
 
                             // (2) Yes! Now check if dividend is INT(32|64)_MIN
                             let temp_reg = register_pool.alloc();
-                            let shift = if reg_size == RegSize::Reg32bit {
+                            let shift = if reg_size == RegSize::Int32bit {
                                 16
                             } else {
                                 48
@@ -274,7 +274,7 @@ pub fn compile_relop(
                 machinecode.push(conditionals::cset(
                     reg1,
                     Condition::from_u32(Condition::LT ^ 1).unwrap(),
-                    RegSize::Reg32bit,
+                    RegSize::Int32bit,
                 ))
             }
             _ => panic!("relop operator '{:?}' only supports integer registers", op),
@@ -285,7 +285,7 @@ pub fn compile_relop(
                 machinecode.push(conditionals::cset(
                     reg1,
                     Condition::from_u32(Condition::LS ^ 1).unwrap(),
-                    RegSize::Reg32bit,
+                    RegSize::Int32bit,
                 ))
             }
             _ => panic!("relop operator '{:?}' only supports integer registers", op),
