@@ -8,6 +8,8 @@ SYMBOL TABLE:
 0000000000000090 l     F .text	0000000000000038 add_f64
 00000000000000c8 l     F .text	0000000000000038 sub_f32
 0000000000000100 l     F .text	0000000000000038 sub_f64
+0000000000000138 l     F .text	0000000000000038 mul_f32
+0000000000000170 l     F .text	0000000000000038 mul_f64
 
 
 Contents of section .text:
@@ -30,7 +32,14 @@ Contents of section .text:
  0100 fd7bbfa9 fd030091 ff4300d1 e00300fd  .{.......C......
  0110 e10700fd e00340fd e10740fd 0038611e  ......@...@..8a.
  0120 000080d2 0100669e ff430091 fd7bc1a8  ......f..C...{..
- 0130 c0035fd6 1f2003d5                    .._.. ..        
+ 0130 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
+ 0140 ff4300d1 e00300bd e10700bd e00340bd  .C............@.
+ 0150 e10740bd 0008211e 000080d2 0100261e  ..@...!.......&.
+ 0160 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
+ 0170 fd7bbfa9 fd030091 ff4300d1 e00300fd  .{.......C......
+ 0180 e10700fd e00340fd e10740fd 0008611e  ......@...@...a.
+ 0190 000080d2 0100669e ff430091 fd7bc1a8  ......f..C...{..
+ 01a0 c0035fd6 1f2003d5                    .._.. ..        
 
 Disassembly of section .text:
 
@@ -123,3 +132,35 @@ Disassembly of section .text:
  12c:	a8c17bfd 	ldp	x29, x30, [sp], #16
  130:	d65f03c0 	ret
  134:	d503201f 	nop
+
+0000000000000138 <mul_f32>:
+ 138:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 13c:	910003fd 	mov	x29, sp
+ 140:	d10043ff 	sub	sp, sp, #0x10
+ 144:	bd0003e0 	str	s0, [sp]
+ 148:	bd0007e1 	str	s1, [sp, #4]
+ 14c:	bd4003e0 	ldr	s0, [sp]
+ 150:	bd4007e1 	ldr	s1, [sp, #4]
+ 154:	1e210800 	fmul	s0, s0, s1
+ 158:	d2800000 	mov	x0, #0x0                   	// #0
+ 15c:	1e260001 	fmov	w1, s0
+ 160:	910043ff 	add	sp, sp, #0x10
+ 164:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 168:	d65f03c0 	ret
+ 16c:	d503201f 	nop
+
+0000000000000170 <mul_f64>:
+ 170:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 174:	910003fd 	mov	x29, sp
+ 178:	d10043ff 	sub	sp, sp, #0x10
+ 17c:	fd0003e0 	str	d0, [sp]
+ 180:	fd0007e1 	str	d1, [sp, #8]
+ 184:	fd4003e0 	ldr	d0, [sp]
+ 188:	fd4007e1 	ldr	d1, [sp, #8]
+ 18c:	1e610800 	fmul	d0, d0, d1
+ 190:	d2800000 	mov	x0, #0x0                   	// #0
+ 194:	9e660001 	fmov	x1, d0
+ 198:	910043ff 	add	sp, sp, #0x10
+ 19c:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 1a0:	d65f03c0 	ret
+ 1a4:	d503201f 	nop

@@ -5,6 +5,8 @@
   (export "add_f64" (func $add_f64))
   (export "sub_f32" (func $sub_f32))
   (export "sub_f64" (func $sub_f64))
+  (export "mul_f32" (func $mul_f32))
+  (export "mul_f64" (func $mul_f64))
 
   (func $get_pi_f32 (result f32)
     f32.const 3.14159274
@@ -31,5 +33,15 @@
     local.get $first
     local.get $second
     f64.sub
+  )
+  (func $mul_f32 (param $first f32) (param $second f32) (result f32)
+    local.get $first
+    local.get $second
+    f32.mul
+  )
+  (func $mul_f64 (param $first f64) (param $second f64) (result f64)
+    local.get $first
+    local.get $second
+    f64.mul
   )
 )
