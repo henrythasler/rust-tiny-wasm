@@ -197,7 +197,9 @@ pub fn compile_function(
             | Operator::I32DivS
             | Operator::I64DivS
             | Operator::F32Add
-            | Operator::F64Add => {
+            | Operator::F64Add
+            | Operator::F32Sub
+            | Operator::F64Sub => {
                 compile_binop(
                     &op,
                     &mut value_stack,
@@ -284,8 +286,8 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I64DivU => ValType::I64,
         Operator::F32Const { .. } => ValType::F32,
         Operator::F64Const { .. } => ValType::F64,
-        Operator::F32Add => ValType::F32,
-        Operator::F64Add => ValType::F64,
+        Operator::F32Add | Operator::F32Sub => ValType::F32,
+        Operator::F64Add | Operator::F64Sub => ValType::F64,
         _ => panic!("Operator '{:?}' not supported", op),
     }
 }

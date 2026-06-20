@@ -19,13 +19,41 @@ fn test_constants() -> Result<()> {
     let res = func.call(std::f32::consts::PI, std::f32::consts::E)?;
     assert_eq!(res, std::f32::consts::PI + std::f32::consts::E);
 
-    let func = instance.get_function::<(f32, f32), f32>("add_f32")?;
     let res = func.call(f32::MIN, f32::MAX)?;
     assert_eq!(res, f32::MIN + f32::MAX);
 
-    let func = instance.get_function::<(f32, f32), f32>("add_f32")?;
     let res = func.call(f32::MAX, f32::MAX)?;
     assert_eq!(res, f32::INFINITY);
+
+    let func = instance.get_function::<(f64, f64), f64>("add_f64")?;
+    let res = func.call(std::f64::consts::PI, std::f64::consts::E)?;
+    assert_eq!(res, std::f64::consts::PI + std::f64::consts::E);
+
+    let res = func.call(f64::MIN, f64::MAX)?;
+    assert_eq!(res, f64::MIN + f64::MAX);
+
+    let res = func.call(f64::MAX, f64::MAX)?;
+    assert_eq!(res, f64::INFINITY);
+
+    let func = instance.get_function::<(f32, f32), f32>("sub_f32")?;
+    let res = func.call(std::f32::consts::PI, std::f32::consts::E)?;
+    assert_eq!(res, std::f32::consts::PI - std::f32::consts::E);
+
+    let res = func.call(f32::MIN, f32::MAX)?;
+    assert_eq!(res, f32::MIN - f32::MAX);
+
+    let res = func.call(f32::MIN, f32::MIN)?;
+    assert_eq!(res, 0.0);
+
+    let func = instance.get_function::<(f64, f64), f64>("sub_f64")?;
+    let res = func.call(std::f64::consts::PI, std::f64::consts::E)?;
+    assert_eq!(res, std::f64::consts::PI - std::f64::consts::E);
+
+    let res = func.call(f64::MIN, f64::MAX)?;
+    assert_eq!(res, f64::MIN - f64::MAX);
+
+    let res = func.call(f64::MIN, f64::MIN)?;
+    assert_eq!(res, 0.0);
 
     Ok(())
 }
