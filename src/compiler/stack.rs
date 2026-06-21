@@ -36,13 +36,6 @@ pub fn get_aligned_stack_size(
         variables_size += *count as usize * size;
     }
 
-    // let mut variables_size = func_type
-    //     .params()
-    //     .iter()
-    //     .fold(0, |acc, x| acc + valtype_to_usize(x));
-    // variables_size += locals
-    //     .iter()
-    //     .fold(0, |acc, x| acc + x.0 as usize * valtype_to_usize(&x.1));
     let stack_size = variables_size.div_ceil(STACK_ALIGNMENT) * STACK_ALIGNMENT;
     assert!(
         stack_size.is_multiple_of(STACK_ALIGNMENT),
@@ -52,6 +45,7 @@ pub fn get_aligned_stack_size(
     (variables_size, stack_size)
 }
 
+/// Initialize locals by storing zero values and pushing a struct to the stack
 pub fn save_locals_to_stack(
     offset: &mut usize,
     locals: &[(u32, ValType)],
@@ -68,12 +62,18 @@ pub fn save_locals_to_stack(
                 valtype: *valtype,
             });
 
+            let reg_size = match valtype {
+                ValType::I32 | ValType::F32 => RegSize::Int32bit,
+                ValType::I64 | ValType::F64 => RegSize::Int64bit,
+                _ => panic!("valtype not supported"),
+            };
+
             machinecode.push(memory::str_imm_unsigned_offset(
                 IReg::XZR,
                 IReg::SP,
                 *offset as u32,
                 map_valtype_to_memsize(valtype),
-                map_valtype_to_regsize(valtype),
+                reg_size,
             ));
             *offset += size;
         }

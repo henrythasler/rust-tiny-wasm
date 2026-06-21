@@ -241,10 +241,13 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 ### Goals
 
-- [ ] Research how floating point values are processed in ARM64 architecture and what corresponding instructions exist.
-- [ ] Implement floating point support for parameters and return values.
-- [ ] Implement floating point support for `f32.const`, `f64.const`.
-- [ ] Implement floating point support for `local.get`, `local.set` and `local.tee`.
+- [x] Research how floating point values are processed in ARM64 architecture and what corresponding instructions exist.
+- [x] Research how the wasm specification defines error handling (e.g. div-by-0) and how this is supported by the aarch64 ISA.
+- [x] Implement floating point support for parameters and return values.
+- [x] Implement floating point support for `f32.const`, `f64.const`.
+- [x] Implement floating point support for `local.get`, `local.set` and `local.tee`.
+- [x] Implement single-precision floating point support for `f32.add`, `f32.sub`, `f32.mul` and `f32.div`.
+- [x] Implement double-precision floating point support for `f64.add`, `f64.sub`, `f64.mul` and `f64.div`.
 
 ## Chapter xx - Rust to Wasm
 

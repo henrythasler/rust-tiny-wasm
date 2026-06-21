@@ -135,42 +135,6 @@ pub fn compile_binop(
             }
             register_pool.free();
         }
-        Operator::F32Add | Operator::F64Add => {
-            match (op1.reg, op2.reg) {
-                (Reg::FReg(reg1), Reg::FReg(reg2)) => machinecode.push(fp_processing::fadd_scalar(
-                    reg1,
-                    reg1,
-                    reg2,
-                    map_valtype_to_regsize(&valtype),
-                )),
-                _ => panic!("add operator only supports float registers"),
-            }
-            register_pool.free_float();
-        }
-        Operator::F32Sub | Operator::F64Sub => {
-            match (op1.reg, op2.reg) {
-                (Reg::FReg(reg1), Reg::FReg(reg2)) => machinecode.push(fp_processing::fsub_scalar(
-                    reg1,
-                    reg1,
-                    reg2,
-                    map_valtype_to_regsize(&valtype),
-                )),
-                _ => panic!("sub operator only supports float registers"),
-            }
-            register_pool.free_float();
-        }
-        Operator::F32Mul | Operator::F64Mul => {
-            match (op1.reg, op2.reg) {
-                (Reg::FReg(reg1), Reg::FReg(reg2)) => machinecode.push(fp_processing::fmul_scalar(
-                    reg1,
-                    reg1,
-                    reg2,
-                    map_valtype_to_regsize(&valtype),
-                )),
-                _ => panic!("mul operator only supports float registers"),
-            }
-            register_pool.free_float();
-        }
         Operator::I32Sub | Operator::I64Sub => {
             match (op1.reg, op2.reg) {
                 (Reg::IReg(reg1), Reg::IReg(reg2)) => {
@@ -266,6 +230,54 @@ pub fn compile_binop(
                 _ => panic!("div operator only supports integer registers"),
             }
             register_pool.free();
+        }
+        Operator::F32Add | Operator::F64Add => {
+            match (op1.reg, op2.reg) {
+                (Reg::FReg(reg1), Reg::FReg(reg2)) => machinecode.push(fp_processing::fadd_scalar(
+                    reg1,
+                    reg1,
+                    reg2,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("add operator only supports float registers"),
+            }
+            register_pool.free_float();
+        }
+        Operator::F32Sub | Operator::F64Sub => {
+            match (op1.reg, op2.reg) {
+                (Reg::FReg(reg1), Reg::FReg(reg2)) => machinecode.push(fp_processing::fsub_scalar(
+                    reg1,
+                    reg1,
+                    reg2,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("sub operator only supports float registers"),
+            }
+            register_pool.free_float();
+        }
+        Operator::F32Mul | Operator::F64Mul => {
+            match (op1.reg, op2.reg) {
+                (Reg::FReg(reg1), Reg::FReg(reg2)) => machinecode.push(fp_processing::fmul_scalar(
+                    reg1,
+                    reg1,
+                    reg2,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("mul operator only supports float registers"),
+            }
+            register_pool.free_float();
+        }
+        Operator::F32Div | Operator::F64Div => {
+            match (op1.reg, op2.reg) {
+                (Reg::FReg(reg1), Reg::FReg(reg2)) => machinecode.push(fp_processing::fdiv_scalar(
+                    reg1,
+                    reg1,
+                    reg2,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("div operator only supports float registers"),
+            }
+            register_pool.free_float();
         }
         _ => panic!("Binary operator '{:?}' not supported", op),
     }

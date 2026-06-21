@@ -63,7 +63,12 @@ pub fn compile_local_set(
             map_valtype_to_memsize(&variable.valtype),
             map_valtype_to_regsize(&variable.valtype),
         )),
-        _ => panic!("Unsupported register type for local.set"),
+        Reg::FReg(reg) => machinecode.push(fp_memory::str_imm_unsigned_offset(
+            reg,
+            IReg::SP,
+            offset as u32,
+            map_valtype_to_regsize(&variable.valtype),
+        )),
     }
     register_pool.free();
 }
@@ -91,7 +96,12 @@ pub fn compile_local_tee(
             map_valtype_to_memsize(&variable.valtype),
             map_valtype_to_regsize(&variable.valtype),
         )),
-        _ => panic!("Unsupported register type for local.tee"),
+        Reg::FReg(reg) => machinecode.push(fp_memory::str_imm_unsigned_offset(
+            reg,
+            IReg::SP,
+            offset as u32,
+            map_valtype_to_regsize(&variable.valtype),
+        )),
     }
     value_stack.push(element);
 }

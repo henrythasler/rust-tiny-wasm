@@ -27,6 +27,11 @@ pub fn fmul_scalar(rd: FReg, rn: FReg, rm: FReg, size: RegSize) -> u32 {
     instr | (rm & 0x1F) << 16 | (rn & 0x1F) << 5 | rd & 0x1F
 }
 
+pub fn fdiv_scalar(rd: FReg, rn: FReg, rm: FReg, size: RegSize) -> u32 {
+    let instr = select_float_instr(0x1E201800, 0x1E601800, size);
+    instr | (rm & 0x1F) << 16 | (rn & 0x1F) << 5 | rd & 0x1F
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -83,6 +88,20 @@ mod tests {
         assert_eq!(
             fmul_scalar(FReg::D1, FReg::D3, FReg::D7, RegSize::Float64bit),
             0x1E670861
+        );
+    }
+
+    #[test]
+    fn test_fdiv_scalar() {
+        // fdiv s10, s13, s17
+        assert_eq!(
+            fdiv_scalar(FReg::S10, FReg::S13, FReg::S17, RegSize::Float32bit),
+            0x1E3119AA
+        );
+        // fdiv d1, d3, d7
+        assert_eq!(
+            fdiv_scalar(FReg::D1, FReg::D3, FReg::D7, RegSize::Float64bit),
+            0x1E671861
         );
     }
 
