@@ -249,6 +249,12 @@ Local variable instructions in WebAssembly are needed to use function parameters
 - [x] Implement single-precision floating point support for `f32.add`, `f32.sub`, `f32.mul` and `f32.div`.
 - [x] Implement double-precision floating point support for `f64.add`, `f64.sub`, `f64.mul` and `f64.div`.
 
+## Chapter 16 - Function Calls
+
+### Goals
+
+- [ ] Implement the `call` instruction
+
 ## Chapter xx - Rust to Wasm
 
 ### Goals
@@ -263,10 +269,19 @@ Use [The rustc book - wasm32v1-none](https://doc.rust-lang.org/rustc/platform-su
 
  - [ ] Verify signatures before calling a Wasm-Function (exports, internal).
 
- ## References
+## References
+
+### WebAssembly
 
 - [WebAssembly 1.0 Core Specification](https://www.w3.org/TR/wasm-core-1/)
+- [WebAssembly Code Explorer](https://wasdk.github.io/wasmcodeexplorer/)
+
+### Arm Architecture
+
 - [Learn the architecture - A64 Instruction Set Architecture Guide](https://developer.arm.com/documentation/102374/latest/)
 - [Arm A-profile A64 Instruction Set Architecture](https://developer.arm.com/documentation/ddi0602/2025-09?lang=en)
-- [godbolt - Compiler Explorer](https://godbolt.org/)
 - [ARMConverter.com - Online ARM to HEX Converter](https://armconverter.com/?lock=arm64)
+
+### Compiler
+
+- [godbolt - Compiler Explorer](https://godbolt.org/)

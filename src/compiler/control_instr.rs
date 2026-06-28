@@ -388,6 +388,77 @@ pub fn compile_end(
             }
         }
     }
-
     false
+}
+
+pub fn compile_call(
+    function_index: u32,
+    module_ctx: &ModuleContext,
+    control_stack: &mut Vec<ControlFrame>,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    assert!(
+        function_index < module_ctx.functions.len() as u32,
+        "call(): function index out of bounds"
+    );
+
+    // extract the function's type index from the module context
+    let type_index = module_ctx
+        .functions
+        .get(function_index as usize)
+        .expect("call(): function not found");
+
+    // get the actual function type from the module context using the type index
+    let func_type = module_ctx.types.get(*type_index as usize).expect(
+        format!(
+            "call(): function type for function_index {} not found",
+            function_index
+        )
+        .as_str(),
+    );
+    assert!(
+        func_type.results().len() <= 1,
+        "call(): function must have at most one return value"
+    );
+    assert!(
+        func_type.params().len() >= value_stack.len(),
+        "call(): insufficient operands on stack for function call"
+    );
+    assert!(
+        func_type.params().len() <= 8,
+        "call(): function must have at most 8 parameters"
+    );
+
+    // move parameters from value stack to registers
+    for (i, param_type) in func_type.params().iter().enumerate().rev() {
+        let stack_element = value_stack.pop().unwrap();
+        assert_eq!(
+            stack_element.valtype, *param_type,
+            "call(): parameter type mismatch for function call"
+        );
+        match stack_element.reg {
+            Reg::IReg(reg) => {
+                machinecode.push(processing::mov_reg(
+                    IReg::try_from((func_type.params().len() - 1 - i) as u32).unwrap(),
+                    reg,
+                    map_valtype_to_regsize(param_type),
+                ));
+                register_pool.free();
+            }
+            _ => panic!("Unsupported register type for function parameter"),
+        }
+    }
+
+    // copy return values from register to value stack
+    if !func_type.results().is_empty() {
+        let return_type = func_type.results().first().unwrap();
+        let stack_element = StackElement {
+            valtype: *return_type,
+            reg: Reg::IReg(IReg::try_from(0).unwrap()),
+        };
+        value_stack.push(stack_element);
+    }
+
 }

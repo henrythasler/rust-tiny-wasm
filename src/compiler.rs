@@ -67,6 +67,13 @@ pub struct StackElement {
     valtype: wasmparser::ValType,
 }
 
+#[derive(Debug, Default)]
+pub struct ModuleContext {
+    types: Vec<wasmparser::FuncType>,
+    exports: Vec<Export>,
+    functions: Vec<u32>,
+}
+
 #[derive(Debug)]
 pub struct Export {
     pub name: String,
@@ -80,11 +87,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
     let parser = Parser::new(0);
 
-    // temporary module sections for lookup
-    let mut types: Vec<wasmparser::FuncType> = Vec::new();
-    let mut exports: Vec<Export> = Vec::new();
-    let mut functions: Vec<u32> = Vec::new();
-
+    let mut module_ctx = ModuleContext::default();
     let mut function_index = 0;
 
     // let mut trap_offsets: HashMap<TrapCode, usize> = HashMap::new();
@@ -101,7 +104,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                         if let wasmparser::CompositeInnerType::Func(func) =
                             item.composite_type.inner
                         {
-                            types.push(func);
+                            module_ctx.types.push(func);
                         }
                     }
                 }
@@ -109,7 +112,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             ImportSection(_) => { /* ... */ }
             FunctionSection(reader) => {
                 for func in reader {
-                    functions.push(func?);
+                    module_ctx.functions.push(func?);
                 }
             }
             TableSection(_) => { /* ... */ }
@@ -118,7 +121,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             ExportSection(reader) => {
                 for export in reader {
                     let export = export?;
-                    exports.push(Export {
+                    module_ctx.exports.push(Export {
                         name: export.name.to_string(),
                         r#type: export.kind,
                         index: export.index,
@@ -146,16 +149,17 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
                 let offset = machinecode.len();
                 let mut reader = body.get_operators_reader()?;
-                let fn_idx = *functions.get(function_index).unwrap() as usize;
+                let fn_idx = *module_ctx.functions.get(function_index).unwrap() as usize;
 
                 compile_function(
                     &mut reader,
-                    types.get(fn_idx).unwrap(),
+                    &module_ctx,
+                    fn_idx,
                     &locals,
                     &mut machinecode,
                 )?;
 
-                let function_id = exports
+                let function_id = module_ctx.exports
                     .get(function_index)
                     .map_or(format!("$func{function_index}"), |v| v.name.clone());
 

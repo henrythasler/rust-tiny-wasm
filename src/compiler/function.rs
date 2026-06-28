@@ -4,12 +4,14 @@ use super::*;
 
 pub fn compile_function(
     reader: &mut wasmparser::OperatorsReader<'_>,
-    func_type: &wasmparser::FuncType,
+    module_ctx: &ModuleContext,
+    fn_idx: usize,
     locals: &[(u32, ValType)],
     machinecode: &mut Vec<u32>,
 ) -> Result<usize> {
     // Value stack starts empty
     let mut value_stack: Vec<StackElement> = vec![];
+    let func_type = module_ctx.types.get(fn_idx).unwrap();
 
     // Control stack is initialized with the (implicit) outer func-block
     let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
@@ -119,6 +121,16 @@ pub fn compile_function(
                 ) {
                     break 'expression;
                 }
+            }
+            Operator::Call { function_index } => {
+                compile_call(
+                    function_index,
+                    module_ctx,
+                    &mut control_stack,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
             }
             Operator::I32LtS | Operator::I64LtS | Operator::I32LeU | Operator::I64LeU => {
                 compile_relop(&op, &mut value_stack, &mut register_pool, machinecode)
