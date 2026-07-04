@@ -5,13 +5,14 @@ use super::*;
 pub fn compile_function(
     reader: &mut wasmparser::OperatorsReader<'_>,
     module_ctx: &ModuleContext,
-    fn_idx: usize,
+    function: &ModuleFunction,
     locals: &[(u32, ValType)],
+    call_patches: &mut Vec<FunctionPatch>,
     machinecode: &mut Vec<u32>,
 ) -> Result<usize> {
     // Value stack starts empty
     let mut value_stack: Vec<StackElement> = vec![];
-    let func_type = module_ctx.types.get(fn_idx).unwrap();
+    let func_type = module_ctx.types.get(function.type_index).unwrap();
 
     // Control stack is initialized with the (implicit) outer func-block
     let mut control_stack: Vec<ControlFrame> = vec![ControlFrame {
@@ -126,9 +127,9 @@ pub fn compile_function(
                 compile_call(
                     function_index,
                     module_ctx,
-                    &mut control_stack,
                     &mut value_stack,
                     &mut register_pool,
+                    call_patches,
                     machinecode,
                 );
             }

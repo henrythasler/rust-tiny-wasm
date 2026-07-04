@@ -11,6 +11,9 @@ test:
     RUST_BACKTRACE=0 cargo llvm-cov test --target aarch64-unknown-linux-gnu --html --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test'
     # RUSTFLAGS="-C instrument-coverage -C link-dead-code" RUST_BACKTRACE=0 cargo llvm-cov --target aarch64-unknown-linux-gnu --html --show-instantiations --ignore-filename-regex '(build\.rs|main\.rs)' --lib --test '*test'
 
+dump:
+    cargo test --target aarch64-unknown-linux-gnu --test objdump -- --nocapture
+
 # Run executable
 run +arguments:
     qemu-aarch64 -L /usr/aarch64-linux-gnu/ target/aarch64-unknown-linux-gnu/debug/tiny-wasm {{arguments}}

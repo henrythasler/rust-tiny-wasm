@@ -329,7 +329,7 @@ pub fn compile_end(
                             .expect("patch location should point to valid location");
                         branch::patch_branch(offset, location);
                     }
-                    _ => panic!("unexpected Instruction"),
+                    _ => panic!("unexpected patch instruction"),
                 }
             }
             return true; // break 'expression;
@@ -348,7 +348,7 @@ pub fn compile_end(
                             .expect("patch location should point to valid location");
                         branch::patch_cbz(offset, location);
                     }
-                    _ => panic!("unexpected Instruction"),
+                    _ => panic!("unexpected patch instruction"),
                 }
             }
         }
@@ -362,7 +362,7 @@ pub fn compile_end(
                             .expect("patch location should point to valid location");
                         branch::patch_branch(offset, location);
                     }
-                    _ => panic!("unexpected Instruction"),
+                    _ => panic!("unexpected patch instruction"),
                 }
             }
         }
@@ -384,6 +384,7 @@ pub fn compile_end(
                             .expect("patch location should point to valid location");
                         branch::patch_cbz(offset, location);
                     }
+                    _ => panic!("unexpected patch instruction"),
                 }
             }
         }
@@ -394,9 +395,9 @@ pub fn compile_end(
 pub fn compile_call(
     function_index: u32,
     module_ctx: &ModuleContext,
-    control_stack: &mut Vec<ControlFrame>,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
+    call_patches: &mut Vec<FunctionPatch>,
     machinecode: &mut Vec<u32>,
 ) {
     assert!(
@@ -404,27 +405,27 @@ pub fn compile_call(
         "call(): function index out of bounds"
     );
 
-    // extract the function's type index from the module context
-    let type_index = module_ctx
+    let function = module_ctx
         .functions
         .get(function_index as usize)
         .expect("call(): function not found");
 
     // get the actual function type from the module context using the type index
-    let func_type = module_ctx.types.get(*type_index as usize).expect(
-        format!(
-            "call(): function type for function_index {} not found",
-            function_index
-        )
-        .as_str(),
-    );
+    let func_type = module_ctx
+        .types
+        .get(function.type_index)
+        .expect("call(): function type for function_index not found");
+
     assert!(
         func_type.results().len() <= 1,
         "call(): function must have at most one return value"
     );
     assert!(
-        func_type.params().len() >= value_stack.len(),
-        "call(): insufficient operands on stack for function call"
+        value_stack.len() >= func_type.params().len(),
+        "call(): insufficient operands on stack for function call index {}: {} < {}",
+        function_index,
+        func_type.params().len(),
+        value_stack.len(),
     );
     assert!(
         func_type.params().len() <= 8,
@@ -451,14 +452,31 @@ pub fn compile_call(
         }
     }
 
-    // copy return values from register to value stack
+    call_patches.push(FunctionPatch {
+        location: machinecode.len(),
+        instruction: Instruction::Call,
+        function_index,
+    });
+    machinecode.push(branch::branch_link(0));
+
+    // copy return value from register to value stack
     if !func_type.results().is_empty() {
         let return_type = func_type.results().first().unwrap();
-        let stack_element = StackElement {
-            valtype: *return_type,
-            reg: Reg::IReg(IReg::try_from(0).unwrap()),
-        };
-        value_stack.push(stack_element);
+        match return_type {
+            ValType::I64 => {
+                let reg = register_pool.alloc();
+                machinecode.push(processing::mov_reg(
+                    reg,
+                    IReg::try_from(0).unwrap(),
+                    RegSize::Int64bit,
+                ));
+                let stack_element = StackElement {
+                    valtype: *return_type,
+                    reg: Reg::IReg(reg),
+                };
+                value_stack.push(stack_element);
+            }
+            _ => panic!("Unsupported return type for function call"),
+        }
     }
-
 }

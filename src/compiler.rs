@@ -5,7 +5,7 @@ use std::mem;
 use wasmparser::{Operator, Parser, Payload::*, ValType};
 
 use super::*;
-use crate::assembler::aarch64::*;
+use crate::assembler::aarch64::{self, *};
 use crate::assembler::{emit_epilogue, emit_prologue};
 use crate::runtime::TrapCode;
 
@@ -40,12 +40,20 @@ pub enum Opcode {
 pub enum Instruction {
     Br,
     Cbz,
+    Call,
 }
 
 #[derive(Debug)]
 pub struct Patch {
     pub location: usize,
     pub instruction: Instruction,
+}
+
+#[derive(Debug)]
+pub struct FunctionPatch {
+    pub location: usize,
+    pub instruction: Instruction,
+    pub function_index: u32,
 }
 
 #[derive(Debug)]
@@ -71,7 +79,7 @@ pub struct StackElement {
 pub struct ModuleContext {
     types: Vec<wasmparser::FuncType>,
     exports: Vec<Export>,
-    functions: Vec<u32>,
+    functions: Vec<ModuleFunction>,
 }
 
 #[derive(Debug)]
@@ -79,6 +87,12 @@ pub struct Export {
     pub name: String,
     pub r#type: wasmparser::ExternalKind,
     pub index: u32,
+}
+
+#[derive(Debug)]
+pub struct ModuleFunction {
+    pub type_index: usize,
+    pub imported: bool,
 }
 
 pub fn compile(module: &[u8]) -> Result<LinkedModule> {
@@ -89,9 +103,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
     let mut module_ctx = ModuleContext::default();
     let mut function_index = 0;
-
-    // let mut trap_offsets: HashMap<TrapCode, usize> = HashMap::new();
-    // let trap_handler = emit_trap_handler(&mut machinecode, &mut trap_offsets);
+    let mut call_patches: Vec<compiler::FunctionPatch> = Vec::new();
 
     for payload in parser.parse_all(module) {
         match payload? {
@@ -111,8 +123,11 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             }
             ImportSection(_) => { /* ... */ }
             FunctionSection(reader) => {
-                for func in reader {
-                    module_ctx.functions.push(func?);
+                for type_index in reader {
+                    module_ctx.functions.push(ModuleFunction {
+                        type_index: type_index? as usize,
+                        imported: false,
+                    });
                 }
             }
             TableSection(_) => { /* ... */ }
@@ -149,17 +164,19 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
                 let offset = machinecode.len();
                 let mut reader = body.get_operators_reader()?;
-                let fn_idx = *module_ctx.functions.get(function_index).unwrap() as usize;
+                let function = module_ctx.functions.get(function_index).unwrap();
 
                 compile_function(
                     &mut reader,
                     &module_ctx,
-                    fn_idx,
+                    function,
                     &locals,
+                    &mut call_patches,
                     &mut machinecode,
                 )?;
 
-                let function_id = module_ctx.exports
+                let function_id = module_ctx
+                    .exports
                     .get(function_index)
                     .map_or(format!("$func{function_index}"), |v| v.name.clone());
 
@@ -184,6 +201,22 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                 )));
             }
         }
+    }
+
+    // patch all the function calls with the correct offsets
+    for patch in call_patches {
+        let target_function = wasm_functions.get(patch.function_index as usize).unwrap();
+        let offset = (target_function.offset as isize - patch.location as isize)
+            * aarch64::INSTRUCTION_SIZE as isize; // convert to bytes
+        // println!(
+        //     "Patching call to '{}()' (index {}, offset {}) at location {} with offset {}",
+        //     target_function.name,
+        //     patch.function_index,
+        //     target_function.offset,
+        //     patch.location,
+        //     offset
+        // );
+        branch::patch_branch_link(offset as i32, &mut machinecode[patch.location]);
     }
 
     Ok(LinkedModule {
