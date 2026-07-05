@@ -17,8 +17,17 @@
         i64.add
     )
 
+    (func $trap
+        unreachable
+    )
+
+    (func $call_trap
+        call $trap
+    )
+
     (export "basic" (func $basic))
     (export "one" (func $one))
     (export "back" (func $back))
     (export "four" (func $four))
+    (export "call_trap" (func $call_trap))
 )

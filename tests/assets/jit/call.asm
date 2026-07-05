@@ -6,6 +6,8 @@ SYMBOL TABLE:
 0000000000000028 l     F .text	0000000000000020 one
 0000000000000048 l     F .text	0000000000000028 back
 0000000000000070 l     F .text	0000000000000040 four
+00000000000000b0 l     F .text	0000000000000028 call_trap
+00000000000000d8 l     F .text	0000000000000020 $func5
 
 
 Contents of section .text:
@@ -20,6 +22,11 @@ Contents of section .text:
  0080 e80300f9 e9ffff97 e80340f9 ff430091  ..........@..C..
  0090 a00000b5 e90301aa 0801098b 000080d2  ................
  00a0 e10308aa fd7bc1a8 c0035fd6 1f2003d5  .....{...._.. ..
+ 00b0 fd7bbfa9 fd030091 410180d2 200080d2  .{......A... ...
+ 00c0 03000014 000080d2 e1031faa fd7bc1a8  .............{..
+ 00d0 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
+ 00e0 f4ffff97 600000b5 000080d2 e1031faa  ....`...........
+ 00f0 fd7bc1a8 c0035fd6                    .{...._.        
 
 Disassembly of section .text:
 
@@ -74,3 +81,25 @@ Disassembly of section .text:
   a4:	a8c17bfd 	ldp	x29, x30, [sp], #16
   a8:	d65f03c0 	ret
   ac:	d503201f 	nop
+
+00000000000000b0 <call_trap>:
+  b0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+  b4:	910003fd 	mov	x29, sp
+  b8:	d2800141 	mov	x1, #0xa                   	// #10
+  bc:	d2800020 	mov	x0, #0x1                   	// #1
+  c0:	14000003 	b	cc <call_trap+0x1c>
+  c4:	d2800000 	mov	x0, #0x0                   	// #0
+  c8:	aa1f03e1 	mov	x1, xzr
+  cc:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  d0:	d65f03c0 	ret
+  d4:	d503201f 	nop
+
+00000000000000d8 <$func5>:
+  d8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+  dc:	910003fd 	mov	x29, sp
+  e0:	97fffff4 	bl	b0 <call_trap>
+  e4:	b5000060 	cbnz	x0, f0 <$func5+0x18>
+  e8:	d2800000 	mov	x0, #0x0                   	// #0
+  ec:	aa1f03e1 	mov	x1, xzr
+  f0:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  f4:	d65f03c0 	ret

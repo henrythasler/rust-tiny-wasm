@@ -58,6 +58,11 @@ pub fn compile_function(
         let index = reader.original_position();
         let op = reader.read().unwrap();
         match op {
+            Operator::Unreachable => trap_inline(
+                TrapCode::UnreachableCodeReached,
+                &mut trap_locations,
+                machinecode,
+            ),
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
             Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
             Operator::Block { blockty } => {
