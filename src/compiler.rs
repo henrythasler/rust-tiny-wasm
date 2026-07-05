@@ -40,6 +40,7 @@ pub enum Opcode {
 pub enum Instruction {
     Br,
     Cbz,
+    Cbnz,
     Call,
 }
 

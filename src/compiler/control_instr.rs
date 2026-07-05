@@ -398,6 +398,7 @@ pub fn compile_call(
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
     call_patches: &mut Vec<FunctionPatch>,
+    trap_locations: &mut Vec<Patch>,
     machinecode: &mut Vec<u32>,
 ) {
     assert!(
@@ -432,7 +433,7 @@ pub fn compile_call(
         "call(): function must have at most 8 parameters"
     );
 
-    // move parameters from value stack to registers
+    // move parameters from value stack to procedure call standard registers
     for (i, param_type) in func_type.params().iter().enumerate().rev() {
         let stack_element = value_stack.pop().unwrap();
         assert_eq!(
@@ -452,6 +453,13 @@ pub fn compile_call(
         }
     }
 
+    let mut stack_size = 0;
+    if register_pool.index > 0 {
+        // save registers to stack before the call
+        stack_size = save_registers(register_pool, machinecode);
+    }
+
+    // need to mark the location of the call instruction for later patching, since we may not know the address of the function to call yet
     call_patches.push(FunctionPatch {
         location: machinecode.len(),
         instruction: Instruction::Call,
@@ -459,7 +467,27 @@ pub fn compile_call(
     });
     machinecode.push(branch::branch_link(0));
 
-    // copy return value from register to value stack
+    // restore registers from stack after the call
+    if stack_size > 0 {
+        restore_registers(stack_size, register_pool, machinecode);
+    }
+
+    // result values according to Aarch64 Procedure Call Standard (X0..X7) are
+    // X0: Return Code (0=Ok, 1=Trap),
+    // X1: Result or Trap code
+
+    // if the return code is 1 (cbnz), we will return from this function immediately.
+    trap_locations.push(Patch {
+        location: machinecode.len(),
+        instruction: Instruction::Cbnz,
+    });
+    machinecode.push(branch::cbnz(
+        RETURN_STATUS_REGISTER,
+        0, // jump to epilogue if return code is 1 (Trap)
+        RegSize::Int64bit,
+    ));
+
+    // copy return value from RETURN_VALUE_REGISTER to value stack
     if !func_type.results().is_empty() {
         let return_type = func_type.results().first().unwrap();
         match return_type {
@@ -467,7 +495,7 @@ pub fn compile_call(
                 let reg = register_pool.alloc();
                 machinecode.push(processing::mov_reg(
                     reg,
-                    IReg::try_from(0).unwrap(),
+                    RETURN_VALUE_REGISTER,
                     RegSize::Int64bit,
                 ));
                 let stack_element = StackElement {

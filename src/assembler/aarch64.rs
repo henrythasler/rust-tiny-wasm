@@ -22,8 +22,15 @@ pub const INT32_SIZE: usize = std::mem::size_of::<i32>();
 pub const INT64_SIZE: usize = std::mem::size_of::<i64>();
 pub const FLOAT32_SIZE: usize = std::mem::size_of::<f32>();
 pub const FLOAT64_SIZE: usize = std::mem::size_of::<f64>();
+pub const INTEGER_REGISTER_SIZE: usize = std::mem::size_of::<u64>();
 
 pub const STACK_ALIGNMENT: usize = 16;
+
+// result values according to Aarch64 Procedure Call Standard (X0..X7) are
+// X0: Return Code (0=Ok, 1=Trap),
+// X1: Result or Trap code
+pub const RETURN_STATUS_REGISTER: IReg = IReg::X0;
+pub const RETURN_VALUE_REGISTER: IReg = IReg::X1;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub enum Reg {
@@ -492,6 +499,10 @@ impl RegisterPool {
     pub fn free_float(&mut self) {
         assert!(self.float_index > 0);
         self.float_index -= 1;
+    }
+
+    pub fn get_allocated_registers(&self) -> Vec<IReg> {
+        self.registers[0..self.index as usize].to_vec()
     }
 }
 

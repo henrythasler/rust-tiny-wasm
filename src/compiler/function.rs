@@ -33,7 +33,7 @@ pub fn compile_function(
     let mut register_pool = RegisterPool::new();
 
     // calculate initial stack size from all parameters and locals
-    let (_variables_size, stack_size) = get_aligned_stack_size(func_type, locals);
+    let (_variables_size, stack_size) = get_initial_stack_size(func_type, locals);
     // println!("{} {:?}", _variables_size, stack_size);
 
     // every functions starts with an epilogue to save the initial state and create a new stack frame
@@ -130,6 +130,7 @@ pub fn compile_function(
                     &mut value_stack,
                     &mut register_pool,
                     call_patches,
+                    &mut trap_locations,
                     machinecode,
                 );
             }
@@ -254,13 +255,17 @@ pub fn compile_function(
     }
 
     for patch in trap_locations {
+        let offset = (machinecode.len() - patch.location) as i32 * 4;
+        let location = machinecode
+            .get_mut(patch.location)
+            .expect("patch location should point to valid location");
+
         match patch.instruction {
             Instruction::Br => {
-                let offset = (machinecode.len() - patch.location) as i32 * 4;
-                let location = machinecode
-                    .get_mut(patch.location)
-                    .expect("patch location should point to valid location");
                 branch::patch_branch(offset, location);
+            }
+            Instruction::Cbnz => {
+                branch::patch_cbnz(offset, location);
             }
             _ => panic!("unexpected instruction"),
         }

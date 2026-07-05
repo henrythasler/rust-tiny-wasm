@@ -66,6 +66,11 @@ pub fn cbnz(rt: IReg, offset: i32, size: RegSize) -> u32 {
     instr
 }
 
+pub fn patch_cbnz(offset: i32, location: &mut u32) {
+    *location &= 0xff00001f;
+    *location |= (((offset >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

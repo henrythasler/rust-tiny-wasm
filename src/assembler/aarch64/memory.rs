@@ -35,6 +35,12 @@ pub fn ldr_imm_unsigned_offset(rt: IReg, rn: IReg, imm: u32, mem: MemSize, size:
     instr
 }
 
+/// This instruction stores a word or a doubleword from a register to memory. The address that is used for the store is calculated from a base register and an immediate offset.
+///
+/// # Examples
+/// ```
+/// let instr = str_imm_unsigned_offset(Reg::X0, Reg::SP, 16, MemSize::Mem64bit, RegSize::Int64bit);
+/// ```
 pub fn str_imm_unsigned_offset(rt: IReg, rn: IReg, imm: u32, mem: MemSize, size: RegSize) -> u32 {
     let mut imm = imm;
     let mut instr: u32 = if mem == MemSize::Mem64bit && size == RegSize::Int64bit {

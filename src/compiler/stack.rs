@@ -18,7 +18,7 @@ pub struct LocalVar {
     pub valtype: ValType,
 }
 
-pub fn get_aligned_stack_size(
+pub fn get_initial_stack_size(
     func_type: &wasmparser::FuncType,
     locals: &[(u32, ValType)],
 ) -> (usize, usize) {
@@ -119,4 +119,61 @@ pub fn save_parameters_to_stack(
         *offset += size;
     }
     variables
+}
+
+pub fn save_registers(register_pool: &mut RegisterPool, machinecode: &mut Vec<u32>) -> usize {
+    // determine the stack size needed to save all registers in the register pool; needs to be aligned to STACK_ALIGNMENT
+    let stack_size = (register_pool.index as usize * INTEGER_REGISTER_SIZE)
+        .div_ceil(STACK_ALIGNMENT)
+        * STACK_ALIGNMENT;
+    assert!(
+        stack_size.is_multiple_of(STACK_ALIGNMENT),
+        "stack size not aligned properly: {}",
+        stack_size
+    );
+
+    // allocate stack memory (sub sp, sp, #stackSize)
+    machinecode.push(arithmetic::sub_imm(
+        IReg::SP,
+        IReg::SP,
+        stack_size as u32,
+        false,
+        RegSize::Int64bit,
+    ));
+
+    for (i, reg) in register_pool.get_allocated_registers().iter().enumerate() {
+        machinecode.push(memory::str_imm_unsigned_offset(
+            *reg,
+            IReg::SP,
+            i as u32 * INTEGER_REGISTER_SIZE as u32,
+            MemSize::Mem64bit,
+            RegSize::Int64bit,
+        ));
+    }
+    stack_size
+}
+
+pub fn restore_registers(
+    stack_size: usize,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    for (i, reg) in register_pool.get_allocated_registers().iter().enumerate() {
+        machinecode.push(memory::ldr_imm_unsigned_offset(
+            *reg,
+            IReg::SP,
+            i as u32 * INTEGER_REGISTER_SIZE as u32,
+            MemSize::Mem64bit,
+            RegSize::Int64bit,
+        ));
+    }
+
+    // free stack memory (add sp, sp, #stackSize)
+    machinecode.push(arithmetic::add_imm(
+        IReg::SP,
+        IReg::SP,
+        stack_size as u32,
+        false,
+        RegSize::Int64bit,
+    ));
 }
