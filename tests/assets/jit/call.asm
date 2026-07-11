@@ -10,6 +10,8 @@ SYMBOL TABLE:
 00000000000000d8 l     F .text	0000000000000020 call_trap
 00000000000000f8 l     F .text	0000000000000038 $func6
 0000000000000130 l     F .text	0000000000000050 plus_one
+0000000000000180 l     F .text	0000000000000038 square_f32
+00000000000001b8 l     F .text	0000000000000030 $func9
 
 
 Contents of section .text:
@@ -37,6 +39,13 @@ Contents of section .text:
  0150 e103082a e9ffff97 c00000b5 e803012a  ...*...........*
  0160 29008052 0801090b 000080d2 e10308aa  )..R............
  0170 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
+ 0180 fd7bbfa9 fd030091 ff4300d1 e00300bd  .{.......C......
+ 0190 e00340bd 0040201e 08000094 800000b5  ..@..@ .........
+ 01a0 2000271e 000080d2 0100261e ff430091   .'.......&..C..
+ 01b0 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 01c0 ff4300d1 e00300bd e00340bd e10340bd  .C........@...@.
+ 01d0 0008211e 000080d2 0100261e ff430091  ..!.......&..C..
+ 01e0 fd7bc1a8 c0035fd6                    .{...._.        
 
 Disassembly of section .text:
 
@@ -151,3 +160,33 @@ Disassembly of section .text:
  174:	a8c17bfd 	ldp	x29, x30, [sp], #16
  178:	d65f03c0 	ret
  17c:	d503201f 	nop
+
+0000000000000180 <square_f32>:
+ 180:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 184:	910003fd 	mov	x29, sp
+ 188:	d10043ff 	sub	sp, sp, #0x10
+ 18c:	bd0003e0 	str	s0, [sp]
+ 190:	bd4003e0 	ldr	s0, [sp]
+ 194:	1e204000 	fmov	s0, s0
+ 198:	94000008 	bl	1b8 <$func9>
+ 19c:	b5000080 	cbnz	x0, 1ac <square_f32+0x2c>
+ 1a0:	1e270020 	fmov	s0, w1
+ 1a4:	d2800000 	mov	x0, #0x0                   	// #0
+ 1a8:	1e260001 	fmov	w1, s0
+ 1ac:	910043ff 	add	sp, sp, #0x10
+ 1b0:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 1b4:	d65f03c0 	ret
+
+00000000000001b8 <$func9>:
+ 1b8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 1bc:	910003fd 	mov	x29, sp
+ 1c0:	d10043ff 	sub	sp, sp, #0x10
+ 1c4:	bd0003e0 	str	s0, [sp]
+ 1c8:	bd4003e0 	ldr	s0, [sp]
+ 1cc:	bd4003e1 	ldr	s1, [sp]
+ 1d0:	1e210800 	fmul	s0, s0, s1
+ 1d4:	d2800000 	mov	x0, #0x0                   	// #0
+ 1d8:	1e260001 	fmov	w1, s0
+ 1dc:	910043ff 	add	sp, sp, #0x10
+ 1e0:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 1e4:	d65f03c0 	ret

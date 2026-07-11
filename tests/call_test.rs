@@ -27,5 +27,12 @@ fn test_call() -> Result<()> {
     assert_eq!(func.call(3, 4)?, 8);
     assert_eq!(func.call(-1, 1)?, 1);
 
+    let func = instance.get_function::<(f32,), f32>("square_f32")?;
+    assert_eq!(
+        func.call(std::f32::consts::PI)?,
+        std::f32::consts::PI * std::f32::consts::PI
+    );
+    assert_eq!(func.call(-1.0)?, 1.0);
+
     Ok(())
 }

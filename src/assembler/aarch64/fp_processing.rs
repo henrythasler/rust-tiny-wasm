@@ -1,5 +1,11 @@
 use super::*;
 
+/// Generates the AArch64 instruction for moving a floating-point value between registers.
+///
+/// Uses `fmov` (general) to move between floating-point registers and general-purpose registers.
+/// Uses `fmov` (register) to move between floating-point registers.
+///
+/// `FMOV <rd>, <rn>`
 pub fn fmov(rd: Reg, rn: Reg, size_rn: RegSize) -> u32 {
     match (rd, rn) {
         (Reg::IReg(rd), Reg::FReg(rn)) => {
@@ -7,6 +13,9 @@ pub fn fmov(rd: Reg, rn: Reg, size_rn: RegSize) -> u32 {
         }
         (Reg::FReg(rd), Reg::IReg(rn)) => {
             select_float_instr(0x1E270000, 0x9E670000, size_rn) | (rn & 0x1F) << 5 | rd & 0x1F
+        }
+        (Reg::FReg(rd), Reg::FReg(rn)) => {
+            select_float_instr(0x1E204000, 0x1E604000, size_rn) | (rn & 0x1F) << 5 | rd & 0x1F
         }
         _ => panic!("Invalid register types for fmov"),
     }
@@ -115,15 +124,5 @@ mod tests {
     #[should_panic]
     fn test_fmov_panic() {
         fmov(Reg::IReg(IReg::X0), Reg::FReg(FReg::D1), RegSize::Int32bit);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_fmov_panic2() {
-        fmov(
-            Reg::FReg(FReg::S0),
-            Reg::FReg(FReg::S0),
-            RegSize::Float32bit,
-        );
     }
 }

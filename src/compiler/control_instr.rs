@@ -449,7 +449,14 @@ pub fn compile_call(
                 ));
                 register_pool.free();
             }
-            _ => panic!("Unsupported register type for function parameter"),
+            Reg::FReg(reg) => {
+                machinecode.push(fp_processing::fmov(
+                    Reg::FReg(FReg::try_from((func_type.params().len() - 1 - i) as u32).unwrap()),
+                    Reg::FReg(reg),
+                    map_valtype_to_regsize(param_type),
+                ));
+                register_pool.free_float();
+            }
         }
     }
 
@@ -501,6 +508,19 @@ pub fn compile_call(
                 let stack_element = StackElement {
                     valtype: *return_type,
                     reg: Reg::IReg(reg),
+                };
+                value_stack.push(stack_element);
+            }
+            ValType::F32 | ValType::F64 => {
+                let reg = register_pool.alloc_float();
+                machinecode.push(fp_processing::fmov(
+                    Reg::FReg(reg),
+                    Reg::IReg(RETURN_VALUE_REGISTER),
+                    map_valtype_to_regsize(return_type),
+                ));
+                let stack_element = StackElement {
+                    valtype: *return_type,
+                    reg: Reg::FReg(reg),
                 };
                 value_stack.push(stack_element);
             }
