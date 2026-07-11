@@ -25,9 +25,24 @@
         call $trap
     )
 
+    (func $myadd (param $first i32) (param $second i32) (result i32)
+        local.get $first
+        local.get $second
+        i32.add
+    )
+
+    (func $plus_one (param $first i32) (param $second i32) (result i32)
+        local.get $first
+        local.get $second
+        call $myadd
+        i32.const 1
+        i32.add
+    )    
+
     (export "basic" (func $basic))
     (export "one" (func $one))
     (export "back" (func $back))
     (export "four" (func $four))
     (export "call_trap" (func $call_trap))
+    (export "plus_one" (func $plus_one))
 )

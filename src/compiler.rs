@@ -103,7 +103,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     let parser = Parser::new(0);
 
     let mut module_ctx = ModuleContext::default();
-    let mut function_index = 0;
+    let mut function_index: u32 = 0;
     let mut call_patches: Vec<compiler::FunctionPatch> = Vec::new();
 
     for payload in parser.parse_all(module) {
@@ -165,7 +165,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
                 let offset = machinecode.len();
                 let mut reader = body.get_operators_reader()?;
-                let function = module_ctx.functions.get(function_index).unwrap();
+                let function = module_ctx.functions.get(function_index as usize).unwrap();
 
                 compile_function(
                     &mut reader,
@@ -176,13 +176,14 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     &mut machinecode,
                 )?;
 
-                let function_id = module_ctx
+                let function_name = module_ctx
                     .exports
-                    .get(function_index)
+                    .iter()
+                    .find(|&idx| idx.index == function_index)
                     .map_or(format!("$func{function_index}"), |v| v.name.clone());
 
                 wasm_functions.push(WasmFunction {
-                    name: function_id,
+                    name: function_name,
                     offset,
                     length: machinecode.len() - offset,
                 });

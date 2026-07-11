@@ -1,10 +1,10 @@
 use std::fs;
-use tiny_wasm::runtime::{TinyWasmError, TrapCode};
 use std::path::Path;
+use tiny_wasm::runtime::{TinyWasmError, TrapCode};
 use tiny_wasm::*;
 
 #[test]
-fn test_branch() -> Result<()> {
+fn test_call() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/call.wasm"))?;
     let instance = get_module_instance(&module)?;
 
@@ -22,6 +22,10 @@ fn test_branch() -> Result<()> {
     assert!(
         matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::UnreachableCodeReached)
     );
+
+    let func = instance.get_function::<(i32, i32), i32>("plus_one")?;
+    assert_eq!(func.call(3, 4)?, 8);
+    assert_eq!(func.call(-1, 1)?, 1);
 
     Ok(())
 }

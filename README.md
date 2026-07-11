@@ -253,7 +253,8 @@ Local variable instructions in WebAssembly are needed to use function parameters
 
 ### Goals
 
-- [ ] Implement the `call` instruction
+- [ ] Implement the `call` instruction for integer and floating point arguments and return values
+- [ ] Pass all test-cases in `tests/call_test.rs`.
 
 ## Chapter xx - Rust to Wasm
 

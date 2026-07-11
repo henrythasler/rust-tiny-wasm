@@ -491,12 +491,12 @@ pub fn compile_call(
     if !func_type.results().is_empty() {
         let return_type = func_type.results().first().unwrap();
         match return_type {
-            ValType::I64 => {
+            ValType::I64 | ValType::I32 => {
                 let reg = register_pool.alloc();
                 machinecode.push(processing::mov_reg(
                     reg,
                     RETURN_VALUE_REGISTER,
-                    RegSize::Int64bit,
+                    map_valtype_to_regsize(return_type),
                 ));
                 let stack_element = StackElement {
                     valtype: *return_type,
