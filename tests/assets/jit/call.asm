@@ -35,16 +35,16 @@ Contents of section .text:
  0110 e90740b9 0801090b 000080d2 e10308aa  ..@.............
  0120 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
  0130 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
- 0140 e10700b9 e80340b9 e90740b9 e003092a  ......@...@....*
- 0150 e103082a e9ffff97 c00000b5 e803012a  ...*...........*
+ 0140 e10700b9 e80340b9 e90740b9 e103092a  ......@...@....*
+ 0150 e003082a e9ffff97 c00000b5 e803012a  ...*...........*
  0160 29008052 0801090b 000080d2 e10308aa  )..R............
  0170 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
  0180 fd7bbfa9 fd030091 ff4300d1 e00300bd  .{.......C......
- 0190 e00340bd 0040201e 08000094 800000b5  ..@..@ .........
- 01a0 2000271e 000080d2 0100261e ff430091   .'.......&..C..
+ 0190 e80340bd 0041201e 08000094 800000b5  ..@..A .........
+ 01a0 2800271e 000080d2 0101261e ff430091  (.'.......&..C..
  01b0 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
- 01c0 ff4300d1 e00300bd e00340bd e10340bd  .C........@...@.
- 01d0 0008211e 000080d2 0100261e ff430091  ..!.......&..C..
+ 01c0 ff4300d1 e00300bd e80340bd e90340bd  .C........@...@.
+ 01d0 0809291e 000080d2 0101261e ff430091  ..).......&..C..
  01e0 fd7bc1a8 c0035fd6                    .{...._.        
 
 Disassembly of section .text:
@@ -147,8 +147,8 @@ Disassembly of section .text:
  140:	b90007e1 	str	w1, [sp, #4]
  144:	b94003e8 	ldr	w8, [sp]
  148:	b94007e9 	ldr	w9, [sp, #4]
- 14c:	2a0903e0 	mov	w0, w9
- 150:	2a0803e1 	mov	w1, w8
+ 14c:	2a0903e1 	mov	w1, w9
+ 150:	2a0803e0 	mov	w0, w8
  154:	97ffffe9 	bl	f8 <$func6>
  158:	b50000c0 	cbnz	x0, 170 <plus_one+0x40>
  15c:	2a0103e8 	mov	w8, w1
@@ -166,13 +166,13 @@ Disassembly of section .text:
  184:	910003fd 	mov	x29, sp
  188:	d10043ff 	sub	sp, sp, #0x10
  18c:	bd0003e0 	str	s0, [sp]
- 190:	bd4003e0 	ldr	s0, [sp]
- 194:	1e204000 	fmov	s0, s0
+ 190:	bd4003e8 	ldr	s8, [sp]
+ 194:	1e204100 	fmov	s0, s8
  198:	94000008 	bl	1b8 <$func9>
  19c:	b5000080 	cbnz	x0, 1ac <square_f32+0x2c>
- 1a0:	1e270020 	fmov	s0, w1
+ 1a0:	1e270028 	fmov	s8, w1
  1a4:	d2800000 	mov	x0, #0x0                   	// #0
- 1a8:	1e260001 	fmov	w1, s0
+ 1a8:	1e260101 	fmov	w1, s8
  1ac:	910043ff 	add	sp, sp, #0x10
  1b0:	a8c17bfd 	ldp	x29, x30, [sp], #16
  1b4:	d65f03c0 	ret
@@ -182,11 +182,11 @@ Disassembly of section .text:
  1bc:	910003fd 	mov	x29, sp
  1c0:	d10043ff 	sub	sp, sp, #0x10
  1c4:	bd0003e0 	str	s0, [sp]
- 1c8:	bd4003e0 	ldr	s0, [sp]
- 1cc:	bd4003e1 	ldr	s1, [sp]
- 1d0:	1e210800 	fmul	s0, s0, s1
+ 1c8:	bd4003e8 	ldr	s8, [sp]
+ 1cc:	bd4003e9 	ldr	s9, [sp]
+ 1d0:	1e290908 	fmul	s8, s8, s9
  1d4:	d2800000 	mov	x0, #0x0                   	// #0
- 1d8:	1e260001 	fmov	w1, s0
+ 1d8:	1e260101 	fmov	w1, s8
  1dc:	910043ff 	add	sp, sp, #0x10
  1e0:	a8c17bfd 	ldp	x29, x30, [sp], #16
  1e4:	d65f03c0 	ret

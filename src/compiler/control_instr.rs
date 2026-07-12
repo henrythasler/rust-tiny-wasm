@@ -434,6 +434,7 @@ pub fn compile_call(
     );
 
     // move parameters from value stack to procedure call standard registers
+    // reverse the sequence to move the top-most stack element (last parameter) to the highest target register since `i` is also reversed
     for (i, param_type) in func_type.params().iter().enumerate().rev() {
         let stack_element = value_stack.pop().unwrap();
         assert_eq!(
@@ -443,7 +444,7 @@ pub fn compile_call(
         match stack_element.reg {
             Reg::IReg(reg) => {
                 machinecode.push(processing::mov_reg(
-                    IReg::try_from((func_type.params().len() - 1 - i) as u32).unwrap(),
+                    IReg::try_from(i as u32).unwrap(),
                     reg,
                     map_valtype_to_regsize(param_type),
                 ));
@@ -451,7 +452,7 @@ pub fn compile_call(
             }
             Reg::FReg(reg) => {
                 machinecode.push(fp_processing::fmov(
-                    Reg::FReg(FReg::try_from((func_type.params().len() - 1 - i) as u32).unwrap()),
+                    Reg::FReg(FReg::try_from(i as u32).unwrap()),
                     Reg::FReg(reg),
                     map_valtype_to_regsize(param_type),
                 ));

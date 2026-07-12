@@ -98,7 +98,10 @@ pub fn compile_testop(
         },
         _ => panic!("Unary operator '{:?}' not supported", op),
     }
-    value_stack.push(operand);
+    value_stack.push(StackElement {
+        reg: operand.reg,
+        valtype: ValType::I32,
+    });
 }
 
 pub fn compile_binop(
