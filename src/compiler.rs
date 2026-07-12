@@ -13,6 +13,7 @@ mod control_instr;
 mod function;
 mod numeric_instr;
 mod parametric_instr;
+mod parser;
 mod procedure_call;
 mod stack;
 mod traphandler;
@@ -22,6 +23,7 @@ use control_instr::*;
 use function::*;
 use numeric_instr::*;
 use parametric_instr::*;
+use parser::*;
 use procedure_call::*;
 use stack::*;
 use traphandler::*;
@@ -81,6 +83,7 @@ pub struct ModuleContext {
     types: Vec<wasmparser::FuncType>,
     exports: Vec<Export>,
     functions: Vec<ModuleFunction>,
+    func_table: Vec<u32>,
 }
 
 #[derive(Debug)]
@@ -131,7 +134,21 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     });
                 }
             }
-            TableSection(_) => { /* ... */ }
+            TableSection(reader) => {
+                for table in reader {
+                    let table = table?;
+                    match table.ty.element_type {
+                        wasmparser::RefType::FUNCREF => {
+                            module_ctx.func_table = vec![0; table.ty.initial as usize];
+                        }
+                        _ => {
+                            return Err(TinyWasmError::Parser(String::from(
+                                "Only funcref tables are supported",
+                            )));
+                        }
+                    }
+                }
+            }
             MemorySection(_) => { /* ... */ }
             GlobalSection(_) => { /* ... */ }
             ExportSection(reader) => {
@@ -145,7 +162,28 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                 }
             }
             StartSection { .. } => { /* ... */ }
-            ElementSection(_) => { /* ... */ }
+            ElementSection(reader) => {
+                for element in reader {
+                    let element = element?;
+                    let _offset: u32 = match element.kind {
+                        wasmparser::ElementKind::Active { offset_expr, .. } => {
+                            parse_const_expr(offset_expr)?
+                        }
+                        _ => panic!("Only active elements are supported"),
+                    };
+
+                    match element.items {
+                        wasmparser::ElementItems::Functions(index) => {
+                            println!("ElementItems::Functions: {:?}", index);
+                        } // Process each item in the element
+                        _ => {
+                            return Err(TinyWasmError::Parser(String::from(
+                                "Only function elements are supported",
+                            )));
+                        }
+                    }
+                }
+            }
             DataCountSection { .. } => { /* ... */ }
             DataSection(_) => { /* ... */ }
 
@@ -197,11 +235,17 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
             // most likely you'd return an error here, but if you want
             // you can also inspect the raw contents of unknown sections
-            _ => {
-                return Err(TinyWasmError::Parser(String::from(
-                    "Found unknown section identifier",
-                )));
-            }
+            other => match other.as_section() {
+                Some((id, _range)) => {
+                    return Err(TinyWasmError::Parser(format!(
+                        "Found unknown section identifier: {}",
+                        id
+                    )));
+                }
+                None => {
+                    return Err(TinyWasmError::Parser(String::from("Found invalid section")));
+                }
+            },
         }
     }
 
