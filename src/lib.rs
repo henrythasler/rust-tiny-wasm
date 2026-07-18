@@ -11,7 +11,7 @@ pub mod runtime;
 pub type Result<T> = std::result::Result<T, TinyWasmError>;
 
 #[derive(Debug, Clone)]
-pub struct WasmFunction {
+pub struct JitObject {
     pub name: String,
     /// offset in INSTRUCTION_SIZE units
     pub offset: usize,
@@ -22,20 +22,16 @@ pub struct WasmFunction {
 #[derive(Debug)]
 pub struct LinkedModule {
     pub machinecode: Vec<u32>,
-    pub functions: Vec<WasmFunction>,
-    // pub trap_handler: Option<WasmFunction>,
+    pub functions: Vec<JitObject>,
+    pub tables: Vec<JitObject>,
 }
 
 impl LinkedModule {
-    pub fn new(
-        machinecode: Vec<u32>,
-        functions: Vec<WasmFunction>,
-        // trap_handler: Option<WasmFunction>,
-    ) -> Self {
+    pub fn new(machinecode: Vec<u32>, functions: Vec<JitObject>, tables: Vec<JitObject>) -> Self {
         Self {
             machinecode,
             functions,
-            // trap_handler,
+            tables,
         }
     }
 }

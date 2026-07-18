@@ -21,8 +21,8 @@
   (func $nop
   )
 
-  ;; Create a table with 8 slots
-  (table $funcTable 8 16 funcref)
+  ;; Create a table with 7 slots
+  (table $funcTable 7 16 funcref)
   
   ;; Populate the table: put function references at specific indices
   (elem (i32.const 2) $add $multiply $square $nop)
@@ -32,7 +32,7 @@
   ;; - $multiply at index 3
   ;; - $square at index 4
   ;; - $nop at index 5
-  ;; - indices 6 and 7 remain null
+  ;; - index 6 remains null
   
   ;; Now use call_indirect
   (func $calculate (param i32 i32 i32) (result i32)

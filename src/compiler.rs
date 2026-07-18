@@ -79,11 +79,18 @@ pub struct StackElement {
 }
 
 #[derive(Debug, Default)]
+pub struct FunctionTable {
+    pub offset: usize,
+    pub length: usize,
+    pub indices: Vec<u32>,
+}
+
+#[derive(Debug, Default)]
 pub struct ModuleContext {
     types: Vec<wasmparser::FuncType>,
     exports: Vec<Export>,
     functions: Vec<ModuleFunction>,
-    func_table: Vec<u32>,
+    func_table: FunctionTable,
 }
 
 #[derive(Debug)]
@@ -101,7 +108,8 @@ pub struct ModuleFunction {
 
 pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     let mut machinecode: Vec<u32> = Vec::new();
-    let mut wasm_functions: Vec<WasmFunction> = Vec::new();
+    let mut wasm_functions: Vec<JitObject> = Vec::new();
+    let mut tables: Vec<JitObject> = Vec::new();
 
     let parser = Parser::new(0);
 
@@ -139,7 +147,12 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     let table = table?;
                     match table.ty.element_type {
                         wasmparser::RefType::FUNCREF => {
-                            module_ctx.func_table = vec![0; table.ty.initial as usize];
+                            // function table will be initialized with u32::MAX to distinguish from valid function references
+                            module_ctx.func_table = FunctionTable {
+                                offset: 0,
+                                length: table.ty.initial as usize,
+                                indices: vec![u32::MAX; table.ty.initial as usize],
+                            };
                         }
                         _ => {
                             return Err(TinyWasmError::Parser(String::from(
@@ -165,24 +178,45 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             ElementSection(reader) => {
                 for element in reader {
                     let element = element?;
-                    let _offset: u32 = match element.kind {
-                        wasmparser::ElementKind::Active { offset_expr, .. } => {
-                            parse_const_expr(offset_expr)?
-                        }
+                    let (table_index, offset) = match element.kind {
+                        wasmparser::ElementKind::Active {
+                            table_index,
+                            offset_expr,
+                        } => (table_index.unwrap_or(0), parse_const_expr(offset_expr)?),
                         _ => panic!("Only active elements are supported"),
                     };
 
+                    assert_eq!(table_index, 0, "Only table index 0 is supported");
+
+                    // println!("table_index: {:?}, offset: {:?}", &table_index, &offset);
+
                     match element.items {
-                        wasmparser::ElementItems::Functions(index) => {
-                            println!("ElementItems::Functions: {:?}", index);
-                        } // Process each item in the element
+                        wasmparser::ElementItems::Functions(section) => {
+                            for (i, func_idx) in section.into_iter().enumerate() {
+                                module_ctx.func_table.indices[(offset as usize) + i] = func_idx?;
+                            }
+                        }
                         _ => {
                             return Err(TinyWasmError::Parser(String::from(
                                 "Only function elements are supported",
                             )));
                         }
                     }
+                    // println!("func_table: {:?}", &module_ctx.func_table);
+                    // panic!()
                 }
+                // adding the function table placeholder to the the machinecode;
+                // content will be replaced by the actual function offset later;
+                // items that are not replaced remain 0 for easy runtime checks
+                module_ctx.func_table.offset = machinecode.len();
+                let padded_length =
+                    module_ctx.func_table.length.div_ceil(FUNCTION_ALIGNMENT) * FUNCTION_ALIGNMENT;
+                machinecode.extend(vec![0; padded_length]);
+                tables.push(JitObject {
+                    name: String::from("function_table"),
+                    offset: module_ctx.func_table.offset,
+                    length: padded_length * INSTRUCTION_SIZE,
+                });
             }
             DataCountSection { .. } => { /* ... */ }
             DataSection(_) => { /* ... */ }
@@ -191,7 +225,15 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             // `CodeSectionEntry`, so we can prepare for that, and
             // afterwards we can parse and handle each function
             // individually.
-            CodeSectionStart { .. } => {}
+            CodeSectionStart { count, .. } => {
+                if count as usize != module_ctx.functions.len() {
+                    return Err(TinyWasmError::Parser(format!(
+                        "Code section count ({}) does not match function section count ({})",
+                        count,
+                        module_ctx.functions.len()
+                    )));
+                }
+            }
             CodeSectionEntry(body) => {
                 // here we can iterate over `body` to parse the function and its locals
 
@@ -220,7 +262,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     .find(|&idx| idx.index == function_index)
                     .map_or(format!("$func{function_index}"), |v| v.name.clone());
 
-                wasm_functions.push(WasmFunction {
+                wasm_functions.push(JitObject {
                     name: function_name,
                     offset,
                     length: machinecode.len() - offset,
@@ -265,10 +307,19 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         branch::patch_branch_link(offset as i32, &mut machinecode[patch.location]);
     }
 
+    // // patching the function table with the actual start offsets for each function
+    for (i, &func_idx) in module_ctx.func_table.indices.iter().enumerate() {
+        if func_idx < u32::MAX {
+            let target_function = wasm_functions.get(func_idx as usize).unwrap();
+            machinecode[module_ctx.func_table.offset + i] =
+                (target_function.offset * INSTRUCTION_SIZE) as u32;
+        }
+    }
+
     Ok(LinkedModule {
         machinecode,
         functions: wasm_functions,
-        // trap_handler: Some(trap_handler),
+        tables, // trap_handler: Some(trap_handler),
     })
 }
 

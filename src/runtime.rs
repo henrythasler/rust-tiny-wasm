@@ -235,7 +235,7 @@ impl FromValue for () {
 #[derive(Debug)]
 pub struct Runtime {
     machinecode: Mmap,
-    functions: Vec<WasmFunction>,
+    functions: Vec<JitObject>,
 }
 
 impl Runtime {
@@ -312,11 +312,12 @@ mod tests {
     fn simple_jit_code() -> Result<()> {
         let module = LinkedModule::new(
             vec![0x0b000020, 0xd65f03c0],
-            vec![WasmFunction {
+            vec![JitObject {
                 name: String::from("test"),
                 offset: 0,
                 length: 2,
             }],
+            vec![],
         );
         let instance = instantiate_module(&module)?;
         let _ = instance.get_function::<(), i32>("test")?;
@@ -328,11 +329,12 @@ mod tests {
         let module = LinkedModule::new(
             // does not return anything
             vec![0xAA1F03E0, 0xAA1F03E1, 0xd65f03c0], // [MOV X0, XZR; MOV X1, XZR; RET]
-            vec![WasmFunction {
+            vec![JitObject {
                 name: String::from("void"),
                 offset: 0,
                 length: 3,
             }],
+            vec![],
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), ()>("void")?;
@@ -346,11 +348,12 @@ mod tests {
         let module = LinkedModule::new(
             // result tag in X0 is 255, which is invalid
             vec![0xD2801FE0, 0xD2801FE1, 0xd65f03c0], // [MOV X0, 0xFF; MOV X1, 0xFF; RET]
-            vec![WasmFunction {
+            vec![JitObject {
                 name: String::from("invalid_result"),
                 offset: 0,
                 length: 3,
             }],
+            vec![],
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i64>("invalid_result")?;
@@ -367,11 +370,12 @@ mod tests {
             // Tag in X0 is 1, which indicates a trap
             // Value in X1 is 0, which is TrapCode::None
             vec![0xAA1F03E1, 0xD2800020, 0xd65f03c0], // [MOV X1, XZR; MOV X0, 1; RET]
-            vec![WasmFunction {
+            vec![JitObject {
                 name: String::from("trap_code"),
                 offset: 0,
                 length: 3,
             }],
+            vec![],
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i32>("trap_code")?;
@@ -384,11 +388,12 @@ mod tests {
     fn invalid_jit_code() -> Result<()> {
         let module = LinkedModule::new(
             vec![],
-            vec![WasmFunction {
+            vec![JitObject {
                 name: String::from("empty"),
                 offset: 0,
                 length: 0,
             }],
+            vec![],
         );
         assert_eq!(
             instantiate_module(&module).unwrap_err(),
@@ -401,11 +406,12 @@ mod tests {
     fn unknown_function() -> Result<()> {
         let module = LinkedModule::new(
             vec![0x0b000020, 0xd65f03c0],
-            vec![WasmFunction {
+            vec![JitObject {
                 name: String::from("test"),
                 offset: 0,
                 length: 2,
             }],
+            vec![],
         );
         let instance = instantiate_module(&module)?;
         assert_eq!(

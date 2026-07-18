@@ -529,3 +529,16 @@ pub fn compile_call(
         }
     }
 }
+
+pub fn compile_call_indirect(
+    _type_index: u32,
+    _table_index: u32,
+    _module_ctx: &ModuleContext,
+    _value_stack: &mut Vec<StackElement>,
+    _register_pool: &mut RegisterPool,
+    _call_patches: &mut Vec<FunctionPatch>,
+    _trap_locations: &mut Vec<Patch>,
+    _machinecode: &mut Vec<u32>,
+) {
+    // FIXME: add logic here
+}

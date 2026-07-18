@@ -139,6 +139,21 @@ pub fn compile_function(
                     machinecode,
                 );
             }
+            Operator::CallIndirect {
+                type_index,
+                table_index,
+            } => {
+                compile_call_indirect(
+                    type_index,
+                    table_index,
+                    module_ctx,
+                    &mut value_stack,
+                    &mut register_pool,
+                    call_patches,
+                    &mut trap_locations,
+                    machinecode,
+                );
+            }
             Operator::I32LtS | Operator::I64LtS | Operator::I32LeU | Operator::I64LeU => {
                 compile_relop(&op, &mut value_stack, &mut register_pool, machinecode)
             }
