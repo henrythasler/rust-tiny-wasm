@@ -531,14 +531,65 @@ pub fn compile_call(
 }
 
 pub fn compile_call_indirect(
-    _type_index: u32,
+    type_index: u32,
     _table_index: u32,
-    _module_ctx: &ModuleContext,
-    _value_stack: &mut Vec<StackElement>,
+    module_ctx: &ModuleContext,
+    value_stack: &mut Vec<StackElement>,
     _register_pool: &mut RegisterPool,
     _call_patches: &mut Vec<FunctionPatch>,
-    _trap_locations: &mut Vec<Patch>,
-    _machinecode: &mut Vec<u32>,
+    trap_locations: &mut Vec<Patch>,
+    machinecode: &mut Vec<u32>,
 ) {
-    // FIXME: add logic here
+    assert!(
+        module_ctx.func_table.is_some(),
+        "call_indirect(): function table is not defined in the module"
+    );
+
+    // get the actual function type from the module context using the type index
+    let func_type = module_ctx
+        .types
+        .get(type_index as usize)
+        .expect("call_indirect(): function type for type_index not found");
+
+    assert!(
+        func_type.results().len() <= 1,
+        "call_indirect(): function must have at most one return value"
+    );
+    assert!(
+        func_type.params().len() <= 8,
+        "call_indirect(): function must have at most 8 parameters"
+    );
+
+    assert!(
+        !value_stack.is_empty(),
+        "call_indirect(): insufficient operands on stack for call_indirect"
+    );
+
+    let table_index = value_stack.pop().unwrap();
+    assert_eq!(
+        table_index.valtype,
+        ValType::I32,
+        "Operand type mismatch in 'call_indirect'"
+    );
+
+    // emit runtime check that the value in register 'tableidx' is smaller than the size of the table
+    // use subs_immediate to substract (static) table size from 'tableidx' register
+    // branch_cond over next instruction if result is >= 0; otherwise trap with table index out of bounds
+
+    let reg = match table_index.reg {
+        Reg::IReg(reg) => reg,
+        _ => panic!("call_indirect(): expected IReg as table_index"),
+    };
+
+    machinecode.push(arithmetic::cmp_imm(
+        reg,
+        module_ctx.func_table.as_ref().unwrap().length as u32,
+        false,
+        RegSize::Int32bit,
+    ));
+    machinecode.push(branch::branch_cond(
+        Condition::LT,
+        TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+    ));
+    trap_inline(TrapCode::TableOutOfBounds, trap_locations, machinecode);
 }

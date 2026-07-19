@@ -26,7 +26,7 @@ pub const FLOAT64_SIZE: usize = std::mem::size_of::<f64>();
 pub const INTEGER_REGISTER_SIZE: usize = std::mem::size_of::<u64>();
 
 pub const STACK_ALIGNMENT: usize = 16;
-pub const FUNCTION_ALIGNMENT: usize = mem::align_of::<fn()>();
+pub const CODE_ALIGNMENT: usize = mem::align_of::<fn()>();
 
 // result values according to Aarch64 Procedure Call Standard (X0..X7) are
 // X0: Return Code (0=Ok, 1=Trap),

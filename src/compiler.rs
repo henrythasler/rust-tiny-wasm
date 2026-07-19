@@ -90,7 +90,7 @@ pub struct ModuleContext {
     types: Vec<wasmparser::FuncType>,
     exports: Vec<Export>,
     functions: Vec<ModuleFunction>,
-    func_table: FunctionTable,
+    func_table: Option<FunctionTable>,
 }
 
 #[derive(Debug)]
@@ -148,11 +148,11 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     match table.ty.element_type {
                         wasmparser::RefType::FUNCREF => {
                             // function table will be initialized with u32::MAX to distinguish from valid function references
-                            module_ctx.func_table = FunctionTable {
+                            module_ctx.func_table = Some(FunctionTable {
                                 offset: 0,
                                 length: table.ty.initial as usize,
                                 indices: vec![u32::MAX; table.ty.initial as usize],
-                            };
+                            });
                         }
                         _ => {
                             return Err(TinyWasmError::Parser(String::from(
@@ -176,47 +176,52 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             }
             StartSection { .. } => { /* ... */ }
             ElementSection(reader) => {
-                for element in reader {
-                    let element = element?;
-                    let (table_index, offset) = match element.kind {
-                        wasmparser::ElementKind::Active {
-                            table_index,
-                            offset_expr,
-                        } => (table_index.unwrap_or(0), parse_const_expr(offset_expr)?),
-                        _ => panic!("Only active elements are supported"),
-                    };
+                if let Some(func_table) = module_ctx.func_table.as_mut() {
+                    for element in reader {
+                        let element = element?;
+                        let (table_index, offset) = match element.kind {
+                            wasmparser::ElementKind::Active {
+                                table_index,
+                                offset_expr,
+                            } => (table_index.unwrap_or(0), parse_const_expr(offset_expr)?),
+                            _ => panic!("Only active elements are supported"),
+                        };
 
-                    assert_eq!(table_index, 0, "Only table index 0 is supported");
+                        assert_eq!(table_index, 0, "Only table index 0 is supported");
 
-                    // println!("table_index: {:?}, offset: {:?}", &table_index, &offset);
+                        // println!("table_index: {:?}, offset: {:?}", &table_index, &offset);
 
-                    match element.items {
-                        wasmparser::ElementItems::Functions(section) => {
-                            for (i, func_idx) in section.into_iter().enumerate() {
-                                module_ctx.func_table.indices[(offset as usize) + i] = func_idx?;
+                        match element.items {
+                            wasmparser::ElementItems::Functions(section) => {
+                                for (i, func_idx) in section.into_iter().enumerate() {
+                                    func_table.indices[(offset as usize) + i] = func_idx?;
+                                }
+                            }
+                            _ => {
+                                return Err(TinyWasmError::Parser(String::from(
+                                    "Only function elements are supported",
+                                )));
                             }
                         }
-                        _ => {
-                            return Err(TinyWasmError::Parser(String::from(
-                                "Only function elements are supported",
-                            )));
-                        }
+                        // println!("func_table: {:?}", &module_ctx.func_table);
+                        // panic!()
                     }
-                    // println!("func_table: {:?}", &module_ctx.func_table);
-                    // panic!()
+                    // adding the function table placeholder to the the machinecode;
+                    // content will be replaced by the actual function offset later;
+                    // items that are not replaced remain 0 for easy runtime checks
+                    func_table.offset = machinecode.len();
+                    let padded_length = func_table.length.div_ceil(CODE_ALIGNMENT) * CODE_ALIGNMENT;
+                    machinecode.extend(vec![0; padded_length]);
+                    tables.push(JitObject {
+                        name: String::from("function_table"),
+                        offset: func_table.offset,
+                        length: padded_length * INSTRUCTION_SIZE,
+                    });
+                } else {
+                    return Err(TinyWasmError::Parser(String::from(
+                        "Element section found but no function table defined",
+                    )));
                 }
-                // adding the function table placeholder to the the machinecode;
-                // content will be replaced by the actual function offset later;
-                // items that are not replaced remain 0 for easy runtime checks
-                module_ctx.func_table.offset = machinecode.len();
-                let padded_length =
-                    module_ctx.func_table.length.div_ceil(FUNCTION_ALIGNMENT) * FUNCTION_ALIGNMENT;
-                machinecode.extend(vec![0; padded_length]);
-                tables.push(JitObject {
-                    name: String::from("function_table"),
-                    offset: module_ctx.func_table.offset,
-                    length: padded_length * INSTRUCTION_SIZE,
-                });
             }
             DataCountSection { .. } => { /* ... */ }
             DataSection(_) => { /* ... */ }
@@ -308,11 +313,13 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     }
 
     // // patching the function table with the actual start offsets for each function
-    for (i, &func_idx) in module_ctx.func_table.indices.iter().enumerate() {
-        if func_idx < u32::MAX {
-            let target_function = wasm_functions.get(func_idx as usize).unwrap();
-            machinecode[module_ctx.func_table.offset + i] =
-                (target_function.offset * INSTRUCTION_SIZE) as u32;
+    if let Some(func_table) = module_ctx.func_table.as_mut() {
+        for (i, &func_idx) in func_table.indices.iter().enumerate() {
+            if func_idx < u32::MAX {
+                let target_function = wasm_functions.get(func_idx as usize).unwrap();
+                machinecode[func_table.offset + i] =
+                    (target_function.offset * INSTRUCTION_SIZE) as u32;
+            }
         }
     }
 
