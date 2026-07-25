@@ -55,7 +55,7 @@ fn test_objdump() {
                     object.add_symbol(Symbol {
                         name: table.name.clone().into_bytes(),
                         value: (table.offset * assembler::aarch64::INSTRUCTION_SIZE) as u64,
-                        size: (table.length * assembler::aarch64::INSTRUCTION_SIZE) as u64,
+                        size: (table.length * assembler::aarch64::TABLE_ENTRY_SIZE) as u64,
                         kind: SymbolKind::Data,
                         scope: SymbolScope::Compilation,
                         weak: false,

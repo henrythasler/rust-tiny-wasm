@@ -82,7 +82,8 @@ pub struct StackElement {
 pub struct FunctionTable {
     pub offset: usize,
     pub length: usize,
-    pub indices: Vec<u32>,
+    pub func_indices: Vec<u32>,
+    pub type_indices: Vec<u32>,
 }
 
 #[derive(Debug, Default)]
@@ -108,7 +109,7 @@ pub struct ModuleFunction {
 
 pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     let mut machinecode: Vec<u32> = Vec::new();
-    let mut wasm_functions: Vec<JitObject> = Vec::new();
+    let mut jit_functions: Vec<JitObject> = Vec::new();
     let mut tables: Vec<JitObject> = Vec::new();
 
     let parser = Parser::new(0);
@@ -151,7 +152,8 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                             module_ctx.func_table = Some(FunctionTable {
                                 offset: 0,
                                 length: table.ty.initial as usize,
-                                indices: vec![u32::MAX; table.ty.initial as usize],
+                                func_indices: vec![u32::MAX; table.ty.initial as usize],
+                                type_indices: vec![u32::MAX; table.ty.initial as usize],
                             });
                         }
                         _ => {
@@ -194,7 +196,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                         match element.items {
                             wasmparser::ElementItems::Functions(section) => {
                                 for (i, func_idx) in section.into_iter().enumerate() {
-                                    func_table.indices[(offset as usize) + i] = func_idx?;
+                                    func_table.func_indices[(offset as usize) + i] = func_idx?;
                                 }
                             }
                             _ => {
@@ -210,12 +212,14 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     // content will be replaced by the actual function offset later;
                     // items that are not replaced remain 0 for easy runtime checks
                     func_table.offset = machinecode.len();
-                    let padded_length = func_table.length.div_ceil(CODE_ALIGNMENT) * CODE_ALIGNMENT;
-                    machinecode.extend(vec![0; padded_length]);
+                    let padded_length = (func_table.length * TABLE_ENTRY_SIZE * INT32_SIZE)
+                        .div_ceil(CODE_ALIGNMENT)
+                        * CODE_ALIGNMENT;
+                    machinecode.extend(vec![u32::MAX; padded_length / INT32_SIZE]); // each function table entry is a tuple of (offset, type_index)
                     tables.push(JitObject {
                         name: String::from("function_table"),
                         offset: func_table.offset,
-                        length: padded_length * INSTRUCTION_SIZE,
+                        length: padded_length, // need to store a tuple of (offset, type_index) for each function in the table
                     });
                 } else {
                     return Err(TinyWasmError::Parser(String::from(
@@ -267,7 +271,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     .find(|&idx| idx.index == function_index)
                     .map_or(format!("$func{function_index}"), |v| v.name.clone());
 
-                wasm_functions.push(JitObject {
+                jit_functions.push(JitObject {
                     name: function_name,
                     offset,
                     length: machinecode.len() - offset,
@@ -298,7 +302,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
     // patch all the function calls with the correct offsets
     for patch in call_patches {
-        let target_function = wasm_functions.get(patch.function_index as usize).unwrap();
+        let target_function = jit_functions.get(patch.function_index as usize).unwrap();
         let offset = (target_function.offset as isize - patch.location as isize)
             * aarch64::INSTRUCTION_SIZE as isize; // convert to bytes
         // println!(
@@ -312,20 +316,22 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         branch::patch_branch_link(offset as i32, &mut machinecode[patch.location]);
     }
 
-    // // patching the function table with the actual start offsets for each function
+    // patching the function table with the actual start offsets for each function
     if let Some(func_table) = module_ctx.func_table.as_mut() {
-        for (i, &func_idx) in func_table.indices.iter().enumerate() {
+        for (i, &func_idx) in func_table.func_indices.iter().enumerate() {
             if func_idx < u32::MAX {
-                let target_function = wasm_functions.get(func_idx as usize).unwrap();
-                machinecode[func_table.offset + i] =
-                    (target_function.offset * INSTRUCTION_SIZE) as u32;
+                let jit_function = jit_functions.get(func_idx as usize).unwrap();
+                let func = module_ctx.functions.get(func_idx as usize).unwrap();
+                machinecode[func_table.offset + i * TABLE_ENTRY_SIZE] =
+                    (jit_function.offset * INSTRUCTION_SIZE) as u32;
+                machinecode[func_table.offset + i * TABLE_ENTRY_SIZE + 1] = func.type_index as u32;
             }
         }
     }
 
     Ok(LinkedModule {
         machinecode,
-        functions: wasm_functions,
+        functions: jit_functions,
         tables, // trap_handler: Some(trap_handler),
     })
 }

@@ -576,13 +576,13 @@ pub fn compile_call_indirect(
     // use subs_immediate to substract (static) table size from 'tableidx' register
     // branch_cond over next instruction if result is >= 0; otherwise trap with table index out of bounds
 
-    let reg = match table_index.reg {
+    let table_index_reg = match table_index.reg {
         Reg::IReg(reg) => reg,
         _ => panic!("call_indirect(): expected IReg as table_index"),
     };
 
     machinecode.push(arithmetic::cmp_imm(
-        reg,
+        table_index_reg,
         module_ctx.func_table.as_ref().unwrap().length as u32,
         false,
         RegSize::Int32bit,
@@ -592,4 +592,16 @@ pub fn compile_call_indirect(
         TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
     ));
     trap_inline(TrapCode::TableOutOfBounds, trap_locations, machinecode);
+
+    // load the function (offset, type_index) tuple from the function table into a register
+    // machinecode.push_back(arm64::encode_adrp(functionidxReg, 0));
+    // machinecode.push_back(arm64::encode_add_immediate(functionidxReg, functionidxReg, 0, false, arm64::reg_size_t::SIZE_64BIT));
+    // machinecode.push_back(arm64::encode_ldr_register(functionidxReg, functionidxReg, tableidx, arm64::index_extend_type_t::INDEX_LSL, 3,
+    //                                                  arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
+
+    // runtime check that the table element is NOT uninitialized (i.e. the function offset is not 0xFFFFFFFF)
+
+    // runtime check that the function type of the function at the given table index matches the expected function type
+    // load the type index of the function at the given table index from the function table into a register and compare it with the expected function type index
+    // if they don't match, trap
 }

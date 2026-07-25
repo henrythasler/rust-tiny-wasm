@@ -18,6 +18,7 @@ pub mod fp_memory;
 pub mod fp_processing;
 
 pub const INSTRUCTION_SIZE: usize = std::mem::size_of::<u32>();
+pub const TABLE_ENTRY_SIZE: usize = 2; // each function table entry is a tuple of (offset, type_index)
 
 pub const INT32_SIZE: usize = std::mem::size_of::<i32>();
 pub const INT64_SIZE: usize = std::mem::size_of::<i64>();
