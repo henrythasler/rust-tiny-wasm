@@ -368,6 +368,14 @@ pub enum Extend {
 }
 
 #[repr(u32)]
+pub enum IndexExtend {
+    Uxtw = 2, // Unsigned extend word
+    Lsl = 3,  // Shift Left
+    Sxtw = 6, // Signed extend word
+    Sxtx = 7, // Signed extend doubleword
+}
+
+#[repr(u32)]
 pub enum Condition {
     /// equal
     EQ = 0b0000,

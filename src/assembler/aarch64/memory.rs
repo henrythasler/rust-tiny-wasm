@@ -35,6 +35,43 @@ pub fn ldr_imm_unsigned_offset(rt: IReg, rn: IReg, imm: u32, mem: MemSize, size:
     instr
 }
 
+/// This instruction calculates an address from a base register value and an offset register value, loads a word from memory, and writes it to a register. The offset register value can optionally be shifted and extended.
+///
+/// # Instructions
+/// `ADRP <rd>, <imm>`
+///
+/// # Arguments
+/// * `rt` - The destination register (IReg).
+/// * `rn` - The base register (IReg).
+/// * `rm` - The offset register (IReg).
+/// * `option` - The index extend option (IndexExtend).
+/// * `amount` - The shift amount (u32).
+/// * `mem` - The memory size (MemSize).
+/// * `size` - The register size (RegSize).
+/// # Returns
+/// * A 32-bit unsigned integer representing the encoded LDR instruction.
+pub fn ldr_reg(
+    rt: IReg,
+    rn: IReg,
+    rm: IReg,
+    option: IndexExtend,
+    amount: u32,
+    mem: MemSize,
+    size: RegSize,
+) -> u32 {
+    let mut instr: u32 = if mem == MemSize::Mem64bit && size == RegSize::Int64bit {
+        0xF8600800 | if amount == 3 { 0x1000 } else { 0 } | (option as u32) << 13
+    } else {
+        panic!("invalid MemSize or RegSize in ldr_reg")
+    };
+
+    instr |= (rm & 0x1F) << 16; // Rm (index register)
+    instr |= (rn & 0x1F) << 5; // Rn (base register)
+    instr |= rt & 0x1F; // Rt (source register)
+
+    instr
+}
+
 /// This instruction stores a word or a doubleword from a register to memory. The address that is used for the store is calculated from a base register and an immediate offset.
 ///
 /// # Examples
@@ -62,6 +99,25 @@ pub fn str_imm_unsigned_offset(rt: IReg, rn: IReg, imm: u32, mem: MemSize, size:
     instr |= (rn & 0x1F) << 5; // Rn (base register)
     instr |= rt & 0x1F; // Rt (source register)
 
+    instr
+}
+
+/// This instruction adds an immediate value that is shifted left by 12 bits, to the PC value to form a PC-relative address, with the bottom 12 bits masked out, and writes the result to the destination register.
+///
+/// # Instructions
+/// `ADRP <rd>, <imm>`
+///
+/// # Arguments
+/// * `rd` - The destination register (IReg).
+/// * `imm` - The immediate value to be added to the PC, shifted left by 12 bits. The immediate value must be a multiple of 4096 (0x1000).
+/// # Returns
+/// * A 32-bit unsigned integer representing the encoded ADRP instruction.
+pub fn adrp(rd: IReg, imm: i64) -> u32 {
+    let mut instr: u32 = 0x90000000; // ADRP opcode
+    let imm = imm >> 12; // Shift right by 12 to get the page number
+    instr |= ((imm & 0x3) as u32) << 29; // immlo
+    instr |= (((imm >> 2) & 0x7FFFF) as u32) << 5; // immhi
+    instr |= rd & 0x1F; // Rd (desination register)
     instr
 }
 
@@ -100,6 +156,29 @@ mod tests {
     }
 
     #[test]
+    fn test_ldr_reg() {
+        //   // LDRB w0, [x0, x0]
+        //   EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 0, arm64::mem_size_t::MEM_8BIT, reg_size_t::SIZE_32BIT), 0x38607800);
+        //   // LDRH w0, [x0, x0, lsl #1]
+        //   EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 1, arm64::mem_size_t::MEM_16BIT, reg_size_t::SIZE_32BIT), 0x78607800);
+        //   // LDR w0, [x0, x0, lsl #2]
+        //   EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 2, arm64::mem_size_t::MEM_32BIT, reg_size_t::SIZE_32BIT), 0xB8607800);
+        // LDR x0, [x0, x0, lsl #3]
+        assert_eq!(
+            ldr_reg(
+                IReg::X0,
+                IReg::X0,
+                IReg::X0,
+                IndexExtend::Lsl,
+                3,
+                MemSize::Mem64bit,
+                RegSize::Int64bit
+            ),
+            0xF8607800
+        );
+    }
+
+    #[test]
     fn test_str_imm_unsigned_offset() {
         // strb w8, [sp, 1]
         assert_eq!(
@@ -127,5 +206,13 @@ mod tests {
     #[should_panic]
     fn test_str_imm_unsigned_offset_panic() {
         str_imm_unsigned_offset(IReg::X1, IReg::SP, 16, MemSize::Mem64bit, RegSize::Int32bit);
+    }
+
+    #[test]
+    fn test_adrp() {
+        // adrp x0, -0x10000000
+        assert_eq!(adrp(IReg::X0, -0x10000000), 0x90F80000);
+        // adrp x11, 0xf000
+        assert_eq!(adrp(IReg::X11, 0xf000), 0xF000006B);
     }
 }

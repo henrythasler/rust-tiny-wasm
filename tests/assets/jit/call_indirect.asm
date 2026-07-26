@@ -7,7 +7,7 @@ SYMBOL TABLE:
 0000000000000070 l     F .text	0000000000000038 $func1
 00000000000000a8 l     F .text	0000000000000030 $func2
 00000000000000d8 l     F .text	0000000000000018 $func3
-00000000000000f0 l     F .text	0000000000000050 calculate
+00000000000000f0 l     F .text	0000000000000070 calculate
 
 
 Contents of section .text:
@@ -29,8 +29,10 @@ Contents of section .text:
  00f0 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
  0100 e10700b9 e20b00b9 e80740b9 e90b40b9  ..........@...@.
  0110 ea0340b9 5f1d0071 8b000054 810080d2  ..@._..q...T....
- 0120 200080d2 03000014 000080d2 e10309aa   ...............
- 0130 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
+ 0120 200080d2 0b000014 0b000090 6b010091   ...........k...
+ 0130 6b796af8 7f0500b1 81000054 a10080d2  kyj........T....
+ 0140 200080d2 03000014 000080d2 e10309aa   ...............
+ 0150 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
 
 Disassembly of section .text:
 
@@ -108,10 +110,18 @@ Disassembly of section .text:
  118:	5400008b 	b.lt	128 <calculate+0x38>  // b.tstop
  11c:	d2800081 	mov	x1, #0x4                   	// #4
  120:	d2800020 	mov	x0, #0x1                   	// #1
- 124:	14000003 	b	130 <calculate+0x40>
- 128:	d2800000 	mov	x0, #0x0                   	// #0
- 12c:	aa0903e1 	mov	x1, x9
- 130:	910043ff 	add	sp, sp, #0x10
- 134:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 138:	d65f03c0 	ret
- 13c:	d503201f 	nop
+ 124:	1400000b 	b	150 <calculate+0x60>
+ 128:	9000000b 	adrp	x11, 0 <function_table>
+ 12c:	9100016b 	add	x11, x11, #0x0
+ 130:	f86a796b 	ldr	x11, [x11, x10, lsl #3]
+ 134:	b100057f 	cmn	x11, #0x1
+ 138:	54000081 	b.ne	148 <calculate+0x58>  // b.any
+ 13c:	d28000a1 	mov	x1, #0x5                   	// #5
+ 140:	d2800020 	mov	x0, #0x1                   	// #1
+ 144:	14000003 	b	150 <calculate+0x60>
+ 148:	d2800000 	mov	x0, #0x0                   	// #0
+ 14c:	aa0903e1 	mov	x1, x9
+ 150:	910043ff 	add	sp, sp, #0x10
+ 154:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 158:	d65f03c0 	ret
+ 15c:	d503201f 	nop

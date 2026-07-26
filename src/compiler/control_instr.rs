@@ -535,7 +535,7 @@ pub fn compile_call_indirect(
     _table_index: u32,
     module_ctx: &ModuleContext,
     value_stack: &mut Vec<StackElement>,
-    _register_pool: &mut RegisterPool,
+    register_pool: &mut RegisterPool,
     _call_patches: &mut Vec<FunctionPatch>,
     trap_locations: &mut Vec<Patch>,
     machinecode: &mut Vec<u32>,
@@ -594,12 +594,46 @@ pub fn compile_call_indirect(
     trap_inline(TrapCode::TableOutOfBounds, trap_locations, machinecode);
 
     // load the function (offset, type_index) tuple from the function table into a register
-    // machinecode.push_back(arm64::encode_adrp(functionidxReg, 0));
-    // machinecode.push_back(arm64::encode_add_immediate(functionidxReg, functionidxReg, 0, false, arm64::reg_size_t::SIZE_64BIT));
-    // machinecode.push_back(arm64::encode_ldr_register(functionidxReg, functionidxReg, tableidx, arm64::index_extend_type_t::INDEX_LSL, 3,
-    //                                                  arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
+
+    let func_index_reg = register_pool.alloc();
+    let funct_table_offset =
+        module_ctx.func_table.as_ref().unwrap().offset as i64 * INSTRUCTION_SIZE as i64;
+    let page_offset =
+        funct_table_offset & (!0xfff - machinecode.len() as i64 * INSTRUCTION_SIZE as i64) & !0xfff;
+    machinecode.push(memory::adrp(func_index_reg, page_offset));
+    machinecode.push(arithmetic::add_imm(
+        func_index_reg,
+        func_index_reg,
+        (funct_table_offset & 0xfff) as u32,
+        false,
+        RegSize::Int64bit,
+    ));
+
+    machinecode.push(memory::ldr_reg(
+        func_index_reg,
+        func_index_reg,
+        table_index_reg,
+        IndexExtend::Lsl, // need to shift left by 3 to get the correct offset for the function table entry (each entry is 8 bytes)
+        3,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
 
     // runtime check that the table element is NOT uninitialized (i.e. the function offset is not 0xFFFFFFFF)
+    // CMN = Compare Negative → adds operand and sets flags; If w0 == 0xFFFFFFFF, then w0 + 1 == 0; Z flag is set on match
+
+    machinecode.push(arithmetic::cmn_imm(
+        func_index_reg,
+        1,
+        false,
+        RegSize::Int64bit,
+    ));
+
+    machinecode.push(branch::branch_cond(
+        Condition::NE,
+        TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+    ));
+    trap_inline(TrapCode::IndirectCallToNull, trap_locations, machinecode);
 
     // runtime check that the function type of the function at the given table index matches the expected function type
     // load the type index of the function at the given table index from the function table into a register and compare it with the expected function type index
