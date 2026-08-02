@@ -7,7 +7,7 @@ SYMBOL TABLE:
 0000000000000070 l     F .text	0000000000000038 $func1
 00000000000000a8 l     F .text	0000000000000030 $func2
 00000000000000d8 l     F .text	0000000000000018 $func3
-00000000000000f0 l     F .text	0000000000000070 calculate
+00000000000000f0 l     F .text	0000000000000088 calculate
 
 
 Contents of section .text:
@@ -29,10 +29,12 @@ Contents of section .text:
  00f0 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
  0100 e10700b9 e20b00b9 e80740b9 e90b40b9  ..........@...@.
  0110 ea0340b9 5f1d0071 8b000054 810080d2  ..@._..q...T....
- 0120 200080d2 0b000014 0b000090 6b010091   ...........k...
+ 0120 200080d2 11000014 0b000090 6b010091   ...........k...
  0130 6b796af8 7f0500b1 81000054 a10080d2  kyj........T....
- 0140 200080d2 03000014 000080d2 e10309aa   ...............
- 0150 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
+ 0140 200080d2 09000014 6cfd60d3 9f010071   .......l.`....q
+ 0150 81000054 c10080d2 200080d2 03000014  ...T.... .......
+ 0160 000080d2 e10309aa ff430091 fd7bc1a8  .........C...{..
+ 0170 c0035fd6 1f2003d5                    .._.. ..        
 
 Disassembly of section .text:
 
@@ -110,7 +112,7 @@ Disassembly of section .text:
  118:	5400008b 	b.lt	128 <calculate+0x38>  // b.tstop
  11c:	d2800081 	mov	x1, #0x4                   	// #4
  120:	d2800020 	mov	x0, #0x1                   	// #1
- 124:	1400000b 	b	150 <calculate+0x60>
+ 124:	14000011 	b	168 <calculate+0x78>
  128:	9000000b 	adrp	x11, 0 <function_table>
  12c:	9100016b 	add	x11, x11, #0x0
  130:	f86a796b 	ldr	x11, [x11, x10, lsl #3]
@@ -118,10 +120,16 @@ Disassembly of section .text:
  138:	54000081 	b.ne	148 <calculate+0x58>  // b.any
  13c:	d28000a1 	mov	x1, #0x5                   	// #5
  140:	d2800020 	mov	x0, #0x1                   	// #1
- 144:	14000003 	b	150 <calculate+0x60>
- 148:	d2800000 	mov	x0, #0x0                   	// #0
- 14c:	aa0903e1 	mov	x1, x9
- 150:	910043ff 	add	sp, sp, #0x10
- 154:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 158:	d65f03c0 	ret
- 15c:	d503201f 	nop
+ 144:	14000009 	b	168 <calculate+0x78>
+ 148:	d360fd6c 	lsr	x12, x11, #32
+ 14c:	7100019f 	cmp	w12, #0x0
+ 150:	54000081 	b.ne	160 <calculate+0x70>  // b.any
+ 154:	d28000c1 	mov	x1, #0x6                   	// #6
+ 158:	d2800020 	mov	x0, #0x1                   	// #1
+ 15c:	14000003 	b	168 <calculate+0x78>
+ 160:	d2800000 	mov	x0, #0x0                   	// #0
+ 164:	aa0903e1 	mov	x1, x9
+ 168:	910043ff 	add	sp, sp, #0x10
+ 16c:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 170:	d65f03c0 	ret
+ 174:	d503201f 	nop

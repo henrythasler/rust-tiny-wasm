@@ -636,6 +636,29 @@ pub fn compile_call_indirect(
     trap_inline(TrapCode::IndirectCallToNull, trap_locations, machinecode);
 
     // runtime check that the function type of the function at the given table index matches the expected function type
-    // load the type index of the function at the given table index from the function table into a register and compare it with the expected function type index
-    // if they don't match, trap
+    // (1) Load the type index of the function at the given table index from the function table into a register
+    // (2) compare it with the expected function type index if they don't match, trap
+
+    let type_reg = register_pool.alloc();
+    machinecode.push(bit::lsr_imm(
+        type_reg,
+        func_index_reg,
+        32,
+        RegSize::Int64bit,
+    ));
+    machinecode.push(arithmetic::cmp_imm(
+        type_reg,
+        type_index,
+        false,
+        RegSize::Int32bit,
+    ));
+    machinecode.push(branch::branch_cond(
+        Condition::NE,
+        TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+    ));
+    trap_inline(TrapCode::BadSignature, trap_locations, machinecode);
+    register_pool.free(); // type_reg
+    register_pool.free(); // table_index_reg
+
+    // load the address of the function to be called (callee)
 }
