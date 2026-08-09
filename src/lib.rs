@@ -10,32 +10,6 @@ pub mod runtime;
 
 pub type Result<T> = std::result::Result<T, TinyWasmError>;
 
-#[derive(Debug, Clone)]
-pub struct JitObject {
-    pub name: String,
-    /// offset in INSTRUCTION_SIZE units
-    pub offset: usize,
-    /// length in INSTRUCTION_SIZE units
-    pub length: usize,
-}
-
-#[derive(Debug)]
-pub struct LinkedModule {
-    pub machinecode: Vec<u32>,
-    pub functions: Vec<JitObject>,
-    pub tables: Vec<JitObject>,
-}
-
-impl LinkedModule {
-    pub fn new(machinecode: Vec<u32>, functions: Vec<JitObject>, tables: Vec<JitObject>) -> Self {
-        Self {
-            machinecode,
-            functions,
-            tables,
-        }
-    }
-}
-
 /// Prints the structure of a WebAssembly module in a human-readable format, including its sections, exports, and code entries.
 ///
 /// This function takes a byte slice representing a WebAssembly module and uses the `wasmparser` crate

@@ -81,7 +81,7 @@ pub struct StackElement {
 #[derive(Debug, Default)]
 pub struct FunctionTable {
     pub offset: usize,
-    pub length: usize,
+    pub length: u32,
     pub func_indices: Vec<u32>,
     pub type_indices: Vec<u32>,
 }
@@ -105,6 +105,39 @@ pub struct Export {
 pub struct ModuleFunction {
     pub type_index: usize,
     pub imported: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct JitObject {
+    pub name: String,
+    /// offset in INSTRUCTION_SIZE units
+    pub offset: usize,
+    /// length in INSTRUCTION_SIZE units
+    pub length: usize,
+}
+
+#[derive(Debug)]
+pub struct LinkedModule {
+    pub machinecode: Vec<u32>,
+    pub functions: Vec<JitObject>,
+    pub func_table_base: usize,
+    pub func_table_len: u32
+}
+
+impl LinkedModule {
+    pub fn new(
+        machinecode: Vec<u32>,
+        functions: Vec<JitObject>,
+        func_table_base: usize,
+        func_table_len: u32,
+    ) -> Self {
+        Self {
+            machinecode,
+            functions,
+            func_table_base,
+            func_table_len,
+        }
+    }
 }
 
 pub fn compile(module: &[u8]) -> Result<LinkedModule> {
@@ -151,7 +184,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                             // function table will be initialized with u32::MAX to distinguish from valid function references
                             module_ctx.func_table = Some(FunctionTable {
                                 offset: 0,
-                                length: table.ty.initial as usize,
+                                length: table.ty.initial as u32,
                                 func_indices: vec![u32::MAX; table.ty.initial as usize],
                                 type_indices: vec![u32::MAX; table.ty.initial as usize],
                             });
@@ -212,7 +245,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     // content will be replaced by the actual function offset later;
                     // items that are not replaced remain 0 for easy runtime checks
                     func_table.offset = machinecode.len();
-                    let padded_length = (func_table.length * TABLE_ENTRY_SIZE * INT32_SIZE)
+                    let padded_length = (func_table.length as usize * TABLE_ENTRY_SIZE * INT32_SIZE)
                         .div_ceil(CODE_ALIGNMENT)
                         * CODE_ALIGNMENT;
                     machinecode.extend(vec![u32::MAX; padded_length / INT32_SIZE]); // each function table entry is a tuple of (offset, type_index)
@@ -314,7 +347,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         //     offset
         // );
         branch::patch_branch_link(offset as i32, &mut machinecode[patch.location]);
-    }
+    }    
 
     // patching the function table with the actual start offsets for each function
     if let Some(func_table) = module_ctx.func_table.as_mut() {
@@ -332,7 +365,8 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     Ok(LinkedModule {
         machinecode,
         functions: jit_functions,
-        tables, // trap_handler: Some(trap_handler),
+        func_table_base: module_ctx.func_table.as_ref().unwrap().offset,
+        func_table_len: module_ctx.func_table.as_ref().unwrap().length
     })
 }
 

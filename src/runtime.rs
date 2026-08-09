@@ -2,6 +2,7 @@ use memmap2::{Mmap, MmapMut};
 use std::mem;
 
 use super::assembler::*;
+use super::compiler::*;
 use super::*;
 // use debugger::*;
 
@@ -105,9 +106,30 @@ pub struct CallableRawResult {
     pub value: i64,
 }
 
+pub mod runtime_ctx_offsets {
+    pub const TABLE_BASE: i32 = 0;
+    pub const TABLE_LEN: i32 = 8;
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct RuntimeCtx {
+    pub func_table_base: *const u8, // ptr to funcref table (heap-allocated, NOT in code buffer)
+    pub func_table_len: u32,
+    pub _pad: u32, // keep 8-byte alignment for the pointer below
+}
+
+// #[repr(C)]
+// #[derive(Debug)]
+// pub struct FuncTableElement {
+//     pub offset: u32,
+//     pub type_index: u32,
+// }
+
 #[derive(Debug)]
 pub struct Callable<P, R> {
     ptr: *const u8,
+    ctx: *mut RuntimeCtx,
     _marker: std::marker::PhantomData<fn(P) -> R>,
 }
 
@@ -117,12 +139,13 @@ impl<P, R> Callable<P, R> {
     /// # Safety
     /// The user **MUST** ensure that the signature used for the
     /// generic matches the actual function that is called.
-    pub unsafe fn new(ptr: *const u8) -> Self
+    pub unsafe fn new(ptr: *const u8, ctx: *mut RuntimeCtx) -> Self
     where
         R: FromValue,
     {
         Self {
             ptr,
+            ctx,
             _marker: std::marker::PhantomData,
         }
     }
@@ -136,10 +159,10 @@ macro_rules! impl_call {
         {
             pub fn call(&self) -> Result<R> {
                 let res = unsafe {
-                    let wasm_func: extern "C" fn() -> CallableRawResult =
+                    let wasm_func: extern "C" fn(*mut RuntimeCtx) -> CallableRawResult =
                         std::mem::transmute(self.ptr);
                     // set_breakpoint();
-                    wasm_func()
+                    wasm_func(self.ctx)
                 };
                 let result: Result<R> = match res.status {
                     0 => Ok(R::from_value(res.value)),
@@ -171,10 +194,10 @@ macro_rules! impl_call {
                 $($arg: $arg),+
             ) -> Result<R> {
                 let res = unsafe {
-                    let wasm_func: extern "C" fn($($arg),+) -> CallableRawResult =
+                    let wasm_func: extern "C" fn(*mut RuntimeCtx, $($arg),+) -> CallableRawResult =
                         std::mem::transmute(self.ptr);
                     // set_breakpoint();
-                    wasm_func($($arg),+)
+                    wasm_func(self.ctx, $($arg),+)
                 };
                 let result: Result<R> = match res.status {
                     0 => Ok(R::from_value(res.value)),
@@ -235,6 +258,8 @@ impl FromValue for () {
 #[derive(Debug)]
 pub struct Runtime {
     machinecode: Mmap,
+    pub func_table_base: usize,
+    pub func_table_len: u32,
     functions: Vec<JitObject>,
 }
 
@@ -263,7 +288,13 @@ impl Runtime {
             mem::size_of::<*const u8>()
         );
 
-        let callable = unsafe { Callable::<P, R>::new(ptr) };
+        let ctx = Box::new(RuntimeCtx {
+            func_table_base: self.machinecode.as_ptr().wrapping_add(self.func_table_base),
+            func_table_len: self.func_table_len,
+            _pad: 0,
+        });
+
+        let callable = unsafe { Callable::<P, R>::new(ptr, Box::into_raw(ctx)) };
         Ok(callable)
     }
 }
@@ -287,6 +318,8 @@ pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
     let machinecode = mmap.make_exec().expect("make_exec() failed");
     Ok(Runtime {
         machinecode,
+        func_table_base: module.func_table_base,
+        func_table_len: module.func_table_len,
         functions: module.functions.to_vec(),
     })
 }
@@ -317,7 +350,8 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            vec![],
+            0,
+            0,
         );
         let instance = instantiate_module(&module)?;
         let _ = instance.get_function::<(), i32>("test")?;
@@ -334,7 +368,8 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            vec![],
+            0,
+            0,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), ()>("void")?;
@@ -353,7 +388,8 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            vec![],
+            0,
+            0,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i64>("invalid_result")?;
@@ -375,7 +411,8 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            vec![],
+            0,
+            0,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i32>("trap_code")?;
@@ -393,7 +430,8 @@ mod tests {
                 offset: 0,
                 length: 0,
             }],
-            vec![],
+            0,
+            0,
         );
         assert_eq!(
             instantiate_module(&module).unwrap_err(),
@@ -411,7 +449,8 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            vec![],
+            0,
+            0,
         );
         let instance = instantiate_module(&module)?;
         assert_eq!(
