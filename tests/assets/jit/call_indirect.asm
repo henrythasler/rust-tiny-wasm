@@ -2,7 +2,6 @@
 tests/assets/jit/call_indirect.o:     file format elf64-littleaarch64
 
 SYMBOL TABLE:
-0000000000000000 l     O .text	0000000000000070 function_table
 0000000000000038 l     F .text	0000000000000038 $func0
 0000000000000070 l     F .text	0000000000000038 $func1
 00000000000000a8 l     F .text	0000000000000030 $func2
@@ -38,11 +37,21 @@ Contents of section .text:
 
 Disassembly of section .text:
 
-0000000000000000 <function_table>:
-   0:	ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff     ................
-  10:	38 00 00 00 00 00 00 00 70 00 00 00 00 00 00 00     8.......p.......
-  20:	a8 00 00 00 01 00 00 00 d8 00 00 00 02 00 00 00     ................
-  30:	ff ff ff ff ff ff ff ff                             ........
+0000000000000000 <$func0-0x38>:
+   0:	ffffffff 	.inst	0xffffffff ; undefined
+   4:	ffffffff 	.inst	0xffffffff ; undefined
+   8:	ffffffff 	.inst	0xffffffff ; undefined
+   c:	ffffffff 	.inst	0xffffffff ; undefined
+  10:	00000038 	udf	#56
+  14:	00000000 	udf	#0
+  18:	00000070 	udf	#112
+  1c:	00000000 	udf	#0
+  20:	000000a8 	udf	#168
+  24:	00000001 	udf	#1
+  28:	000000d8 	udf	#216
+  2c:	00000002 	udf	#2
+  30:	ffffffff 	.inst	0xffffffff ; undefined
+  34:	ffffffff 	.inst	0xffffffff ; undefined
 
 0000000000000038 <$func0>:
   38:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
@@ -113,7 +122,7 @@ Disassembly of section .text:
  11c:	d2800081 	mov	x1, #0x4                   	// #4
  120:	d2800020 	mov	x0, #0x1                   	// #1
  124:	14000011 	b	168 <calculate+0x78>
- 128:	9000000b 	adrp	x11, 0 <function_table>
+ 128:	9000000b 	adrp	x11, 0 <$func0-0x38>
  12c:	9100016b 	add	x11, x11, #0x0
  130:	f86a796b 	ldr	x11, [x11, x10, lsl #3]
  134:	b100057f 	cmn	x11, #0x1

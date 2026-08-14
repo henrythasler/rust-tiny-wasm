@@ -78,7 +78,7 @@ pub struct StackElement {
     valtype: wasmparser::ValType,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct FunctionTable {
     pub offset: usize,
     pub length: u32,
@@ -116,26 +116,25 @@ pub struct JitObject {
     pub length: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LinkedModule {
     pub machinecode: Vec<u32>,
     pub functions: Vec<JitObject>,
-    pub func_table_base: usize,
-    pub func_table_len: u32
+    pub func_table: Option<FunctionTable>,
+    // pub func_table_base: usize,
+    // pub func_table_len: u32
 }
 
 impl LinkedModule {
     pub fn new(
         machinecode: Vec<u32>,
         functions: Vec<JitObject>,
-        func_table_base: usize,
-        func_table_len: u32,
+        func_table: Option<FunctionTable>,
     ) -> Self {
         Self {
             machinecode,
             functions,
-            func_table_base,
-            func_table_len,
+            func_table,
         }
     }
 }
@@ -365,8 +364,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     Ok(LinkedModule {
         machinecode,
         functions: jit_functions,
-        func_table_base: module_ctx.func_table.as_ref().unwrap().offset,
-        func_table_len: module_ctx.func_table.as_ref().unwrap().length
+        func_table: module_ctx.func_table,
     })
 }
 

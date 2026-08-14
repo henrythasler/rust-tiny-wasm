@@ -258,8 +258,7 @@ impl FromValue for () {
 #[derive(Debug)]
 pub struct Runtime {
     machinecode: Mmap,
-    pub func_table_base: usize,
-    pub func_table_len: u32,
+    func_table: Option<FunctionTable>,
     functions: Vec<JitObject>,
 }
 
@@ -288,9 +287,14 @@ impl Runtime {
             mem::size_of::<*const u8>()
         );
 
+        let (func_table_offset, func_table_len) = match &self.func_table {
+            Some(val) => (val.offset, val.length),
+            None => (0 , 0)
+        };
+
         let ctx = Box::new(RuntimeCtx {
-            func_table_base: self.machinecode.as_ptr().wrapping_add(self.func_table_base),
-            func_table_len: self.func_table_len,
+            func_table_base: self.machinecode.as_ptr().wrapping_add(func_table_offset),
+            func_table_len,
             _pad: 0,
         });
 
@@ -318,8 +322,7 @@ pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
     let machinecode = mmap.make_exec().expect("make_exec() failed");
     Ok(Runtime {
         machinecode,
-        func_table_base: module.func_table_base,
-        func_table_len: module.func_table_len,
+        func_table: module.func_table.clone(),
         functions: module.functions.to_vec(),
     })
 }
@@ -350,8 +353,7 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            0,
-            0,
+            None
         );
         let instance = instantiate_module(&module)?;
         let _ = instance.get_function::<(), i32>("test")?;
@@ -368,8 +370,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            0,
-            0,
+            None
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), ()>("void")?;
@@ -388,8 +389,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            0,
-            0,
+            None
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i64>("invalid_result")?;
@@ -411,8 +411,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            0,
-            0,
+            None
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i32>("trap_code")?;
@@ -430,8 +429,7 @@ mod tests {
                 offset: 0,
                 length: 0,
             }],
-            0,
-            0,
+            None
         );
         assert_eq!(
             instantiate_module(&module).unwrap_err(),
@@ -449,8 +447,7 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            0,
-            0,
+            None
         );
         let instance = instantiate_module(&module)?;
         assert_eq!(
