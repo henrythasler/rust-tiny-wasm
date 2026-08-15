@@ -429,8 +429,9 @@ pub fn compile_call(
         value_stack.len(),
     );
     assert!(
-        func_type.params().len() <= 8,
-        "call(): function must have at most 8 parameters"
+        func_type.params().len() <= MAX_ARGUMENTS,
+        "call(): function must have at most {} parameters",
+        MAX_ARGUMENTS
     );
 
     // move parameters from value stack to procedure call standard registers
@@ -444,7 +445,7 @@ pub fn compile_call(
         match stack_element.reg {
             Reg::IReg(reg) => {
                 machinecode.push(processing::mov_reg(
-                    IReg::try_from(i as u32).unwrap(),
+                    INTEGER_ARGUMENT_REGS[i],
                     reg,
                     map_valtype_to_regsize(param_type),
                 ));
@@ -452,7 +453,7 @@ pub fn compile_call(
             }
             Reg::FReg(reg) => {
                 machinecode.push(fp_processing::fmov(
-                    Reg::FReg(FReg::try_from(i as u32).unwrap()),
+                    Reg::FReg(FLOAT_ARGUMENT_REGS[i]),
                     Reg::FReg(reg),
                     map_valtype_to_regsize(param_type),
                 ));
@@ -460,6 +461,8 @@ pub fn compile_call(
             }
         }
     }
+
+    load_context_from_stack(machinecode);
 
     let mut stack_size = 0;
     if register_pool.index > 0 {
@@ -583,7 +586,7 @@ pub fn compile_call_indirect(
 
     machinecode.push(arithmetic::cmp_imm(
         table_index_reg,
-        module_ctx.func_table.as_ref().unwrap().length as u32,
+        module_ctx.func_table.as_ref().unwrap().length,
         false,
         RegSize::Int32bit,
     ));

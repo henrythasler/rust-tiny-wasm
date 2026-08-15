@@ -289,7 +289,7 @@ impl Runtime {
 
         let (func_table_offset, func_table_len) = match &self.func_table {
             Some(val) => (val.offset, val.length),
-            None => (0 , 0)
+            None => (0, 0),
         };
 
         let ctx = Box::new(RuntimeCtx {
@@ -353,7 +353,7 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            None
+            None,
         );
         let instance = instantiate_module(&module)?;
         let _ = instance.get_function::<(), i32>("test")?;
@@ -370,7 +370,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            None
+            None,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), ()>("void")?;
@@ -389,7 +389,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            None
+            None,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i64>("invalid_result")?;
@@ -411,7 +411,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            None
+            None,
         );
         let instance = instantiate_module(&module)?;
         let func = instance.get_function::<(), i32>("trap_code")?;
@@ -429,7 +429,7 @@ mod tests {
                 offset: 0,
                 length: 0,
             }],
-            None
+            None,
         );
         assert_eq!(
             instantiate_module(&module).unwrap_err(),
@@ -447,7 +447,7 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            None
+            None,
         );
         let instance = instantiate_module(&module)?;
         assert_eq!(

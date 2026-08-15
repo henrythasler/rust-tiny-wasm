@@ -244,9 +244,10 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     // content will be replaced by the actual function offset later;
                     // items that are not replaced remain 0 for easy runtime checks
                     func_table.offset = machinecode.len();
-                    let padded_length = (func_table.length as usize * TABLE_ENTRY_SIZE * INT32_SIZE)
-                        .div_ceil(CODE_ALIGNMENT)
-                        * CODE_ALIGNMENT;
+                    let padded_length =
+                        (func_table.length as usize * TABLE_ENTRY_SIZE * INT32_SIZE)
+                            .div_ceil(CODE_ALIGNMENT)
+                            * CODE_ALIGNMENT;
                     machinecode.extend(vec![u32::MAX; padded_length / INT32_SIZE]); // each function table entry is a tuple of (offset, type_index)
                     tables.push(JitObject {
                         name: String::from("function_table"),
@@ -346,7 +347,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         //     offset
         // );
         branch::patch_branch_link(offset as i32, &mut machinecode[patch.location]);
-    }    
+    }
 
     // patching the function table with the actual start offsets for each function
     if let Some(func_table) = module_ctx.func_table.as_mut() {

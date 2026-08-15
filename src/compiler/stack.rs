@@ -21,6 +21,7 @@ pub struct LocalVar {
 pub fn get_initial_stack_size(
     func_type: &wasmparser::FuncType,
     locals: &[(u32, ValType)],
+    reserved: i32,
 ) -> (usize, usize) {
     let mut variables_size: usize = 0;
     for item in func_type.params() {
@@ -35,6 +36,9 @@ pub fn get_initial_stack_size(
         variables_size = variables_size.div_ceil(size) * size;
         variables_size += *count as usize * size;
     }
+
+    variables_size = variables_size.div_ceil(INTEGER_REGISTER_SIZE) * INTEGER_REGISTER_SIZE;
+    variables_size += reserved as usize * INTEGER_REGISTER_SIZE;
 
     let stack_size = variables_size.div_ceil(STACK_ALIGNMENT) * STACK_ALIGNMENT;
     assert!(
@@ -95,8 +99,8 @@ pub fn save_parameters_to_stack(
             valtype: *valtype,
         });
         let src_reg = match valtype {
-            ValType::I32 | ValType::I64 => Reg::IReg(IReg::try_from(i as u32).unwrap()),
-            ValType::F32 | ValType::F64 => Reg::FReg(FReg::try_from(i as u32).unwrap()),
+            ValType::I32 | ValType::I64 => Reg::IReg(INTEGER_ARGUMENT_REGS[i]),
+            ValType::F32 | ValType::F64 => Reg::FReg(FLOAT_ARGUMENT_REGS[i]),
             _ => panic!("valtype not supported"),
         };
 
@@ -119,6 +123,27 @@ pub fn save_parameters_to_stack(
         *offset += size;
     }
     variables
+}
+
+pub fn save_context_to_stack(offset: &mut usize, machinecode: &mut Vec<u32>) {
+    machinecode.push(memory::str_imm_unsigned_offset(
+        CONTEXT_REG,
+        IReg::SP,
+        *offset as u32,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
+    *offset += INTEGER_REGISTER_SIZE;
+}
+
+pub fn load_context_from_stack(machinecode: &mut Vec<u32>) {
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        CONTEXT_REG,
+        IReg::SP,
+        0,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
 }
 
 pub fn save_registers(register_pool: &mut RegisterPool, machinecode: &mut Vec<u32>) -> usize {
