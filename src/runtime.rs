@@ -7,6 +7,8 @@ use super::*;
 // use debugger::*;
 
 // mod debugger;
+pub mod context;
+use context::*;
 
 #[repr(u64)]
 #[non_exhaustive]
@@ -105,26 +107,6 @@ pub struct CallableRawResult {
     pub status: i64,
     pub value: i64,
 }
-
-pub mod runtime_ctx_offsets {
-    pub const TABLE_BASE: i32 = 0;
-    pub const TABLE_LEN: i32 = 8;
-}
-
-#[repr(C)]
-#[derive(Debug)]
-pub struct RuntimeCtx {
-    pub func_table_base: *const u8, // ptr to funcref table (heap-allocated, NOT in code buffer)
-    pub func_table_len: u32,
-    pub _pad: u32, // keep 8-byte alignment for the pointer below
-}
-
-// #[repr(C)]
-// #[derive(Debug)]
-// pub struct FuncTableElement {
-//     pub offset: u32,
-//     pub type_index: u32,
-// }
 
 #[derive(Debug)]
 pub struct Callable<P, R> {

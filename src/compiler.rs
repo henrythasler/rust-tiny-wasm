@@ -8,6 +8,7 @@ use super::*;
 use crate::assembler::aarch64::{self, *};
 use crate::assembler::{emit_epilogue, emit_prologue};
 use crate::runtime::TrapCode;
+use crate::runtime::context::*;
 
 mod control_instr;
 mod function;
@@ -147,6 +148,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     let parser = Parser::new(0);
 
     let mut module_ctx = ModuleContext::default();
+    let mut runtime_ctx = RuntimeCtx::default();
     let mut function_index: u32 = 0;
     let mut call_patches: Vec<compiler::FunctionPatch> = Vec::new();
 

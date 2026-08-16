@@ -559,8 +559,8 @@ pub fn compile_call_indirect(
         "call_indirect(): function must have at most one return value"
     );
     assert!(
-        func_type.params().len() <= 8,
-        "call_indirect(): function must have at most 8 parameters"
+        func_type.params().len() <= MAX_ARGUMENTS,
+        "call_indirect(): function must have at most {} parameters", MAX_ARGUMENTS
     );
 
     assert!(
