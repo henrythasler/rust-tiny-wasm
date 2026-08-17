@@ -240,12 +240,13 @@ impl FromValue for () {
 #[derive(Debug)]
 pub struct Runtime {
     machinecode: Mmap,
-    func_table: Option<FunctionTable>,
+    ctx: RuntimeCtx,
+    func_table: Option<FuncTable>,
     functions: Vec<JitObject>,
 }
 
 impl Runtime {
-    pub fn get_function<P, R>(&self, name: &str) -> Result<Callable<P, R>>
+    pub fn get_function<P, R>(&mut self, name: &str) -> Result<Callable<P, R>>
     where
         R: FromValue,
     {
@@ -269,23 +270,19 @@ impl Runtime {
             mem::size_of::<*const u8>()
         );
 
-        let (func_table_offset, func_table_len) = match &self.func_table {
-            Some(val) => (val.offset, val.length),
-            None => (0, 0),
-        };
+        // println!("func_table: {:?}", self.func_table);
+        let ctx = &mut self.ctx;
+        if let Some(func_table) = self.func_table.as_mut() {
+            func_table.sync_to_context(ctx);
+        }
+        // println!("ctx after sync: {:?}", ctx);
 
-        let ctx = Box::new(RuntimeCtx {
-            func_table_base: self.machinecode.as_ptr().wrapping_add(func_table_offset),
-            func_table_len,
-            _pad: 0,
-        });
-
-        let callable = unsafe { Callable::<P, R>::new(ptr, Box::into_raw(ctx)) };
+        let callable = unsafe { Callable::<P, R>::new(ptr, ctx) };
         Ok(callable)
     }
 }
 
-pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
+pub fn instantiate_module(module: LinkedModule) -> Result<Runtime> {
     // Allocate executable memory and copy JIT code into that region
     let bytes = bytemuck::cast_slice(&module.machinecode);
     if bytes.is_empty() {
@@ -304,7 +301,8 @@ pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
     let machinecode = mmap.make_exec().expect("make_exec() failed");
     Ok(Runtime {
         machinecode,
-        func_table: module.func_table.clone(),
+        ctx: RuntimeCtx::default(),
+        func_table: module.func_table,
         functions: module.functions.to_vec(),
     })
 }
@@ -337,8 +335,8 @@ mod tests {
             }],
             None,
         );
-        let instance = instantiate_module(&module)?;
-        let _ = instance.get_function::<(), i32>("test")?;
+        let mut runtime = instantiate_module(module)?;
+        let _ = runtime.get_function::<(), i32>("test")?;
         Ok(())
     }
 
@@ -354,8 +352,8 @@ mod tests {
             }],
             None,
         );
-        let instance = instantiate_module(&module)?;
-        let func = instance.get_function::<(), ()>("void")?;
+        let mut runtime = instantiate_module(module)?;
+        let func = runtime.get_function::<(), ()>("void")?;
         let res = func.call()?;
         assert_eq!(res, ());
         Ok(())
@@ -373,8 +371,8 @@ mod tests {
             }],
             None,
         );
-        let instance = instantiate_module(&module)?;
-        let func = instance.get_function::<(), i64>("invalid_result")?;
+        let mut runtime = instantiate_module(module)?;
+        let func = runtime.get_function::<(), i64>("invalid_result")?;
         let res = func.call();
         assert!(
             matches!(res.unwrap_err(), TinyWasmError::Runtime(msg) if msg.contains("result tag"))
@@ -395,8 +393,8 @@ mod tests {
             }],
             None,
         );
-        let instance = instantiate_module(&module)?;
-        let func = instance.get_function::<(), i32>("trap_code")?;
+        let mut runtime = instantiate_module(module)?;
+        let func = runtime.get_function::<(), i32>("trap_code")?;
         let res = func.call();
         assert!(matches!(res.unwrap_err(), TinyWasmError::Trap(value) if value==TrapCode::None));
         Ok(())
@@ -414,7 +412,7 @@ mod tests {
             None,
         );
         assert_eq!(
-            instantiate_module(&module).unwrap_err(),
+            instantiate_module(module).unwrap_err(),
             TinyWasmError::Runtime(String::from("JIT code is empty"))
         );
         Ok(())
@@ -431,9 +429,9 @@ mod tests {
             }],
             None,
         );
-        let instance = instantiate_module(&module)?;
+        let mut runtime = instantiate_module(module)?;
         assert_eq!(
-            instance.get_function::<(), i32>("unknown").unwrap_err(),
+            runtime.get_function::<(), i32>("unknown").unwrap_err(),
             TinyWasmError::Runtime(String::from(
                 "Function 'unknown' not found in module exports"
             ))

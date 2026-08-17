@@ -105,7 +105,7 @@ pub fn print_module(module: &[u8]) -> Result<()> {
 /// This function will return an error if the module cannot be compiled or instantiated.
 pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
     let linked_module = compiler::compile(module)?;
-    runtime::instantiate_module(&linked_module)
+    runtime::instantiate_module(linked_module)
 }
 
 /// This function load a WebAssembly module, compiles and executes the given function
@@ -130,7 +130,7 @@ pub fn get_module_instance(module: &[u8]) -> Result<runtime::Runtime> {
 /// ```
 pub fn execute(filename: &Path, function: &str) -> Result<i32> {
     let module = fs::read(filename)?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
     let entrypoint = instance.get_function::<(), i32>(function)?;
     entrypoint.call()
 }

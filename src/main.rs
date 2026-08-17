@@ -47,24 +47,40 @@ fn main() -> Result<()> {
     println!("Loading '{}'", file_path.display().bright_blue());
     let module = fs::read(file_path)?;
     print_module(&module)?;
-    let instance = get_module_instance(&module)?;
+    let mut runtime = get_module_instance(&module)?;
 
     // get the function pointer and call the function
-    let func_arg = args
+    let first = args
         .args
         .first()
         .map(|s| s.parse().unwrap_or(0))
         .unwrap_or(0);
 
+    let second = args
+        .args
+        .get(1)
+        .map(|s| s.parse().unwrap_or(0))
+        .unwrap_or(0);
+
+    let third = args
+        .args
+        .get(2)
+        .map(|s| s.parse().unwrap_or(0))
+        .unwrap_or(0);
+
     println!(
-        "Calling {}({})",
+        "Calling {}({}, {}, {})",
         func_name.white().bold(),
-        func_arg.bright_yellow()
+        first.bright_yellow(),
+        second.bright_yellow(),
+        third.bright_yellow(),
     );
 
+    // println!("func_table: {:p}", runtime.func_table.as_ref().unwrap().elements.as_ptr());
+
     // Call the function
-    let entrypoint = instance.get_function::<(i32,), i32>(func_name)?;
-    let result = entrypoint.call(func_arg)?;
+    let entrypoint = runtime.get_function::<(i32, i32, i32), i32>(func_name)?;
+    let result = entrypoint.call(first, second, third)?;
     println!("Return value: {}", result.bright_green().bold());
     Ok(())
 }

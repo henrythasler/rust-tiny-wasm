@@ -8,7 +8,7 @@ use tiny_wasm::*;
 #[rustfmt::skip]
 fn test_call_0() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/wast/call_0.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(), i32>("type-i32")?;
     assert_eq!(func.call()?, 306);

@@ -5,7 +5,7 @@ use tiny_wasm::*;
 #[test]
 fn test_locals() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/locals.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let entrypoint = instance.get_function::<(i64,), i64>("store_i64")?;
     let res = entrypoint.call(0x1234567890aabbcci64)?;

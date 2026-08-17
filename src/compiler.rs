@@ -80,7 +80,7 @@ pub struct StackElement {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct FunctionTable {
+pub struct CompilerFunctionTable {
     pub offset: usize,
     pub length: u32,
     pub func_indices: Vec<u32>,
@@ -92,7 +92,7 @@ pub struct ModuleContext {
     types: Vec<wasmparser::FuncType>,
     exports: Vec<Export>,
     functions: Vec<ModuleFunction>,
-    func_table: Option<FunctionTable>,
+    func_table: Option<CompilerFunctionTable>,
 }
 
 #[derive(Debug)]
@@ -121,16 +121,14 @@ pub struct JitObject {
 pub struct LinkedModule {
     pub machinecode: Vec<u32>,
     pub functions: Vec<JitObject>,
-    pub func_table: Option<FunctionTable>,
-    // pub func_table_base: usize,
-    // pub func_table_len: u32
+    pub func_table: Option<FuncTable>,
 }
 
 impl LinkedModule {
     pub fn new(
         machinecode: Vec<u32>,
         functions: Vec<JitObject>,
-        func_table: Option<FunctionTable>,
+        func_table: Option<FuncTable>,
     ) -> Self {
         Self {
             machinecode,
@@ -148,7 +146,6 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     let parser = Parser::new(0);
 
     let mut module_ctx = ModuleContext::default();
-    let mut runtime_ctx = RuntimeCtx::default();
     let mut function_index: u32 = 0;
     let mut call_patches: Vec<compiler::FunctionPatch> = Vec::new();
 
@@ -183,7 +180,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     match table.ty.element_type {
                         wasmparser::RefType::FUNCREF => {
                             // function table will be initialized with u32::MAX to distinguish from valid function references
-                            module_ctx.func_table = Some(FunctionTable {
+                            module_ctx.func_table = Some(CompilerFunctionTable {
                                 offset: 0,
                                 length: table.ty.initial as u32,
                                 func_indices: vec![u32::MAX; table.ty.initial as usize],
@@ -351,12 +348,20 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         branch::patch_branch_link(offset as i32, &mut machinecode[patch.location]);
     }
 
+    let mut ctx_func_table = None;
+
     // patching the function table with the actual start offsets for each function
     if let Some(func_table) = module_ctx.func_table.as_mut() {
+        ctx_func_table = Some(FuncTable::new(func_table.length as usize));
+
         for (i, &func_idx) in func_table.func_indices.iter().enumerate() {
             if func_idx < u32::MAX {
                 let jit_function = jit_functions.get(func_idx as usize).unwrap();
                 let func = module_ctx.functions.get(func_idx as usize).unwrap();
+                ctx_func_table.as_mut().unwrap().elements[i] = FuncTableElement {
+                    offset: (jit_function.offset * INSTRUCTION_SIZE) as u32,
+                    type_id: func.type_index as u32,
+                };
                 machinecode[func_table.offset + i * TABLE_ENTRY_SIZE] =
                     (jit_function.offset * INSTRUCTION_SIZE) as u32;
                 machinecode[func_table.offset + i * TABLE_ENTRY_SIZE + 1] = func.type_index as u32;
@@ -367,7 +372,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     Ok(LinkedModule {
         machinecode,
         functions: jit_functions,
-        func_table: module_ctx.func_table,
+        func_table: ctx_func_table,
     })
 }
 

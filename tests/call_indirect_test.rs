@@ -6,7 +6,7 @@ use tiny_wasm::*;
 #[test]
 fn test_call_indirect() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/call_indirect.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32, i32, i32), i32>("calculate")?;
 

@@ -5,7 +5,7 @@ use tiny_wasm::*;
 #[test]
 fn test_constants() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/float.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(), f32>("get_pi_f32")?;
     let res = func.call()?;

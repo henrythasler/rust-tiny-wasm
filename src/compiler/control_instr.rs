@@ -560,7 +560,8 @@ pub fn compile_call_indirect(
     );
     assert!(
         func_type.params().len() <= MAX_ARGUMENTS,
-        "call_indirect(): function must have at most {} parameters", MAX_ARGUMENTS
+        "call_indirect(): function must have at most {} parameters",
+        MAX_ARGUMENTS
     );
 
     assert!(

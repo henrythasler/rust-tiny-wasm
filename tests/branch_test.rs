@@ -5,7 +5,7 @@ use tiny_wasm::*;
 #[test]
 fn test_branch() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/branch.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i64,), i64>("simple_if")?;
     assert_eq!(func.call(-10)?, 1);
