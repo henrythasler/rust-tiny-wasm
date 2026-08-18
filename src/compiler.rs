@@ -243,22 +243,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                                 )));
                             }
                         }
-                        // println!("func_table: {:?}", &module_ctx.func_table);
-                        // panic!()
                     }
-                    // adding the function table placeholder to the the machinecode;
-                    // content will be replaced by the actual function offset later;
-                    // items that are not replaced remain 0 for easy runtime checks
-                    let padded_length =
-                        (compiler_func_table.length as usize * TABLE_ENTRY_SIZE * INT32_SIZE)
-                            .div_ceil(CODE_ALIGNMENT)
-                            * CODE_ALIGNMENT;
-                    machinecode.extend(vec![u32::MAX; padded_length / INT32_SIZE]); // each function table entry is a tuple of (offset, type_index)
-                // tables.push(JitObject {
-                //     name: String::from("function_table"),
-                //     offset: compiler_func_table.offset,
-                //     length: padded_length, // need to store a tuple of (offset, type_index) for each function in the table
-                // });
                 } else {
                     return Err(TinyWasmError::Parser(String::from(
                         "Element section found but no function table defined",

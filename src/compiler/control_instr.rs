@@ -577,18 +577,26 @@ pub fn compile_call_indirect(
     );
 
     // emit runtime check that the value in register 'tableidx' is smaller than the size of the table
-    // use subs_immediate to substract (static) table size from 'tableidx' register
-    // branch_cond over next instruction if result is >= 0; otherwise trap with table index out of bounds
+    // branch_cond over next instruction if result is <= FUNC_TABLE_LEN; otherwise trap with table index out of bounds
 
     let table_index_reg = match table_index.reg {
         Reg::IReg(reg) => reg,
         _ => panic!("call_indirect(): expected IReg as table_index"),
     };
 
-    machinecode.push(arithmetic::cmp_imm(
+    let table_len_reg = register_pool.alloc();
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        table_len_reg,
+        CONTEXT_REG,
+        ctx_offsets::FUNC_TABLE_LEN,
+        MemSize::Mem32bit,
+        RegSize::Int32bit,
+    ));
+    machinecode.push(arithmetic::cmp_shifted_reg(
         table_index_reg,
-        module_ctx.compiler_func_table.as_ref().unwrap().length,
-        false,
+        table_len_reg,
+        Shift::Lsl,
+        0,
         RegSize::Int32bit,
     ));
     machinecode.push(branch::branch_cond(
@@ -596,73 +604,75 @@ pub fn compile_call_indirect(
         TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
     ));
     trap_inline(TrapCode::TableOutOfBounds, trap_locations, machinecode);
+    register_pool.free();
 
-    // load the function (offset, type_index) tuple from the function table into a register
+    // load the 
 
-    let func_index_reg = register_pool.alloc();
-    let funct_table_offset =
-        module_ctx.compiler_func_table.as_ref().unwrap().offset as i64 * INSTRUCTION_SIZE as i64;
-    let page_offset =
-        funct_table_offset & (!0xfff - machinecode.len() as i64 * INSTRUCTION_SIZE as i64) & !0xfff;
-    machinecode.push(memory::adrp(func_index_reg, page_offset));
-    machinecode.push(arithmetic::add_imm(
-        func_index_reg,
-        func_index_reg,
-        (funct_table_offset & 0xfff) as u32,
-        false,
-        RegSize::Int64bit,
-    ));
+    // // load the function (offset, type_index) tuple from the function table into a register
+    // let func_index_reg = register_pool.alloc();
+    // let funct_table_offset =
+    //     module_ctx.compiler_func_table.as_ref().unwrap().offset as i64 * INSTRUCTION_SIZE as i64;
+    // let page_offset =
+    //     funct_table_offset & (!0xfff - machinecode.len() as i64 * INSTRUCTION_SIZE as i64) & !0xfff;
+    // machinecode.push(memory::adrp(func_index_reg, page_offset));
+    // machinecode.push(arithmetic::add_imm(
+    //     func_index_reg,
+    //     func_index_reg,
+    //     (funct_table_offset & 0xfff) as u32,
+    //     false,
+    //     RegSize::Int64bit,
+    // ));
 
-    machinecode.push(memory::ldr_reg(
-        func_index_reg,
-        func_index_reg,
-        table_index_reg,
-        IndexExtend::Lsl, // need to shift left by 3 to get the correct offset for the function table entry (each entry is 8 bytes)
-        3,
-        MemSize::Mem64bit,
-        RegSize::Int64bit,
-    ));
+    // machinecode.push(memory::ldr_reg(
+    //     func_index_reg,
+    //     func_index_reg,
+    //     table_index_reg,
+    //     IndexExtend::Lsl, // need to shift left by 3 to get the correct offset for the function table entry (each entry is 8 bytes)
+    //     3,
+    //     MemSize::Mem64bit,
+    //     RegSize::Int64bit,
+    // ));
 
     // runtime check that the table element is NOT uninitialized (i.e. the function offset is not 0xFFFFFFFF)
     // CMN = Compare Negative → adds operand and sets flags; If w0 == 0xFFFFFFFF, then w0 + 1 == 0; Z flag is set on match
 
-    machinecode.push(arithmetic::cmn_imm(
-        func_index_reg,
-        1,
-        false,
-        RegSize::Int64bit,
-    ));
+    // machinecode.push(arithmetic::cmn_imm(
+    //     func_index_reg,
+    //     1,
+    //     false,
+    //     RegSize::Int64bit,
+    // ));
 
-    machinecode.push(branch::branch_cond(
-        Condition::NE,
-        TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
-    ));
-    trap_inline(TrapCode::IndirectCallToNull, trap_locations, machinecode);
+    // machinecode.push(branch::branch_cond(
+    //     Condition::NE,
+    //     TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+    // ));
+    // trap_inline(TrapCode::IndirectCallToNull, trap_locations, machinecode);
 
     // runtime check that the function type of the function at the given table index matches the expected function type
     // (1) Load the type index of the function at the given table index from the function table into a register
     // (2) compare it with the expected function type index if they don't match, trap
 
-    let type_reg = register_pool.alloc();
-    machinecode.push(bit::lsr_imm(
-        type_reg,
-        func_index_reg,
-        32,
-        RegSize::Int64bit,
-    ));
-    machinecode.push(arithmetic::cmp_imm(
-        type_reg,
-        type_index,
-        false,
-        RegSize::Int32bit,
-    ));
-    machinecode.push(branch::branch_cond(
-        Condition::NE,
-        TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
-    ));
-    trap_inline(TrapCode::BadSignature, trap_locations, machinecode);
-    register_pool.free(); // type_reg
-    register_pool.free(); // table_index_reg
+    // let type_reg = register_pool.alloc();
+    // machinecode.push(bit::lsr_imm(
+    //     type_reg,
+    //     func_index_reg,
+    //     32,
+    //     RegSize::Int64bit,
+    // ));
+    // machinecode.push(arithmetic::cmp_imm(
+    //     type_reg,
+    //     type_index,
+    //     false,
+    //     RegSize::Int32bit,
+    // ));
+    // machinecode.push(branch::branch_cond(
+    //     Condition::NE,
+    //     TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+    // ));
+    // trap_inline(TrapCode::BadSignature, trap_locations, machinecode);
+    // register_pool.free(); // type_reg
+    // register_pool.free(); // table_index_reg
 
     // load the address of the function to be called (callee)
 }

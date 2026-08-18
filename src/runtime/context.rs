@@ -24,14 +24,14 @@ pub struct FuncTableElement {
 }
 
 pub mod ctx_offsets {
-    pub const JIT_BASE: i32 = 0;
-    pub const JIT_LEN: i32 = 8;
-    pub const FUNC_TABLE_BASE: i32 = 16;
-    pub const FUNC_TABLE_LEN: i32 = 24;
-    pub const MEMORY_BASE: i32 = 32;
-    pub const MEMORY_LEN: i32 = 40;
-    pub const GLOBALS_BASE: i32 = 48;
-    pub const HOST_CALL: i32 = 56;
+    pub const JIT_BASE: u32 = 0;
+    pub const JIT_LEN: u32 = 8;
+    pub const FUNC_TABLE_BASE: u32 = 16;
+    pub const FUNC_TABLE_LEN: u32 = 24;
+    pub const MEMORY_BASE: u32 = 32;
+    pub const MEMORY_LEN: u32 = 40;
+    pub const GLOBALS_BASE: u32 = 48;
+    pub const HOST_CALL: u32 = 56;
 }
 
 #[derive(Debug, Clone)]
@@ -43,7 +43,7 @@ impl FuncTable {
     pub fn new(initial_len: usize) -> Self {
         let elements = vec![
             FuncTableElement {
-                offset: 0,
+                offset: u32::MAX,
                 type_id: u32::MAX
             };
             initial_len
