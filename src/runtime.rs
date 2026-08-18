@@ -333,6 +333,7 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
+            RuntimeCtx::default(),
             None,
         );
         let mut runtime = instantiate_module(module)?;
@@ -350,6 +351,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
+            RuntimeCtx::default(),
             None,
         );
         let mut runtime = instantiate_module(module)?;
@@ -369,6 +371,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
+            RuntimeCtx::default(),
             None,
         );
         let mut runtime = instantiate_module(module)?;
@@ -391,6 +394,7 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
+            RuntimeCtx::default(),
             None,
         );
         let mut runtime = instantiate_module(module)?;
@@ -409,6 +413,7 @@ mod tests {
                 offset: 0,
                 length: 0,
             }],
+            RuntimeCtx::default(),
             None,
         );
         assert_eq!(
@@ -427,6 +432,7 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
+            RuntimeCtx::default(),
             None,
         );
         let mut runtime = instantiate_module(module)?;

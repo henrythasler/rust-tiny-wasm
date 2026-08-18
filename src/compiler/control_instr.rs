@@ -539,12 +539,12 @@ pub fn compile_call_indirect(
     module_ctx: &ModuleContext,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
-    _call_patches: &mut Vec<FunctionPatch>,
+    // _call_patches: &mut Vec<FunctionPatch>,
     trap_locations: &mut Vec<Patch>,
     machinecode: &mut Vec<u32>,
 ) {
     assert!(
-        module_ctx.func_table.is_some(),
+        module_ctx.compiler_func_table.is_some(),
         "call_indirect(): function table is not defined in the module"
     );
 
@@ -587,7 +587,7 @@ pub fn compile_call_indirect(
 
     machinecode.push(arithmetic::cmp_imm(
         table_index_reg,
-        module_ctx.func_table.as_ref().unwrap().length,
+        module_ctx.compiler_func_table.as_ref().unwrap().length,
         false,
         RegSize::Int32bit,
     ));
@@ -601,7 +601,7 @@ pub fn compile_call_indirect(
 
     let func_index_reg = register_pool.alloc();
     let funct_table_offset =
-        module_ctx.func_table.as_ref().unwrap().offset as i64 * INSTRUCTION_SIZE as i64;
+        module_ctx.compiler_func_table.as_ref().unwrap().offset as i64 * INSTRUCTION_SIZE as i64;
     let page_offset =
         funct_table_offset & (!0xfff - machinecode.len() as i64 * INSTRUCTION_SIZE as i64) & !0xfff;
     machinecode.push(memory::adrp(func_index_reg, page_offset));

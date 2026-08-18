@@ -11,8 +11,8 @@ SYMBOL TABLE:
 
 Contents of section .text:
  0000 ffffffff ffffffff ffffffff ffffffff  ................
- 0010 38000000 00000000 70000000 00000000  8.......p.......
- 0020 a8000000 01000000 e0000000 02000000  ................
+ 0010 ffffffff ffffffff ffffffff ffffffff  ................
+ 0020 ffffffff ffffffff ffffffff ffffffff  ................
  0030 ffffffff ffffffff fd7bbfa9 fd030091  .........{......
  0040 ff4300d1 e00300f9 e10b00b9 e20f00b9  .C..............
  0050 e80b40b9 e90f40b9 0801090b 000080d2  ..@...@.........
@@ -43,14 +43,14 @@ Disassembly of section .text:
    4:	ffffffff 	.inst	0xffffffff ; undefined
    8:	ffffffff 	.inst	0xffffffff ; undefined
    c:	ffffffff 	.inst	0xffffffff ; undefined
-  10:	00000038 	udf	#56
-  14:	00000000 	udf	#0
-  18:	00000070 	udf	#112
-  1c:	00000000 	udf	#0
-  20:	000000a8 	udf	#168
-  24:	00000001 	udf	#1
-  28:	000000e0 	udf	#224
-  2c:	00000002 	udf	#2
+  10:	ffffffff 	.inst	0xffffffff ; undefined
+  14:	ffffffff 	.inst	0xffffffff ; undefined
+  18:	ffffffff 	.inst	0xffffffff ; undefined
+  1c:	ffffffff 	.inst	0xffffffff ; undefined
+  20:	ffffffff 	.inst	0xffffffff ; undefined
+  24:	ffffffff 	.inst	0xffffffff ; undefined
+  28:	ffffffff 	.inst	0xffffffff ; undefined
+  2c:	ffffffff 	.inst	0xffffffff ; undefined
   30:	ffffffff 	.inst	0xffffffff ; undefined
   34:	ffffffff 	.inst	0xffffffff ; undefined
 

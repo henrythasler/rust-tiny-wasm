@@ -153,7 +153,7 @@ pub fn compile_function(
                     module_ctx,
                     &mut value_stack,
                     &mut register_pool,
-                    call_patches,
+                    // call_patches,
                     &mut trap_locations,
                     machinecode,
                 );
