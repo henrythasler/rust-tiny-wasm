@@ -20,9 +20,15 @@ fn test_call_indirect() -> Result<()> {
         matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::IndirectCallToNull)
     );
 
-    // wrong function type (calling square with a function type that expects 2 parameters instead of 1)
+    // wrong function type; calling square() which takes 1 parameter instead of the expected 2 for calculate()
     let res = func.call(4, 0, 0).unwrap_err();
     assert!(matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::BadSignature));
+
+    // index 2 is the "add" function, which takes 2 parameters and returns their sum
+    assert_eq!(func.call(2, 13, 24)?, 13 + 24);
+
+    // index 3 is the "multiply" function, which takes 2 parameters and returns their product
+    assert_eq!(func.call(3, 13, 24)?, 13 * 24);
 
     Ok(())
 }

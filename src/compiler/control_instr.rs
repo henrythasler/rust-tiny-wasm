@@ -1,4 +1,4 @@
-use wasmparser::BlockType;
+use wasmparser::{BlockType, FuncType};
 
 use super::*;
 
@@ -392,6 +392,81 @@ pub fn compile_end(
     false
 }
 
+fn prepare_parameters(
+    func_type: &FuncType,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    // move parameters from value stack to procedure call standard registers
+    // reverse the sequence to move the top-most stack element (last parameter) to the highest target register since `i` is also reversed
+    for (i, param_type) in func_type.params().iter().enumerate().rev() {
+        let stack_element = value_stack.pop().unwrap();
+        assert_eq!(
+            stack_element.valtype, *param_type,
+            "call(): parameter type mismatch for function call"
+        );
+        match stack_element.reg {
+            Reg::IReg(reg) => {
+                machinecode.push(processing::mov_reg(
+                    INTEGER_ARGUMENT_REGS[i],
+                    reg,
+                    map_valtype_to_regsize(param_type),
+                ));
+                register_pool.free();
+            }
+            Reg::FReg(reg) => {
+                machinecode.push(fp_processing::fmov(
+                    Reg::FReg(FLOAT_ARGUMENT_REGS[i]),
+                    Reg::FReg(reg),
+                    map_valtype_to_regsize(param_type),
+                ));
+                register_pool.free_float();
+            }
+        }
+    }
+}
+
+fn process_result(
+    func_type: &FuncType,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    if !func_type.results().is_empty() {
+        let return_type = func_type.results().first().unwrap();
+        match return_type {
+            ValType::I64 | ValType::I32 => {
+                let reg = register_pool.alloc();
+                machinecode.push(processing::mov_reg(
+                    reg,
+                    RETURN_VALUE_REGISTER,
+                    map_valtype_to_regsize(return_type),
+                ));
+                let stack_element = StackElement {
+                    valtype: *return_type,
+                    reg: Reg::IReg(reg),
+                };
+                value_stack.push(stack_element);
+            }
+            ValType::F32 | ValType::F64 => {
+                let reg = register_pool.alloc_float();
+                machinecode.push(fp_processing::fmov(
+                    Reg::FReg(reg),
+                    Reg::IReg(RETURN_VALUE_REGISTER),
+                    map_valtype_to_regsize(return_type),
+                ));
+                let stack_element = StackElement {
+                    valtype: *return_type,
+                    reg: Reg::FReg(reg),
+                };
+                value_stack.push(stack_element);
+            }
+            _ => panic!("Unsupported return type for function call"),
+        }
+    }
+}
+
 pub fn compile_call(
     function_index: u32,
     module_ctx: &ModuleContext,
@@ -434,34 +509,7 @@ pub fn compile_call(
         MAX_ARGUMENTS
     );
 
-    // move parameters from value stack to procedure call standard registers
-    // reverse the sequence to move the top-most stack element (last parameter) to the highest target register since `i` is also reversed
-    for (i, param_type) in func_type.params().iter().enumerate().rev() {
-        let stack_element = value_stack.pop().unwrap();
-        assert_eq!(
-            stack_element.valtype, *param_type,
-            "call(): parameter type mismatch for function call"
-        );
-        match stack_element.reg {
-            Reg::IReg(reg) => {
-                machinecode.push(processing::mov_reg(
-                    INTEGER_ARGUMENT_REGS[i],
-                    reg,
-                    map_valtype_to_regsize(param_type),
-                ));
-                register_pool.free();
-            }
-            Reg::FReg(reg) => {
-                machinecode.push(fp_processing::fmov(
-                    Reg::FReg(FLOAT_ARGUMENT_REGS[i]),
-                    Reg::FReg(reg),
-                    map_valtype_to_regsize(param_type),
-                ));
-                register_pool.free_float();
-            }
-        }
-    }
-
+    prepare_parameters(func_type, value_stack, register_pool, machinecode);
     load_context_from_stack(machinecode);
 
     let mut stack_size = 0;
@@ -499,38 +547,7 @@ pub fn compile_call(
     ));
 
     // copy return value from RETURN_VALUE_REGISTER to value stack
-    if !func_type.results().is_empty() {
-        let return_type = func_type.results().first().unwrap();
-        match return_type {
-            ValType::I64 | ValType::I32 => {
-                let reg = register_pool.alloc();
-                machinecode.push(processing::mov_reg(
-                    reg,
-                    RETURN_VALUE_REGISTER,
-                    map_valtype_to_regsize(return_type),
-                ));
-                let stack_element = StackElement {
-                    valtype: *return_type,
-                    reg: Reg::IReg(reg),
-                };
-                value_stack.push(stack_element);
-            }
-            ValType::F32 | ValType::F64 => {
-                let reg = register_pool.alloc_float();
-                machinecode.push(fp_processing::fmov(
-                    Reg::FReg(reg),
-                    Reg::IReg(RETURN_VALUE_REGISTER),
-                    map_valtype_to_regsize(return_type),
-                ));
-                let stack_element = StackElement {
-                    valtype: *return_type,
-                    reg: Reg::FReg(reg),
-                };
-                value_stack.push(stack_element);
-            }
-            _ => panic!("Unsupported return type for function call"),
-        }
-    }
+    process_result(func_type, value_stack, register_pool, machinecode);
 }
 
 pub fn compile_call_indirect(
@@ -679,5 +696,39 @@ pub fn compile_call_indirect(
     trap_inline(TrapCode::BadSignature, trap_locations, machinecode);
     register_pool.free(); // type_index_reg
 
-    // load the address of the function to be called (callee)
+    prepare_parameters(func_type, value_stack, register_pool, machinecode);
+    load_context_from_stack(machinecode);
+
+    let mut stack_size = 0;
+    if register_pool.index > 0 {
+        // save registers to stack before the call
+        stack_size = save_registers(register_pool, machinecode);
+    }
+    // address of the function to be called (callee) is in code_ptr_reg;
+    machinecode.push(branch::branch_link_reg(code_ptr_reg));
+
+    // restore registers from stack after the call; we do this here instead of after the trap check
+    // because we want to free the stack space used for saving registers even if the call traps, so that the stack
+    // is in a consistent state when the trap handler is called.
+    if stack_size > 0 {
+        restore_registers(stack_size, register_pool, machinecode);
+    }
+
+    // result values according to Aarch64 Procedure Call Standard (X0..X7) are
+    // X0: Return Code (0=Ok, 1=Trap),
+    // X1: Result or Trap code
+
+    // if the return code is 1 (cbnz), we will return from this function immediately.
+    trap_locations.push(Patch {
+        location: machinecode.len(),
+        instruction: Instruction::Cbnz,
+    });
+    machinecode.push(branch::cbnz(
+        RETURN_STATUS_REGISTER,
+        0, // jump to epilogue if return code is 1 (Trap)
+        RegSize::Int64bit,
+    ));
+
+    // copy return value from RETURN_VALUE_REGISTER to value stack
+    process_result(func_type, value_stack, register_pool, machinecode);
 }
