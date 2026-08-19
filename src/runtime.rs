@@ -282,7 +282,7 @@ impl Runtime {
     }
 }
 
-pub fn instantiate_module(module: LinkedModule) -> Result<Runtime> {
+pub fn instantiate_module(mut module: LinkedModule) -> Result<Runtime> {
     // Allocate executable memory and copy JIT code into that region
     let bytes = bytemuck::cast_slice(&module.machinecode);
     if bytes.is_empty() {
@@ -297,11 +297,28 @@ pub fn instantiate_module(module: LinkedModule) -> Result<Runtime> {
         clear_cache(mmap.as_mut_ptr(), mmap.len());
     }
 
+    // patch the function table entries to point to the correct absolute addresses in the executable memory
+    if let Some(func_table) = module.func_table.as_mut() {
+        for element in func_table.elements.iter_mut() {
+            let offset = element.code_ptr as usize;
+            let absolute_address = mmap.as_ptr().wrapping_add(offset);
+            element.code_ptr = absolute_address;
+        }
+    }
+
     // set execution permissions
     let machinecode = mmap.make_exec().expect("make_exec() failed");
+
+    // update the runtime context with the base address and length of the JIT code
+    module.runtime_ctx.jit_base = machinecode.as_ptr();
+    module.runtime_ctx.jit_len = machinecode.len() as u32;
+
+    // println!("Runtime context: {:?}", module.runtime_ctx);
+    // println!("Function table: {:?}", module.func_table);
+
     Ok(Runtime {
         machinecode,
-        ctx: RuntimeCtx::default(),
+        ctx: module.runtime_ctx,
         func_table: module.func_table,
         functions: module.functions.to_vec(),
     })

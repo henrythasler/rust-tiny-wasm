@@ -20,5 +20,9 @@ fn test_call_indirect() -> Result<()> {
         matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::IndirectCallToNull)
     );
 
+    // wrong function type (calling square with a function type that expects 2 parameters instead of 1)
+    let res = func.call(4, 0, 0).unwrap_err();
+    assert!(matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::BadSignature));
+
     Ok(())
 }

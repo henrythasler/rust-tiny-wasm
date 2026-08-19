@@ -535,17 +535,21 @@ pub fn compile_call(
 
 pub fn compile_call_indirect(
     type_index: u32,
-    _table_index: u32,
+    table_index: u32,
     module_ctx: &ModuleContext,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
-    // _call_patches: &mut Vec<FunctionPatch>,
     trap_locations: &mut Vec<Patch>,
     machinecode: &mut Vec<u32>,
 ) {
     assert!(
         module_ctx.compiler_func_table.is_some(),
         "call_indirect(): function table is not defined in the module"
+    );
+
+    assert_eq!(
+        table_index, 0,
+        "call_indirect(): only table index 0 is supported"
     );
 
     // get the actual function type from the module context using the type index
@@ -606,73 +610,74 @@ pub fn compile_call_indirect(
     trap_inline(TrapCode::TableOutOfBounds, trap_locations, machinecode);
     register_pool.free();
 
-    // load the 
+    let code_ptr_reg = register_pool.alloc();
+    let type_index_reg = register_pool.alloc();
+    // load the base address of the function table from the runtime context into a register
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        type_index_reg,
+        CONTEXT_REG,
+        ctx_offsets::FUNC_TABLE_BASE,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
+    // add the table index to the base address of the function table to get the address of the function table entry
+    machinecode.push(arithmetic::add_shifted_reg(
+        type_index_reg,
+        type_index_reg,
+        table_index_reg,
+        Shift::Lsl,
+        4,
+        RegSize::Int64bit,
+    ));
 
-    // // load the function (offset, type_index) tuple from the function table into a register
-    // let func_index_reg = register_pool.alloc();
-    // let funct_table_offset =
-    //     module_ctx.compiler_func_table.as_ref().unwrap().offset as i64 * INSTRUCTION_SIZE as i64;
-    // let page_offset =
-    //     funct_table_offset & (!0xfff - machinecode.len() as i64 * INSTRUCTION_SIZE as i64) & !0xfff;
-    // machinecode.push(memory::adrp(func_index_reg, page_offset));
-    // machinecode.push(arithmetic::add_imm(
-    //     func_index_reg,
-    //     func_index_reg,
-    //     (funct_table_offset & 0xfff) as u32,
-    //     false,
-    //     RegSize::Int64bit,
-    // ));
-
-    // machinecode.push(memory::ldr_reg(
-    //     func_index_reg,
-    //     func_index_reg,
-    //     table_index_reg,
-    //     IndexExtend::Lsl, // need to shift left by 3 to get the correct offset for the function table entry (each entry is 8 bytes)
-    //     3,
-    //     MemSize::Mem64bit,
-    //     RegSize::Int64bit,
-    // ));
+    // load the function pointer and type index from the function table entry into registers
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        code_ptr_reg,
+        type_index_reg,
+        func_table_offsets::CODE_PTR,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        type_index_reg,
+        type_index_reg,
+        func_table_offsets::TYPE_ID,
+        MemSize::Mem32bit,
+        RegSize::Int32bit,
+    ));
 
     // runtime check that the table element is NOT uninitialized (i.e. the function offset is not 0xFFFFFFFF)
     // CMN = Compare Negative → adds operand and sets flags; If w0 == 0xFFFFFFFF, then w0 + 1 == 0; Z flag is set on match
 
-    // machinecode.push(arithmetic::cmn_imm(
-    //     func_index_reg,
-    //     1,
-    //     false,
-    //     RegSize::Int64bit,
-    // ));
+    machinecode.push(arithmetic::cmn_imm(
+        type_index_reg,
+        1,
+        false,
+        RegSize::Int32bit,
+    ));
 
-    // machinecode.push(branch::branch_cond(
-    //     Condition::NE,
-    //     TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
-    // ));
-    // trap_inline(TrapCode::IndirectCallToNull, trap_locations, machinecode);
+    machinecode.push(branch::branch_cond(
+        Condition::NE,
+        TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+    ));
+    trap_inline(TrapCode::IndirectCallToNull, trap_locations, machinecode);
 
     // runtime check that the function type of the function at the given table index matches the expected function type
     // (1) Load the type index of the function at the given table index from the function table into a register
     // (2) compare it with the expected function type index if they don't match, trap
 
-    // let type_reg = register_pool.alloc();
-    // machinecode.push(bit::lsr_imm(
-    //     type_reg,
-    //     func_index_reg,
-    //     32,
-    //     RegSize::Int64bit,
-    // ));
-    // machinecode.push(arithmetic::cmp_imm(
-    //     type_reg,
-    //     type_index,
-    //     false,
-    //     RegSize::Int32bit,
-    // ));
-    // machinecode.push(branch::branch_cond(
-    //     Condition::NE,
-    //     TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
-    // ));
-    // trap_inline(TrapCode::BadSignature, trap_locations, machinecode);
-    // register_pool.free(); // type_reg
-    // register_pool.free(); // table_index_reg
+    machinecode.push(arithmetic::cmp_imm(
+        type_index_reg,
+        type_index,
+        false,
+        RegSize::Int32bit,
+    ));
+    machinecode.push(branch::branch_cond(
+        Condition::EQ,
+        TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+    ));
+    trap_inline(TrapCode::BadSignature, trap_locations, machinecode);
+    register_pool.free(); // type_index_reg
 
     // load the address of the function to be called (callee)
 }

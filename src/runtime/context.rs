@@ -16,13 +16,6 @@ pub struct RuntimeCtx {
                               //     has been generated referencing their offsets — you'll break old code silently.
 }
 
-#[derive(Debug, Clone)]
-#[repr(C)]
-pub struct FuncTableElement {
-    pub offset: u32, // relative to jit_base
-    pub type_id: u32,
-}
-
 pub mod ctx_offsets {
     pub const JIT_BASE: u32 = 0;
     pub const JIT_LEN: u32 = 8;
@@ -35,6 +28,19 @@ pub mod ctx_offsets {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
+pub struct FuncTableElement {
+    pub code_ptr: *const u8,
+    pub type_id: u32,
+    _pad: u32, // keep 16-byte alignment for each element
+}
+
+pub mod func_table_offsets {
+    pub const CODE_PTR: u32 = 0;
+    pub const TYPE_ID: u32 = 8;
+}
+
+#[derive(Debug, Clone)]
 pub struct FuncTable {
     pub elements: Vec<FuncTableElement>,
 }
@@ -43,8 +49,9 @@ impl FuncTable {
     pub fn new(initial_len: usize) -> Self {
         let elements = vec![
             FuncTableElement {
-                offset: u32::MAX,
-                type_id: u32::MAX
+                code_ptr: std::ptr::null(),
+                type_id: u32::MAX,
+                _pad: 0,
             };
             initial_len
         ];

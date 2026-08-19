@@ -345,14 +345,12 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             if func_idx < u32::MAX {
                 let jit_function = jit_functions.get(func_idx as usize).unwrap();
                 let func = module_ctx.functions.get(func_idx as usize).unwrap();
-                module_ctx.ctx_func_table.as_mut().unwrap().elements[i].offset =
-                    (jit_function.offset * INSTRUCTION_SIZE) as u32;
+
+                // store relative offset first; will be patched to absolute address later when the module is loaded into memory
+                module_ctx.ctx_func_table.as_mut().unwrap().elements[i].code_ptr =
+                    (jit_function.offset * INSTRUCTION_SIZE) as *const u8;
                 module_ctx.ctx_func_table.as_mut().unwrap().elements[i].type_id =
                     func.type_index as u32;
-
-                // machinecode[func_table.offset + i * TABLE_ENTRY_SIZE] =
-                //     (jit_function.offset * INSTRUCTION_SIZE) as u32;
-                // machinecode[func_table.offset + i * TABLE_ENTRY_SIZE + 1] = func.type_index as u32;
             }
         }
     }
