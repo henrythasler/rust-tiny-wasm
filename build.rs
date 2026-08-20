@@ -109,6 +109,8 @@ fn message_to_trap_enum(message: &str) -> String {
         "integer divide by zero" => String::from("IntegerDivisionByZero"),
         "integer overflow" => String::from("IntegerOverflow"),
         "invalid conversion to integer" => String::from("InvalidConversionToInteger"),
+        "undefined element" => String::from("TableOutOfBounds"),
+        "indirect call type mismatch" => String::from("BadSignature"),
         _ => panic!("Unsupported trap message: {}", message),
     }
 }

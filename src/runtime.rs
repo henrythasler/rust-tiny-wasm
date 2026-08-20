@@ -300,9 +300,12 @@ pub fn instantiate_module(mut module: LinkedModule) -> Result<Runtime> {
     // patch the function table entries to point to the correct absolute addresses in the executable memory
     if let Some(func_table) = module.func_table.as_mut() {
         for element in func_table.elements.iter_mut() {
-            let offset = element.code_ptr as usize;
-            let absolute_address = mmap.as_ptr().wrapping_add(offset);
-            element.code_ptr = absolute_address;
+            // patch only if element is initialized; otherwise leave as std::ptr::null() for runtime checks
+            if element.type_id < u32::MAX {
+                let offset = element.code_ptr as usize;
+                let absolute_address = mmap.as_ptr().wrapping_add(offset);
+                element.code_ptr = absolute_address;
+            }
         }
     }
 

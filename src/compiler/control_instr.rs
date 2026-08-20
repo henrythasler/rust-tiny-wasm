@@ -621,7 +621,7 @@ pub fn compile_call_indirect(
         RegSize::Int32bit,
     ));
     machinecode.push(branch::branch_cond(
-        Condition::LT,
+        Condition::LO,
         TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
     ));
     trap_inline(TrapCode::TableOutOfBounds, trap_locations, machinecode);
@@ -663,19 +663,11 @@ pub fn compile_call_indirect(
         RegSize::Int32bit,
     ));
 
-    // runtime check that the table element is NOT uninitialized (i.e. the function offset is not 0xFFFFFFFF)
-    // CMN = Compare Negative → adds operand and sets flags; If w0 == 0xFFFFFFFF, then w0 + 1 == 0; Z flag is set on match
-
-    machinecode.push(arithmetic::cmn_imm(
-        type_index_reg,
-        1,
-        false,
-        RegSize::Int32bit,
-    ));
-
-    machinecode.push(branch::branch_cond(
-        Condition::NE,
+    // runtime check that the table element is NOT uninitialized (i.e. the code ptr is not NULL)
+    machinecode.push(branch::cbnz(
+        code_ptr_reg,
         TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+        RegSize::Int64bit,
     ));
     trap_inline(TrapCode::IndirectCallToNull, trap_locations, machinecode);
 

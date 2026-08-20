@@ -14,6 +14,12 @@ fn test_call_indirect() -> Result<()> {
     let res = func.call(7, 0, 0).unwrap_err();
     assert!(matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::TableOutOfBounds));
 
+    let res = func.call(0x10000000, 0, 0).unwrap_err();
+    assert!(matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::TableOutOfBounds));
+
+    let res = func.call(-1, 0, 0).unwrap_err();
+    assert!(matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::TableOutOfBounds));
+
     // call uninitialized table entry
     let res = func.call(0, 0, 0).unwrap_err();
     assert!(
