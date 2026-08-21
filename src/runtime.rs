@@ -2,10 +2,13 @@ use memmap2::{Mmap, MmapMut};
 use std::mem;
 
 use super::assembler::*;
+use super::compiler::*;
 use super::*;
 // use debugger::*;
 
 // mod debugger;
+pub mod context;
+use context::*;
 
 #[repr(u64)]
 #[non_exhaustive]
@@ -108,6 +111,7 @@ pub struct CallableRawResult {
 #[derive(Debug)]
 pub struct Callable<P, R> {
     ptr: *const u8,
+    ctx: *mut RuntimeCtx,
     _marker: std::marker::PhantomData<fn(P) -> R>,
 }
 
@@ -117,12 +121,13 @@ impl<P, R> Callable<P, R> {
     /// # Safety
     /// The user **MUST** ensure that the signature used for the
     /// generic matches the actual function that is called.
-    pub unsafe fn new(ptr: *const u8) -> Self
+    pub unsafe fn new(ptr: *const u8, ctx: *mut RuntimeCtx) -> Self
     where
         R: FromValue,
     {
         Self {
             ptr,
+            ctx,
             _marker: std::marker::PhantomData,
         }
     }
@@ -136,10 +141,10 @@ macro_rules! impl_call {
         {
             pub fn call(&self) -> Result<R> {
                 let res = unsafe {
-                    let wasm_func: extern "C" fn() -> CallableRawResult =
+                    let wasm_func: extern "C" fn(*mut RuntimeCtx) -> CallableRawResult =
                         std::mem::transmute(self.ptr);
                     // set_breakpoint();
-                    wasm_func()
+                    wasm_func(self.ctx)
                 };
                 let result: Result<R> = match res.status {
                     0 => Ok(R::from_value(res.value)),
@@ -171,10 +176,10 @@ macro_rules! impl_call {
                 $($arg: $arg),+
             ) -> Result<R> {
                 let res = unsafe {
-                    let wasm_func: extern "C" fn($($arg),+) -> CallableRawResult =
+                    let wasm_func: extern "C" fn(*mut RuntimeCtx, $($arg),+) -> CallableRawResult =
                         std::mem::transmute(self.ptr);
                     // set_breakpoint();
-                    wasm_func($($arg),+)
+                    wasm_func(self.ctx, $($arg),+)
                 };
                 let result: Result<R> = match res.status {
                     0 => Ok(R::from_value(res.value)),
@@ -235,11 +240,13 @@ impl FromValue for () {
 #[derive(Debug)]
 pub struct Runtime {
     machinecode: Mmap,
+    ctx: RuntimeCtx,
+    func_table: Option<FuncTable>,
     functions: Vec<JitObject>,
 }
 
 impl Runtime {
-    pub fn get_function<P, R>(&self, name: &str) -> Result<Callable<P, R>>
+    pub fn get_function<P, R>(&mut self, name: &str) -> Result<Callable<P, R>>
     where
         R: FromValue,
     {
@@ -263,12 +270,19 @@ impl Runtime {
             mem::size_of::<*const u8>()
         );
 
-        let callable = unsafe { Callable::<P, R>::new(ptr) };
+        // println!("func_table: {:?}", self.func_table);
+        let ctx = &mut self.ctx;
+        if let Some(func_table) = self.func_table.as_mut() {
+            func_table.sync_to_context(ctx);
+        }
+        // println!("ctx after sync: {:?}", ctx);
+
+        let callable = unsafe { Callable::<P, R>::new(ptr, ctx) };
         Ok(callable)
     }
 }
 
-pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
+pub fn instantiate_module(mut module: LinkedModule) -> Result<Runtime> {
     // Allocate executable memory and copy JIT code into that region
     let bytes = bytemuck::cast_slice(&module.machinecode);
     if bytes.is_empty() {
@@ -283,10 +297,32 @@ pub fn instantiate_module(module: &LinkedModule) -> Result<Runtime> {
         clear_cache(mmap.as_mut_ptr(), mmap.len());
     }
 
+    // patch the function table entries to point to the correct absolute addresses in the executable memory
+    if let Some(func_table) = module.func_table.as_mut() {
+        for element in func_table.elements.iter_mut() {
+            // patch only if element is initialized; otherwise leave as std::ptr::null() for runtime checks
+            if element.type_id < u32::MAX {
+                let offset = element.code_ptr as usize;
+                let absolute_address = mmap.as_ptr().wrapping_add(offset);
+                element.code_ptr = absolute_address;
+            }
+        }
+    }
+
     // set execution permissions
     let machinecode = mmap.make_exec().expect("make_exec() failed");
+
+    // update the runtime context with the base address and length of the JIT code
+    module.runtime_ctx.jit_base = machinecode.as_ptr();
+    module.runtime_ctx.jit_len = machinecode.len() as u32;
+
+    // println!("Runtime context: {:?}", module.runtime_ctx);
+    // println!("Function table: {:?}", module.func_table);
+
     Ok(Runtime {
         machinecode,
+        ctx: module.runtime_ctx,
+        func_table: module.func_table,
         functions: module.functions.to_vec(),
     })
 }
@@ -317,10 +353,11 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            vec![],
+            RuntimeCtx::default(),
+            None,
         );
-        let instance = instantiate_module(&module)?;
-        let _ = instance.get_function::<(), i32>("test")?;
+        let mut runtime = instantiate_module(module)?;
+        let _ = runtime.get_function::<(), i32>("test")?;
         Ok(())
     }
 
@@ -334,10 +371,11 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            vec![],
+            RuntimeCtx::default(),
+            None,
         );
-        let instance = instantiate_module(&module)?;
-        let func = instance.get_function::<(), ()>("void")?;
+        let mut runtime = instantiate_module(module)?;
+        let func = runtime.get_function::<(), ()>("void")?;
         let res = func.call()?;
         assert_eq!(res, ());
         Ok(())
@@ -353,10 +391,11 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            vec![],
+            RuntimeCtx::default(),
+            None,
         );
-        let instance = instantiate_module(&module)?;
-        let func = instance.get_function::<(), i64>("invalid_result")?;
+        let mut runtime = instantiate_module(module)?;
+        let func = runtime.get_function::<(), i64>("invalid_result")?;
         let res = func.call();
         assert!(
             matches!(res.unwrap_err(), TinyWasmError::Runtime(msg) if msg.contains("result tag"))
@@ -375,10 +414,11 @@ mod tests {
                 offset: 0,
                 length: 3,
             }],
-            vec![],
+            RuntimeCtx::default(),
+            None,
         );
-        let instance = instantiate_module(&module)?;
-        let func = instance.get_function::<(), i32>("trap_code")?;
+        let mut runtime = instantiate_module(module)?;
+        let func = runtime.get_function::<(), i32>("trap_code")?;
         let res = func.call();
         assert!(matches!(res.unwrap_err(), TinyWasmError::Trap(value) if value==TrapCode::None));
         Ok(())
@@ -393,10 +433,11 @@ mod tests {
                 offset: 0,
                 length: 0,
             }],
-            vec![],
+            RuntimeCtx::default(),
+            None,
         );
         assert_eq!(
-            instantiate_module(&module).unwrap_err(),
+            instantiate_module(module).unwrap_err(),
             TinyWasmError::Runtime(String::from("JIT code is empty"))
         );
         Ok(())
@@ -411,11 +452,12 @@ mod tests {
                 offset: 0,
                 length: 2,
             }],
-            vec![],
+            RuntimeCtx::default(),
+            None,
         );
-        let instance = instantiate_module(&module)?;
+        let mut runtime = instantiate_module(module)?;
         assert_eq!(
-            instance.get_function::<(), i32>("unknown").unwrap_err(),
+            runtime.get_function::<(), i32>("unknown").unwrap_err(),
             TinyWasmError::Runtime(String::from(
                 "Function 'unknown' not found in module exports"
             ))

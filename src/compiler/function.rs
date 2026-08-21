@@ -33,7 +33,8 @@ pub fn compile_function(
     let mut register_pool = RegisterPool::new();
 
     // calculate initial stack size from all parameters and locals
-    let (_variables_size, stack_size) = get_initial_stack_size(func_type, locals);
+    let (_variables_size, stack_size) =
+        get_initial_stack_size(func_type, locals, RESERVED_REG as i32);
     // println!("{} {:?}", _variables_size, stack_size);
 
     // every functions starts with an epilogue to save the initial state and create a new stack frame
@@ -41,6 +42,9 @@ pub fn compile_function(
 
     let mut variables: Vec<LocalVar> = vec![];
     let mut stack_offset = 0;
+
+    save_context_to_stack(&mut stack_offset, machinecode);
+
     // save parameters to stack
     if !func_type.params().is_empty() {
         variables.extend(save_parameters_to_stack(
@@ -149,7 +153,7 @@ pub fn compile_function(
                     module_ctx,
                     &mut value_stack,
                     &mut register_pool,
-                    call_patches,
+                    // call_patches,
                     &mut trap_locations,
                     machinecode,
                 );

@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use num_enum::TryFromPrimitive;
 use std::mem;
 use std::ops::{BitAnd, BitXor};
 
@@ -29,6 +28,31 @@ pub const INTEGER_REGISTER_SIZE: usize = std::mem::size_of::<u64>();
 pub const STACK_ALIGNMENT: usize = 16;
 pub const CODE_ALIGNMENT: usize = mem::align_of::<fn()>();
 
+// X0 is reserved for the runtime context and always passed to any function call as first parameter (X0)
+pub const RESERVED_REG: u32 = 1;
+pub const CONTEXT_REG: IReg = IReg::X0;
+pub const MAX_ARGUMENTS: usize = 7; // X1..X7
+
+pub const INTEGER_ARGUMENT_REGS: [IReg; MAX_ARGUMENTS] = [
+    IReg::X1,
+    IReg::X2,
+    IReg::X3,
+    IReg::X4,
+    IReg::X5,
+    IReg::X6,
+    IReg::X7,
+];
+
+pub const FLOAT_ARGUMENT_REGS: [FReg; MAX_ARGUMENTS] = [
+    FReg::D0,
+    FReg::D1,
+    FReg::D2,
+    FReg::D3,
+    FReg::D4,
+    FReg::D5,
+    FReg::D6,
+];
+
 // result values according to Aarch64 Procedure Call Standard (X0..X7) are
 // X0: Return Code (0=Ok, 1=Trap),
 // X1: Result or Trap code
@@ -42,7 +66,7 @@ pub enum Reg {
 }
 
 #[repr(u32)]
-#[derive(TryFromPrimitive, Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum IReg {
     X0 = 0,
@@ -132,7 +156,7 @@ impl BitAnd<u32> for IReg {
 
 /// double-precision floating-point registers (D0-D31) and their single-precision aliases (S0-S31)
 #[repr(u32)]
-#[derive(TryFromPrimitive, Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum FReg {
     D0 = 0,

@@ -40,6 +40,10 @@ pub fn patch_branch_link(offset: i32, location: &mut u32) {
     *location = 0x94000000 | ((offset >> 2) & 0x3FFFFFF) as u32 // imm26 offset
 }
 
+pub fn branch_link_reg(rn: IReg) -> u32 {
+    0xD63F0000 | ((rn & 0x1F) << 5)
+}
+
 pub fn branch_cond(cond: Condition, imm19: i32) -> u32 {
     let mut instr = 0x54000000u32;
     instr |= (((imm19 >> 2) & 0x7FFFF) as u32) << 5; // imm19 offset

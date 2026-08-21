@@ -50,19 +50,19 @@ fn test_objdump() {
                 let bytes: &[u8] = bytemuck::cast_slice(&linked_module.machinecode);
                 object.set_section_data(text_section, bytes, 16); // 16-byte alignment
 
-                // Add a symbol for the function table
-                for table in &linked_module.tables {
-                    object.add_symbol(Symbol {
-                        name: table.name.clone().into_bytes(),
-                        value: (table.offset * assembler::aarch64::INSTRUCTION_SIZE) as u64,
-                        size: (table.length * assembler::aarch64::TABLE_ENTRY_SIZE) as u64,
-                        kind: SymbolKind::Data,
-                        scope: SymbolScope::Compilation,
-                        weak: false,
-                        section: SymbolSection::Section(text_section),
-                        flags: SymbolFlags::None,
-                    });
-                }
+                // // Add a symbol for the function table
+                // for table in &linked_module.tables {
+                //     object.add_symbol(Symbol {
+                //         name: table.name.clone().into_bytes(),
+                //         value: (table.offset * assembler::aarch64::INSTRUCTION_SIZE) as u64,
+                //         size: (table.length * assembler::aarch64::TABLE_ENTRY_SIZE) as u64,
+                //         kind: SymbolKind::Data,
+                //         scope: SymbolScope::Compilation,
+                //         weak: false,
+                //         section: SymbolSection::Section(text_section),
+                //         flags: SymbolFlags::None,
+                //     });
+                // }
 
                 // Add a symbol for each function
                 for function in &linked_module.functions {

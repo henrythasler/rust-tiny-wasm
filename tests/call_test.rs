@@ -6,7 +6,7 @@ use tiny_wasm::*;
 #[test]
 fn test_call() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/call.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(), i64>("basic")?;
     assert_eq!(func.call()?, 1);

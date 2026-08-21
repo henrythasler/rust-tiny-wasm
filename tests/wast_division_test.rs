@@ -8,7 +8,7 @@ use tiny_wasm::*;
 #[rustfmt::skip]
 fn test_division_0() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/wast/division_0.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32, i32), i32>("div_s")?;
     assert!(matches!(func.call(1, 0).unwrap_err(), runtime::TinyWasmError::Trap(trap_code) if trap_code==runtime::TrapCode::IntegerDivisionByZero));
@@ -44,7 +44,7 @@ fn test_division_0() -> Result<()> {
 #[rustfmt::skip]
 fn test_division_1() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/wast/division_1.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i64, i64), i64>("div_s")?;
     assert!(matches!(func.call(1, 0).unwrap_err(), runtime::TinyWasmError::Trap(trap_code) if trap_code==runtime::TrapCode::IntegerDivisionByZero));

@@ -2,191 +2,223 @@
 tests/assets/jit/call.o:     file format elf64-littleaarch64
 
 SYMBOL TABLE:
-0000000000000000 l     F .text	0000000000000028 basic
-0000000000000028 l     F .text	0000000000000020 one
-0000000000000048 l     F .text	0000000000000028 back
-0000000000000070 l     F .text	0000000000000040 four
-00000000000000b0 l     F .text	0000000000000028 $func4
-00000000000000d8 l     F .text	0000000000000020 call_trap
-00000000000000f8 l     F .text	0000000000000038 $func6
-0000000000000130 l     F .text	0000000000000050 plus_one
-0000000000000180 l     F .text	0000000000000038 square_f32
-00000000000001b8 l     F .text	0000000000000030 $func9
+0000000000000000 l     F .text	0000000000000038 basic
+0000000000000038 l     F .text	0000000000000028 one
+0000000000000060 l     F .text	0000000000000038 back
+0000000000000098 l     F .text	0000000000000050 four
+00000000000000e8 l     F .text	0000000000000030 $func4
+0000000000000118 l     F .text	0000000000000030 call_trap
+0000000000000148 l     F .text	0000000000000038 $func6
+0000000000000180 l     F .text	0000000000000058 plus_one
+00000000000001d8 l     F .text	0000000000000040 square_f32
+0000000000000218 l     F .text	0000000000000038 $func9
 
 
 Contents of section .text:
- 0000 fd7bbfa9 fd030091 08000094 800000b5  .{..............
- 0010 e80301aa 000080d2 e10308aa fd7bc1a8  .............{..
- 0020 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
- 0030 280080d2 000080d2 e10308aa fd7bc1a8  (............{..
- 0040 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
- 0050 f6ffff97 800000b5 e80301aa 000080d2  ................
- 0060 e10308aa fd7bc1a8 c0035fd6 1f2003d5  .....{...._.. ..
- 0070 fd7bbfa9 fd030091 680080d2 ff4300d1  .{......h....C..
- 0080 e80300f9 e9ffff97 e80340f9 ff430091  ..........@..C..
- 0090 a00000b5 e90301aa 0801098b 000080d2  ................
- 00a0 e10308aa fd7bc1a8 c0035fd6 1f2003d5  .....{...._.. ..
- 00b0 fd7bbfa9 fd030091 410180d2 200080d2  .{......A... ...
- 00c0 03000014 000080d2 e1031faa fd7bc1a8  .............{..
- 00d0 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
- 00e0 f4ffff97 600000b5 000080d2 e1031faa  ....`...........
- 00f0 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
- 0100 ff4300d1 e00300b9 e10700b9 e80340b9  .C............@.
- 0110 e90740b9 0801090b 000080d2 e10308aa  ..@.............
- 0120 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
- 0130 fd7bbfa9 fd030091 ff4300d1 e00300b9  .{.......C......
- 0140 e10700b9 e80340b9 e90740b9 e103092a  ......@...@....*
- 0150 e003082a e9ffff97 c00000b5 e803012a  ...*...........*
- 0160 29008052 0801090b 000080d2 e10308aa  )..R............
- 0170 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
- 0180 fd7bbfa9 fd030091 ff4300d1 e00300bd  .{.......C......
- 0190 e80340bd 0041201e 08000094 800000b5  ..@..A .........
- 01a0 2800271e 000080d2 0101261e ff430091  (.'.......&..C..
- 01b0 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
- 01c0 ff4300d1 e00300bd e80340bd e90340bd  .C........@...@.
- 01d0 0809291e 000080d2 0101261e ff430091  ..).......&..C..
- 01e0 fd7bc1a8 c0035fd6                    .{...._.        
+ 0000 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
+ 0010 e00340f9 09000094 800000b5 e80301aa  ..@.............
+ 0020 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
+ 0030 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
+ 0040 ff4300d1 e00300f9 280080d2 000080d2  .C......(.......
+ 0050 e10308aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
+ 0060 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
+ 0070 e00340f9 f1ffff97 800000b5 e80301aa  ..@.............
+ 0080 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
+ 0090 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
+ 00a0 ff4300d1 e00300f9 680080d2 e00340f9  .C......h.....@.
+ 00b0 ff4300d1 e80300f9 e0ffff97 e80340f9  .C............@.
+ 00c0 ff430091 a00000b5 e90301aa 0801098b  .C..............
+ 00d0 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
+ 00e0 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
+ 00f0 ff4300d1 e00300f9 410180d2 200080d2  .C......A... ...
+ 0100 03000014 000080d2 e1031faa ff430091  .............C..
+ 0110 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 0120 ff4300d1 e00300f9 e00340f9 efffff97  .C........@.....
+ 0130 600000b5 000080d2 e1031faa ff430091  `............C..
+ 0140 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 0150 ff4300d1 e00300f9 e10b00b9 e20f00b9  .C..............
+ 0160 e80b40b9 e90f40b9 0801090b 000080d2  ..@...@.........
+ 0170 e10308aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
+ 0180 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
+ 0190 e10b00b9 e20f00b9 e80b40b9 e90f40b9  ..........@...@.
+ 01a0 e203092a e103082a e00340f9 e7ffff97  ...*...*..@.....
+ 01b0 c00000b5 e803012a 29008052 0801090b  .......*)..R....
+ 01c0 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
+ 01d0 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
+ 01e0 ff4300d1 e00300f9 e00b00bd e80b40bd  .C............@.
+ 01f0 0041201e e00340f9 08000094 800000b5  .A ...@.........
+ 0200 2800271e 000080d2 0101261e ff430091  (.'.......&..C..
+ 0210 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 0220 ff4300d1 e00300f9 e00b00bd e80b40bd  .C............@.
+ 0230 e90b40bd 0809291e 000080d2 0101261e  ..@...).......&.
+ 0240 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
 
 Disassembly of section .text:
 
 0000000000000000 <basic>:
    0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
    4:	910003fd 	mov	x29, sp
-   8:	94000008 	bl	28 <one>
-   c:	b5000080 	cbnz	x0, 1c <basic+0x1c>
-  10:	aa0103e8 	mov	x8, x1
-  14:	d2800000 	mov	x0, #0x0                   	// #0
-  18:	aa0803e1 	mov	x1, x8
-  1c:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  20:	d65f03c0 	ret
-  24:	d503201f 	nop
+   8:	d10043ff 	sub	sp, sp, #0x10
+   c:	f90003e0 	str	x0, [sp]
+  10:	f94003e0 	ldr	x0, [sp]
+  14:	94000009 	bl	38 <one>
+  18:	b5000080 	cbnz	x0, 28 <basic+0x28>
+  1c:	aa0103e8 	mov	x8, x1
+  20:	d2800000 	mov	x0, #0x0                   	// #0
+  24:	aa0803e1 	mov	x1, x8
+  28:	910043ff 	add	sp, sp, #0x10
+  2c:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  30:	d65f03c0 	ret
+  34:	d503201f 	nop
 
-0000000000000028 <one>:
-  28:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-  2c:	910003fd 	mov	x29, sp
-  30:	d2800028 	mov	x8, #0x1                   	// #1
-  34:	d2800000 	mov	x0, #0x0                   	// #0
-  38:	aa0803e1 	mov	x1, x8
-  3c:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  40:	d65f03c0 	ret
-  44:	d503201f 	nop
+0000000000000038 <one>:
+  38:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+  3c:	910003fd 	mov	x29, sp
+  40:	d10043ff 	sub	sp, sp, #0x10
+  44:	f90003e0 	str	x0, [sp]
+  48:	d2800028 	mov	x8, #0x1                   	// #1
+  4c:	d2800000 	mov	x0, #0x0                   	// #0
+  50:	aa0803e1 	mov	x1, x8
+  54:	910043ff 	add	sp, sp, #0x10
+  58:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  5c:	d65f03c0 	ret
 
-0000000000000048 <back>:
-  48:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-  4c:	910003fd 	mov	x29, sp
-  50:	97fffff6 	bl	28 <one>
-  54:	b5000080 	cbnz	x0, 64 <back+0x1c>
-  58:	aa0103e8 	mov	x8, x1
-  5c:	d2800000 	mov	x0, #0x0                   	// #0
-  60:	aa0803e1 	mov	x1, x8
-  64:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  68:	d65f03c0 	ret
-  6c:	d503201f 	nop
+0000000000000060 <back>:
+  60:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+  64:	910003fd 	mov	x29, sp
+  68:	d10043ff 	sub	sp, sp, #0x10
+  6c:	f90003e0 	str	x0, [sp]
+  70:	f94003e0 	ldr	x0, [sp]
+  74:	97fffff1 	bl	38 <one>
+  78:	b5000080 	cbnz	x0, 88 <back+0x28>
+  7c:	aa0103e8 	mov	x8, x1
+  80:	d2800000 	mov	x0, #0x0                   	// #0
+  84:	aa0803e1 	mov	x1, x8
+  88:	910043ff 	add	sp, sp, #0x10
+  8c:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  90:	d65f03c0 	ret
+  94:	d503201f 	nop
 
-0000000000000070 <four>:
-  70:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-  74:	910003fd 	mov	x29, sp
-  78:	d2800068 	mov	x8, #0x3                   	// #3
-  7c:	d10043ff 	sub	sp, sp, #0x10
-  80:	f90003e8 	str	x8, [sp]
-  84:	97ffffe9 	bl	28 <one>
-  88:	f94003e8 	ldr	x8, [sp]
-  8c:	910043ff 	add	sp, sp, #0x10
-  90:	b50000a0 	cbnz	x0, a4 <four+0x34>
-  94:	aa0103e9 	mov	x9, x1
-  98:	8b090108 	add	x8, x8, x9
-  9c:	d2800000 	mov	x0, #0x0                   	// #0
-  a0:	aa0803e1 	mov	x1, x8
-  a4:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  a8:	d65f03c0 	ret
-  ac:	d503201f 	nop
+0000000000000098 <four>:
+  98:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+  9c:	910003fd 	mov	x29, sp
+  a0:	d10043ff 	sub	sp, sp, #0x10
+  a4:	f90003e0 	str	x0, [sp]
+  a8:	d2800068 	mov	x8, #0x3                   	// #3
+  ac:	f94003e0 	ldr	x0, [sp]
+  b0:	d10043ff 	sub	sp, sp, #0x10
+  b4:	f90003e8 	str	x8, [sp]
+  b8:	97ffffe0 	bl	38 <one>
+  bc:	f94003e8 	ldr	x8, [sp]
+  c0:	910043ff 	add	sp, sp, #0x10
+  c4:	b50000a0 	cbnz	x0, d8 <four+0x40>
+  c8:	aa0103e9 	mov	x9, x1
+  cc:	8b090108 	add	x8, x8, x9
+  d0:	d2800000 	mov	x0, #0x0                   	// #0
+  d4:	aa0803e1 	mov	x1, x8
+  d8:	910043ff 	add	sp, sp, #0x10
+  dc:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  e0:	d65f03c0 	ret
+  e4:	d503201f 	nop
 
-00000000000000b0 <$func4>:
-  b0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-  b4:	910003fd 	mov	x29, sp
-  b8:	d2800141 	mov	x1, #0xa                   	// #10
-  bc:	d2800020 	mov	x0, #0x1                   	// #1
-  c0:	14000003 	b	cc <$func4+0x1c>
-  c4:	d2800000 	mov	x0, #0x0                   	// #0
-  c8:	aa1f03e1 	mov	x1, xzr
-  cc:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  d0:	d65f03c0 	ret
-  d4:	d503201f 	nop
+00000000000000e8 <$func4>:
+  e8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+  ec:	910003fd 	mov	x29, sp
+  f0:	d10043ff 	sub	sp, sp, #0x10
+  f4:	f90003e0 	str	x0, [sp]
+  f8:	d2800141 	mov	x1, #0xa                   	// #10
+  fc:	d2800020 	mov	x0, #0x1                   	// #1
+ 100:	14000003 	b	10c <$func4+0x24>
+ 104:	d2800000 	mov	x0, #0x0                   	// #0
+ 108:	aa1f03e1 	mov	x1, xzr
+ 10c:	910043ff 	add	sp, sp, #0x10
+ 110:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 114:	d65f03c0 	ret
 
-00000000000000d8 <call_trap>:
-  d8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-  dc:	910003fd 	mov	x29, sp
-  e0:	97fffff4 	bl	b0 <$func4>
-  e4:	b5000060 	cbnz	x0, f0 <call_trap+0x18>
-  e8:	d2800000 	mov	x0, #0x0                   	// #0
-  ec:	aa1f03e1 	mov	x1, xzr
-  f0:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  f4:	d65f03c0 	ret
+0000000000000118 <call_trap>:
+ 118:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 11c:	910003fd 	mov	x29, sp
+ 120:	d10043ff 	sub	sp, sp, #0x10
+ 124:	f90003e0 	str	x0, [sp]
+ 128:	f94003e0 	ldr	x0, [sp]
+ 12c:	97ffffef 	bl	e8 <$func4>
+ 130:	b5000060 	cbnz	x0, 13c <call_trap+0x24>
+ 134:	d2800000 	mov	x0, #0x0                   	// #0
+ 138:	aa1f03e1 	mov	x1, xzr
+ 13c:	910043ff 	add	sp, sp, #0x10
+ 140:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 144:	d65f03c0 	ret
 
-00000000000000f8 <$func6>:
-  f8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-  fc:	910003fd 	mov	x29, sp
- 100:	d10043ff 	sub	sp, sp, #0x10
- 104:	b90003e0 	str	w0, [sp]
- 108:	b90007e1 	str	w1, [sp, #4]
- 10c:	b94003e8 	ldr	w8, [sp]
- 110:	b94007e9 	ldr	w9, [sp, #4]
- 114:	0b090108 	add	w8, w8, w9
- 118:	d2800000 	mov	x0, #0x0                   	// #0
- 11c:	aa0803e1 	mov	x1, x8
- 120:	910043ff 	add	sp, sp, #0x10
- 124:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 128:	d65f03c0 	ret
- 12c:	d503201f 	nop
+0000000000000148 <$func6>:
+ 148:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 14c:	910003fd 	mov	x29, sp
+ 150:	d10043ff 	sub	sp, sp, #0x10
+ 154:	f90003e0 	str	x0, [sp]
+ 158:	b9000be1 	str	w1, [sp, #8]
+ 15c:	b9000fe2 	str	w2, [sp, #12]
+ 160:	b9400be8 	ldr	w8, [sp, #8]
+ 164:	b9400fe9 	ldr	w9, [sp, #12]
+ 168:	0b090108 	add	w8, w8, w9
+ 16c:	d2800000 	mov	x0, #0x0                   	// #0
+ 170:	aa0803e1 	mov	x1, x8
+ 174:	910043ff 	add	sp, sp, #0x10
+ 178:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 17c:	d65f03c0 	ret
 
-0000000000000130 <plus_one>:
- 130:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
- 134:	910003fd 	mov	x29, sp
- 138:	d10043ff 	sub	sp, sp, #0x10
- 13c:	b90003e0 	str	w0, [sp]
- 140:	b90007e1 	str	w1, [sp, #4]
- 144:	b94003e8 	ldr	w8, [sp]
- 148:	b94007e9 	ldr	w9, [sp, #4]
- 14c:	2a0903e1 	mov	w1, w9
- 150:	2a0803e0 	mov	w0, w8
- 154:	97ffffe9 	bl	f8 <$func6>
- 158:	b50000c0 	cbnz	x0, 170 <plus_one+0x40>
- 15c:	2a0103e8 	mov	w8, w1
- 160:	52800029 	mov	w9, #0x1                   	// #1
- 164:	0b090108 	add	w8, w8, w9
- 168:	d2800000 	mov	x0, #0x0                   	// #0
- 16c:	aa0803e1 	mov	x1, x8
- 170:	910043ff 	add	sp, sp, #0x10
- 174:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 178:	d65f03c0 	ret
- 17c:	d503201f 	nop
-
-0000000000000180 <square_f32>:
+0000000000000180 <plus_one>:
  180:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
  184:	910003fd 	mov	x29, sp
  188:	d10043ff 	sub	sp, sp, #0x10
- 18c:	bd0003e0 	str	s0, [sp]
- 190:	bd4003e8 	ldr	s8, [sp]
- 194:	1e204100 	fmov	s0, s8
- 198:	94000008 	bl	1b8 <$func9>
- 19c:	b5000080 	cbnz	x0, 1ac <square_f32+0x2c>
- 1a0:	1e270028 	fmov	s8, w1
- 1a4:	d2800000 	mov	x0, #0x0                   	// #0
- 1a8:	1e260101 	fmov	w1, s8
- 1ac:	910043ff 	add	sp, sp, #0x10
- 1b0:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 1b4:	d65f03c0 	ret
+ 18c:	f90003e0 	str	x0, [sp]
+ 190:	b9000be1 	str	w1, [sp, #8]
+ 194:	b9000fe2 	str	w2, [sp, #12]
+ 198:	b9400be8 	ldr	w8, [sp, #8]
+ 19c:	b9400fe9 	ldr	w9, [sp, #12]
+ 1a0:	2a0903e2 	mov	w2, w9
+ 1a4:	2a0803e1 	mov	w1, w8
+ 1a8:	f94003e0 	ldr	x0, [sp]
+ 1ac:	97ffffe7 	bl	148 <$func6>
+ 1b0:	b50000c0 	cbnz	x0, 1c8 <plus_one+0x48>
+ 1b4:	2a0103e8 	mov	w8, w1
+ 1b8:	52800029 	mov	w9, #0x1                   	// #1
+ 1bc:	0b090108 	add	w8, w8, w9
+ 1c0:	d2800000 	mov	x0, #0x0                   	// #0
+ 1c4:	aa0803e1 	mov	x1, x8
+ 1c8:	910043ff 	add	sp, sp, #0x10
+ 1cc:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 1d0:	d65f03c0 	ret
+ 1d4:	d503201f 	nop
 
-00000000000001b8 <$func9>:
- 1b8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
- 1bc:	910003fd 	mov	x29, sp
- 1c0:	d10043ff 	sub	sp, sp, #0x10
- 1c4:	bd0003e0 	str	s0, [sp]
- 1c8:	bd4003e8 	ldr	s8, [sp]
- 1cc:	bd4003e9 	ldr	s9, [sp]
- 1d0:	1e290908 	fmul	s8, s8, s9
- 1d4:	d2800000 	mov	x0, #0x0                   	// #0
- 1d8:	1e260101 	fmov	w1, s8
- 1dc:	910043ff 	add	sp, sp, #0x10
- 1e0:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 1e4:	d65f03c0 	ret
+00000000000001d8 <square_f32>:
+ 1d8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 1dc:	910003fd 	mov	x29, sp
+ 1e0:	d10043ff 	sub	sp, sp, #0x10
+ 1e4:	f90003e0 	str	x0, [sp]
+ 1e8:	bd000be0 	str	s0, [sp, #8]
+ 1ec:	bd400be8 	ldr	s8, [sp, #8]
+ 1f0:	1e204100 	fmov	s0, s8
+ 1f4:	f94003e0 	ldr	x0, [sp]
+ 1f8:	94000008 	bl	218 <$func9>
+ 1fc:	b5000080 	cbnz	x0, 20c <square_f32+0x34>
+ 200:	1e270028 	fmov	s8, w1
+ 204:	d2800000 	mov	x0, #0x0                   	// #0
+ 208:	1e260101 	fmov	w1, s8
+ 20c:	910043ff 	add	sp, sp, #0x10
+ 210:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 214:	d65f03c0 	ret
+
+0000000000000218 <$func9>:
+ 218:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 21c:	910003fd 	mov	x29, sp
+ 220:	d10043ff 	sub	sp, sp, #0x10
+ 224:	f90003e0 	str	x0, [sp]
+ 228:	bd000be0 	str	s0, [sp, #8]
+ 22c:	bd400be8 	ldr	s8, [sp, #8]
+ 230:	bd400be9 	ldr	s9, [sp, #8]
+ 234:	1e290908 	fmul	s8, s8, s9
+ 238:	d2800000 	mov	x0, #0x0                   	// #0
+ 23c:	1e260101 	fmov	w1, s8
+ 240:	910043ff 	add	sp, sp, #0x10
+ 244:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 248:	d65f03c0 	ret
+ 24c:	d503201f 	nop

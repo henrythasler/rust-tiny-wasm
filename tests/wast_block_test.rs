@@ -8,7 +8,7 @@ use tiny_wasm::*;
 #[rustfmt::skip]
 fn test_block_0() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/wast/block_0.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(), ()>("type-i32")?;
     func.call()?;

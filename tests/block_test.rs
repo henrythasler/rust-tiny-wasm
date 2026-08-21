@@ -5,7 +5,7 @@ use tiny_wasm::*;
 #[test]
 fn test_block() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/block.wasm"))?;
-    let instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(), ()>("simple")?;
     func.call()?;
