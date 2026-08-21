@@ -1,10 +1,9 @@
 # Developer Documentation
 
-## Header Layout
+## JIT Layout
 
-| Offset | Size | Type   | Name         | Description |
-|----------|------|--------|--------------|-------------|
-| 0x00 | n*8 | (u32, u32) | func_table | tuple of (offset, type_index) for each function |
+- Function machinecode is compiled back-to-back in the order defined in the code section.
+- Size of each function is padded to 8 bytes using `nop` instructions.
 
 ## Runtime Context
 

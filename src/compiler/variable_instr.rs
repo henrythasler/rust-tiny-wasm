@@ -105,3 +105,13 @@ pub fn compile_local_tee(
     }
     value_stack.push(element);
 }
+
+pub fn compile_global_get(
+    global_index: u32,
+    module_ctx: &ModuleContext,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+
+}

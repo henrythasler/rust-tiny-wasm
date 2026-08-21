@@ -93,6 +93,7 @@ pub struct ModuleContext {
     functions: Vec<ModuleFunction>,
     compiler_func_table: Option<CompilerFunctionTable>,
     ctx_func_table: Option<FuncTable>,
+    globals: Option<Vec<Global>>,
     runtime_ctx: RuntimeCtx,
 }
 
@@ -101,6 +102,12 @@ pub struct Export {
     pub name: String,
     pub r#type: wasmparser::ExternalKind,
     pub index: u32,
+}
+
+#[derive(Debug)]
+pub struct Global {
+    pub valtype: wasmparser::ValType,
+    pub mutable: bool,
 }
 
 #[derive(Debug)]
@@ -202,7 +209,17 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                 }
             }
             MemorySection(_) => { /* ... */ }
-            GlobalSection(_) => { /* ... */ }
+            GlobalSection(reader) => {
+                module_ctx.globals = Some(Vec::new());
+                for global in reader {
+                    let global = global?;
+                    module_ctx.globals.as_mut().unwrap().push(Global {
+                        valtype: global.ty.content_type,
+                        mutable: global.ty.mutable,
+                        // init: parse_const_expr(global.init)?,
+                    });
+                }
+            }
             ExportSection(reader) => {
                 for export in reader {
                     let export = export?;

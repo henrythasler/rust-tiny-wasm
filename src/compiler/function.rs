@@ -224,6 +224,15 @@ pub fn compile_function(
                 let var = variables.get(local_index as usize).unwrap();
                 compile_local_tee(var, var.offset, &mut value_stack, machinecode);
             }
+            Operator::GlobalGet { global_index } => {
+              compile_global_get(
+                  global_index,
+                  module_ctx,
+                  &mut value_stack,
+                  &mut register_pool,
+                  machinecode,
+              );  
+            }
             Operator::I32Add
             | Operator::I64Add
             | Operator::I32Sub
