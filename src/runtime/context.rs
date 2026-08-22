@@ -10,7 +10,7 @@ pub struct RuntimeCtx {
     pub memory_base: *mut u8, // linear memory base, if you have one
     pub memory_len: u32,
     pub _pad3: u32, // keep 8-byte alignment for the pointer below
-    pub globals_base: *mut u8,
+    pub globals_base: *mut i64,
     pub host_call: *const u8, // fn ptr for calling back into Rust (see §5)
                               // ... add fields as needed, but NEVER reorder existing ones once JIT code
                               //     has been generated referencing their offsets — you'll break old code silently.

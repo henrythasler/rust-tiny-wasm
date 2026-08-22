@@ -108,6 +108,7 @@ pub struct Export {
 pub struct Global {
     pub valtype: wasmparser::ValType,
     pub mutable: bool,
+    pub value: i64,
 }
 
 #[derive(Debug)]
@@ -131,6 +132,7 @@ pub struct LinkedModule {
     pub functions: Vec<JitObject>,
     pub runtime_ctx: RuntimeCtx,
     pub func_table: Option<FuncTable>,
+    pub globals: Vec<i64>,
 }
 
 impl LinkedModule {
@@ -139,12 +141,14 @@ impl LinkedModule {
         functions: Vec<JitObject>,
         runtime_ctx: RuntimeCtx,
         func_table: Option<FuncTable>,
+        globals: Vec<i64>,
     ) -> Self {
         Self {
             machinecode,
             functions,
             runtime_ctx,
             func_table,
+            globals,
         }
     }
 }
@@ -216,7 +220,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     module_ctx.globals.as_mut().unwrap().push(Global {
                         valtype: global.ty.content_type,
                         mutable: global.ty.mutable,
-                        // init: parse_const_expr(global.init)?,
+                        value: parse_const_expr(global.init_expr)?,
                     });
                 }
             }
@@ -377,6 +381,11 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         functions: jit_functions,
         runtime_ctx: module_ctx.runtime_ctx,
         func_table: module_ctx.ctx_func_table,
+        globals: if let Some(globals) = module_ctx.globals {
+            globals.iter().map(|global| global.value).collect()
+        } else {
+            Vec::new()
+        },
     })
 }
 

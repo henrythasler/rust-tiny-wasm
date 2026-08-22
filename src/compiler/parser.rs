@@ -14,6 +14,8 @@ pub fn parse_const_expr(expr: wasmparser::ConstExpr) -> Result<i64> {
         match op {
             Operator::I32Const { value } => return Ok(value as i64),
             Operator::I64Const { value } => return Ok(value),
+            Operator::F32Const { value } => return Ok(value.bits() as i64),
+            Operator::F64Const { value } => return Ok(value.bits() as i64),
             _ => {
                 return Err(TinyWasmError::Parser(String::from(
                     "Invalid const expression, expected i32.const or i64.const",

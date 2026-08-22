@@ -225,13 +225,13 @@ pub fn compile_function(
                 compile_local_tee(var, var.offset, &mut value_stack, machinecode);
             }
             Operator::GlobalGet { global_index } => {
-              compile_global_get(
-                  global_index,
-                  module_ctx,
-                  &mut value_stack,
-                  &mut register_pool,
-                  machinecode,
-              );  
+                compile_global_get(
+                    global_index,
+                    module_ctx,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
             }
             Operator::I32Add
             | Operator::I64Add

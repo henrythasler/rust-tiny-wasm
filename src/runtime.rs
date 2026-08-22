@@ -243,6 +243,7 @@ pub struct Runtime {
     ctx: RuntimeCtx,
     func_table: Option<FuncTable>,
     functions: Vec<JitObject>,
+    globals: Vec<i64>,
 }
 
 impl Runtime {
@@ -319,11 +320,14 @@ pub fn instantiate_module(mut module: LinkedModule) -> Result<Runtime> {
     // println!("Runtime context: {:?}", module.runtime_ctx);
     // println!("Function table: {:?}", module.func_table);
 
+    module.runtime_ctx.globals_base = module.globals.as_mut_ptr();
+
     Ok(Runtime {
         machinecode,
         ctx: module.runtime_ctx,
         func_table: module.func_table,
         functions: module.functions.to_vec(),
+        globals: module.globals,
     })
 }
 
@@ -355,6 +359,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
+            vec![],
         );
         let mut runtime = instantiate_module(module)?;
         let _ = runtime.get_function::<(), i32>("test")?;
@@ -373,6 +378,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
+            vec![],
         );
         let mut runtime = instantiate_module(module)?;
         let func = runtime.get_function::<(), ()>("void")?;
@@ -393,6 +399,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
+            vec![],
         );
         let mut runtime = instantiate_module(module)?;
         let func = runtime.get_function::<(), i64>("invalid_result")?;
@@ -416,6 +423,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
+            vec![],
         );
         let mut runtime = instantiate_module(module)?;
         let func = runtime.get_function::<(), i32>("trap_code")?;
@@ -435,6 +443,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
+            vec![],
         );
         assert_eq!(
             instantiate_module(module).unwrap_err(),
@@ -454,6 +463,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
+            vec![],
         );
         let mut runtime = instantiate_module(module)?;
         assert_eq!(
