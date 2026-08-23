@@ -166,8 +166,8 @@ pub fn compile_function(
             }
             Operator::I32Const { value } => {
                 compile_const(
-                    &op,
-                    value,
+                    map_op_to_valtype(&op),
+                    Value::I32(value),
                     &mut value_stack,
                     &mut register_pool,
                     machinecode,
@@ -175,26 +175,26 @@ pub fn compile_function(
             }
             Operator::I64Const { value } => {
                 compile_const(
-                    &op,
-                    value,
+                    map_op_to_valtype(&op),
+                    Value::I64(value),
                     &mut value_stack,
                     &mut register_pool,
                     machinecode,
                 );
             }
             Operator::F32Const { value } => {
-                compile_float_const(
-                    &op,
-                    IeeeFloat::F32(value),
+                compile_const(
+                    map_op_to_valtype(&op),
+                    Value::F32(value),
                     &mut value_stack,
                     &mut register_pool,
                     machinecode,
                 );
             }
             Operator::F64Const { value } => {
-                compile_float_const(
-                    &op,
-                    IeeeFloat::F64(value),
+                compile_const(
+                    map_op_to_valtype(&op),
+                    Value::F64(value),
                     &mut value_stack,
                     &mut register_pool,
                     machinecode,

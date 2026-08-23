@@ -10,10 +10,22 @@
   ;; this is a special case where the LEB128 encoded number has 0x0B as it's last byte which collides with the init_exp terminator
   (global $mut3 (mut i32) (i32.const 186384))
   (export "get_int32" (func $get_int32))
+  (export "get_int64" (func $get_int64))
+  (export "get_float32" (func $get_float32))
+  (export "get_float64" (func $get_float64))
   ;; (export "store_int32" (func $store_int32))
   ;; (export "store_int64" (func $store_int64))
   (func $get_int32 (result i32)
     global.get $int32
+  )
+  (func $get_int64 (result i64)
+    global.get $int64
+  )
+  (func $get_float32 (result f32)
+    global.get $float32
+  )
+  (func $get_float64 (result f64)
+    global.get $float64
   )
   ;; (func $store_int32 (param $arg i32) (result i32)
   ;;   local.get $arg

@@ -121,45 +121,56 @@ pub fn compile_global_get(
         .get(global_index as usize)
         .expect("Global index out of bounds");
 
-    match global.valtype {
-        ValType::I32 | ValType::I64 => {
-            let reg = register_pool.alloc();
-            value_stack.push(StackElement {
-                reg: Reg::IReg(reg),
-                valtype: global.valtype,
-            });
+    match global.mutable {
+        true => {
+            match global.valtype {
+                ValType::I32 | ValType::I64 => {
+                    let reg = register_pool.alloc();
+                    value_stack.push(StackElement {
+                        reg: Reg::IReg(reg),
+                        valtype: global.valtype,
+                    });
 
-            machinecode.push(memory::ldr_imm_unsigned_offset(
-                reg,
-                CONTEXT_REG,
-                ctx_offsets::GLOBALS_BASE,
-                MemSize::Mem64bit,
-                RegSize::Int64bit,
-            ));
+                    machinecode.push(memory::ldr_imm_unsigned_offset(
+                        reg,
+                        CONTEXT_REG,
+                        ctx_offsets::GLOBALS_BASE,
+                        MemSize::Mem64bit,
+                        RegSize::Int64bit,
+                    ));
 
-            machinecode.push(memory::ldr_imm_unsigned_offset(
-                reg,
-                reg,
-                global_index * 8, // Assuming each global is 8 bytes; adjust as necessary
-                map_valtype_to_memsize(&global.valtype),
-                map_valtype_to_regsize(&global.valtype),
-            ));
+                    machinecode.push(memory::ldr_imm_unsigned_offset(
+                        reg,
+                        reg,
+                        global_index * 8, // Assuming each global is 8 bytes; adjust as necessary
+                        map_valtype_to_memsize(&global.valtype),
+                        map_valtype_to_regsize(&global.valtype),
+                    ));
+                }
+                ValType::F32 | ValType::F64 => {
+                    let reg = register_pool.alloc_float();
+                    value_stack.push(StackElement {
+                        reg: Reg::FReg(reg),
+                        valtype: global.valtype,
+                    });
+                    machinecode.push(fp_memory::ldr_imm_unsigned_offset(
+                        reg,
+                        IReg::X0, // Assuming X0 holds the base address of globals
+                        (global_index as usize * 8) as u32, // Assuming each global is 8 bytes; adjust as necessary
+                        map_valtype_to_regsize(&global.valtype),
+                    ));
+                }
+                _ => panic!("Unsupported variable type for global.get"),
+            }
         }
-        ValType::F32 | ValType::F64 => {
-            let reg = register_pool.alloc_float();
-            value_stack.push(StackElement {
-                reg: Reg::FReg(reg),
-                valtype: global.valtype,
-            });
-            machinecode.push(fp_memory::ldr_imm_unsigned_offset(
-                reg,
-                IReg::X0, // Assuming X0 holds the base address of globals
-                (global_index as usize * 8) as u32, // Assuming each global is 8 bytes; adjust as necessary
-                map_valtype_to_regsize(&global.valtype),
-            ));
-        }
-        _ => panic!("Unsupported variable type for global.get"),
-    };
+        false => compile_const(
+            global.valtype,
+            global.value.clone(),
+            value_stack,
+            register_pool,
+            machinecode,
+        ),
+    }
 }
 
 pub fn compile_global_set(

@@ -7,6 +7,25 @@ pub enum IeeeFloat {
     F64(Ieee64),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum Value {
+    I32(i32),
+    I64(i64),
+    F32(Ieee32),
+    F64(Ieee64),
+}
+
+impl Value {
+    pub fn to_i64(&self) -> i64 {
+        match self {
+            Value::I32(v) => *v as i64,
+            Value::I64(v) => *v,
+            Value::F32(v) => v.bits() as i64,
+            Value::F64(v) => v.bits() as i64,
+        }
+    }
+}
+
 pub trait RegisterInfo: Sized {
     fn to_reg_size(&self) -> RegSize;
     fn to_ireg_size(&self) -> RegSize;
@@ -339,55 +358,76 @@ pub fn compile_relop(
     register_pool.free();
 }
 
-pub fn compile_const<T: Into<i64>>(
-    op: &Operator,
-    value: T,
+pub fn compile_const(
+    valtype: ValType,
+    value: Value,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
     machinecode: &mut Vec<u32>,
 ) {
-    let reg = register_pool.alloc();
-    let valtype = map_op_to_valtype(op);
+    match value {
+        Value::I32(v) => {
+            let reg = register_pool.alloc();
+            value_stack.push(StackElement {
+                reg: Reg::IReg(reg),
+                valtype,
+            });
+            compound::mov_large_immediate(
+                reg,
+                v.into(),
+                map_valtype_to_regsize(&valtype),
+                machinecode,
+            );
+        }
+        Value::I64(v) => {
+            let reg = register_pool.alloc();
+            value_stack.push(StackElement {
+                reg: Reg::IReg(reg),
+                valtype,
+            });
+            compound::mov_large_immediate(reg, v, map_valtype_to_regsize(&valtype), machinecode);
+        }
+        Value::F32(v) => {
+            let reg = register_pool.alloc_float();
+            value_stack.push(StackElement {
+                reg: Reg::FReg(reg),
+                valtype,
+            });
 
-    value_stack.push(StackElement {
-        reg: Reg::IReg(reg),
-        valtype,
-    });
+            let temp_reg = register_pool.alloc();
+            compound::mov_large_immediate(
+                temp_reg,
+                v.bits() as i64,
+                RegSize::Int32bit,
+                machinecode,
+            );
+            machinecode.push(fp_processing::fmov(
+                Reg::FReg(reg),
+                Reg::IReg(temp_reg),
+                RegSize::Float32bit,
+            ));
+            register_pool.free();
+        }
+        Value::F64(v) => {
+            let reg = register_pool.alloc_float();
+            value_stack.push(StackElement {
+                reg: Reg::FReg(reg),
+                valtype,
+            });
 
-    compound::mov_large_immediate(
-        reg,
-        value.into(),
-        map_valtype_to_regsize(&valtype),
-        machinecode,
-    );
-}
-
-pub fn compile_float_const(
-    op: &Operator,
-    value: IeeeFloat,
-    value_stack: &mut Vec<StackElement>,
-    register_pool: &mut RegisterPool,
-    machinecode: &mut Vec<u32>,
-) {
-    let reg = register_pool.alloc_float();
-    let valtype = map_op_to_valtype(op);
-
-    value_stack.push(StackElement {
-        reg: Reg::FReg(reg),
-        valtype,
-    });
-
-    let temp_reg = register_pool.alloc();
-    compound::mov_large_immediate(
-        temp_reg,
-        value.bits() as i64,
-        value.to_ireg_size(),
-        machinecode,
-    );
-    machinecode.push(fp_processing::fmov(
-        Reg::FReg(reg),
-        Reg::IReg(temp_reg),
-        value.to_reg_size(),
-    ));
-    register_pool.free();
+            let temp_reg = register_pool.alloc();
+            compound::mov_large_immediate(
+                temp_reg,
+                v.bits() as i64,
+                RegSize::Int64bit,
+                machinecode,
+            );
+            machinecode.push(fp_processing::fmov(
+                Reg::FReg(reg),
+                Reg::IReg(temp_reg),
+                RegSize::Float64bit,
+            ));
+            register_pool.free();
+        }
+    }
 }

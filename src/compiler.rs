@@ -108,7 +108,8 @@ pub struct Export {
 pub struct Global {
     pub valtype: wasmparser::ValType,
     pub mutable: bool,
-    pub value: i64,
+    // enum type for i32, i64, f32 and f64 values
+    pub value: Value,
 }
 
 #[derive(Debug)]
@@ -250,12 +251,19 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                         assert_eq!(table_index, 0, "Only table index 0 is supported");
 
                         // println!("table_index: {:?}, offset: {:?}", &table_index, &offset);
+                        let offset = match offset {
+                            Value::I32(v) => v as usize,
+                            _ => {
+                                return Err(TinyWasmError::Parser(String::from(
+                                    "Only i32 offsets are supported for element sections",
+                                )));
+                            }
+                        };
 
                         match element.items {
                             wasmparser::ElementItems::Functions(section) => {
                                 for (i, func_idx) in section.into_iter().enumerate() {
-                                    compiler_func_table.func_indices[(offset as usize) + i] =
-                                        func_idx?;
+                                    compiler_func_table.func_indices[offset + i] = func_idx?;
                                 }
                             }
                             _ => {
@@ -376,16 +384,18 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         }
     }
 
+    let globals = if let Some(globals) = module_ctx.globals.as_ref() {
+        globals.iter().map(|global| global.value.to_i64()).collect()
+    } else {
+        Vec::new()
+    };
+
     Ok(LinkedModule {
         machinecode,
         functions: jit_functions,
         runtime_ctx: module_ctx.runtime_ctx,
         func_table: module_ctx.ctx_func_table,
-        globals: if let Some(globals) = module_ctx.globals {
-            globals.iter().map(|global| global.value).collect()
-        } else {
-            Vec::new()
-        },
+        globals,
     })
 }
 
