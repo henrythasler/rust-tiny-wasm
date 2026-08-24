@@ -8,15 +8,21 @@
   (global $mutfloat32 (mut f32) (f32.const 3.14159274))
   (global $mutfloat64 (mut f64) (f64.const 2.7182818284590451))
   ;; this is a special case where the LEB128 encoded number has 0x0B as it's last byte which collides with the init_exp terminator
-  (global $mut3 (mut i32) (i32.const 186384))
+  (global $special (mut i32) (i32.const 186384))
   (export "get_int32" (func $get_int32))
+  (export "get_special" (func $get_special))
   (export "get_int64" (func $get_int64))
   (export "get_float32" (func $get_float32))
   (export "get_float64" (func $get_float64))
-  ;; (export "store_int32" (func $store_int32))
-  ;; (export "store_int64" (func $store_int64))
+  (export "store_int32" (func $store_int32))
+  (export "store_int64" (func $store_int64))
+  (export "store_float32" (func $store_float32))
+  (export "store_float64" (func $store_float64))
   (func $get_int32 (result i32)
     global.get $int32
+  )
+  (func $get_special (result i32)
+    global.get $special
   )
   (func $get_int64 (result i64)
     global.get $int64
@@ -27,14 +33,24 @@
   (func $get_float64 (result f64)
     global.get $float64
   )
-  ;; (func $store_int32 (param $arg i32) (result i32)
-  ;;   local.get $arg
-  ;;   global.set $mutint32
-  ;;   global.get $mutint32   
-  ;; )
-  ;; (func $store_int64 (param $arg i64) (result i64)
-  ;;   local.get $arg
-  ;;   global.set $mutint64
-  ;;   global.get $mutint64
-  ;; )
+  (func $store_int32 (param $arg i32) (result i32)
+    local.get $arg
+    global.set $mutint32
+    global.get $mutint32   
+  )
+  (func $store_int64 (param $arg i64) (result i64)
+    local.get $arg
+    global.set $mutint64
+    global.get $mutint64
+  )
+  (func $store_float32 (param $arg f32) (result f32)
+    local.get $arg
+    global.set $mutfloat32
+    global.get $mutfloat32
+  )
+  (func $store_float64 (param $arg f64) (result f64)
+    local.get $arg
+    global.set $mutfloat64
+    global.get $mutfloat64
+  )
 )

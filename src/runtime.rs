@@ -243,6 +243,9 @@ pub struct Runtime {
     ctx: RuntimeCtx,
     func_table: Option<FuncTable>,
     functions: Vec<JitObject>,
+
+    // Owns the allocation referenced by ctx.globals_base.
+    #[allow(dead_code)]
     globals: Vec<i64>,
 }
 

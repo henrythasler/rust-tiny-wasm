@@ -233,6 +233,15 @@ pub fn compile_function(
                     machinecode,
                 );
             }
+            Operator::GlobalSet { global_index } => {
+                compile_global_set(
+                    global_index,
+                    module_ctx,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
             Operator::I32Add
             | Operator::I64Add
             | Operator::I32Sub

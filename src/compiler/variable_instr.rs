@@ -153,12 +153,23 @@ pub fn compile_global_get(
                         reg: Reg::FReg(reg),
                         valtype: global.valtype,
                     });
+
+                    let temp_reg = register_pool.alloc();
+                    machinecode.push(memory::ldr_imm_unsigned_offset(
+                        temp_reg,
+                        CONTEXT_REG,
+                        ctx_offsets::GLOBALS_BASE,
+                        MemSize::Mem64bit,
+                        RegSize::Int64bit,
+                    ));
+
                     machinecode.push(fp_memory::ldr_imm_unsigned_offset(
                         reg,
-                        IReg::X0, // Assuming X0 holds the base address of globals
-                        (global_index as usize * 8) as u32, // Assuming each global is 8 bytes; adjust as necessary
+                        temp_reg,
+                        global_index * 8, // Assuming each global is 8 bytes; adjust as necessary
                         map_valtype_to_regsize(&global.valtype),
                     ));
+                    register_pool.free(); // Free the temporary register after use
                 }
                 _ => panic!("Unsupported variable type for global.get"),
             }
@@ -183,4 +194,38 @@ pub fn compile_global_set(
     let element = value_stack
         .pop()
         .expect("value stack should contain at least one element on 'local.set' opcode");
+
+    // Retrieve the global variable from the module context; will panic if the index is out of bounds or if globals are not initialized
+    let global = module_ctx
+        .globals
+        .as_ref()
+        .unwrap()
+        .get(global_index as usize)
+        .expect("Global index out of bounds");
+
+    let temp_reg = register_pool.alloc();
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        temp_reg,
+        CONTEXT_REG,
+        ctx_offsets::GLOBALS_BASE,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
+
+    match element.reg {
+        Reg::IReg(reg) => machinecode.push(memory::str_imm_unsigned_offset(
+            reg,
+            temp_reg,
+            global_index * 8,
+            map_valtype_to_memsize(&global.valtype),
+            map_valtype_to_regsize(&global.valtype),
+        )),
+        Reg::FReg(reg) => machinecode.push(fp_memory::str_imm_unsigned_offset(
+            reg,
+            temp_reg,
+            global_index * 8,
+            map_valtype_to_regsize(&global.valtype),
+        )),
+    }
+    register_pool.free();
 }
