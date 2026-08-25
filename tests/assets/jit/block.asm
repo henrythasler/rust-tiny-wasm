@@ -10,6 +10,7 @@ SYMBOL TABLE:
 0000000000000110 l     F .text	0000000000000048 parameter-nested-return
 0000000000000158 l     F .text	0000000000000060 nested-br_if
 00000000000001b8 l     F .text	0000000000000050 loop_return
+0000000000000208 l     F .text	0000000000000040 truncate_stack
 
 
 Contents of section .text:
@@ -45,7 +46,11 @@ Contents of section .text:
  01d0 49008052 0801090b e80b00b9 05000014  I..R............
  01e0 49018052 1f01096b e8a79f1a 08ffff35  I..R...k.......5
  01f0 e80b40b9 000080d2 e10308aa ff430091  ..@..........C..
- 0200 fd7bc1a8 c0035fd6                    .{...._.        
+ 0200 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 0210 ff4300d1 e00300f9 28008052 49008052  .C......(..RI..R
+ 0220 89000035 69008052 02000014 e803092a  ...5i..R.......*
+ 0230 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
+ 0240 c0035fd6 1f2003d5                    .._.. ..        
 
 Disassembly of section .text:
 
@@ -194,3 +199,21 @@ Disassembly of section .text:
  1fc:	910043ff 	add	sp, sp, #0x10
  200:	a8c17bfd 	ldp	x29, x30, [sp], #16
  204:	d65f03c0 	ret
+
+0000000000000208 <truncate_stack>:
+ 208:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 20c:	910003fd 	mov	x29, sp
+ 210:	d10043ff 	sub	sp, sp, #0x10
+ 214:	f90003e0 	str	x0, [sp]
+ 218:	52800028 	mov	w8, #0x1                   	// #1
+ 21c:	52800049 	mov	w9, #0x2                   	// #2
+ 220:	35000089 	cbnz	w9, 230 <truncate_stack+0x28>
+ 224:	52800069 	mov	w9, #0x3                   	// #3
+ 228:	14000002 	b	230 <truncate_stack+0x28>
+ 22c:	2a0903e8 	mov	w8, w9
+ 230:	d2800000 	mov	x0, #0x0                   	// #0
+ 234:	aa0803e1 	mov	x1, x8
+ 238:	910043ff 	add	sp, sp, #0x10
+ 23c:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 240:	d65f03c0 	ret
+ 244:	d503201f 	nop

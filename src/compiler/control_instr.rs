@@ -4,18 +4,22 @@ use super::*;
 
 pub fn compile_return(
     control_stack: &mut [ControlFrame],
-    value_stack: &[StackElement],
+    value_stack: &mut Vec<StackElement>,
     machinecode: &mut Vec<u32>,
 ) {
     let frame = control_stack
         .get_mut(0)
         .expect("control stack should contain at least one element on 'return' opcode");
 
-    assert_eq!(
-        frame.end_types.len(),
-        value_stack.len(),
+    assert!(
+        value_stack.len() >= frame.end_types.len(),
         "insufficient operands on stack for 'return'"
     );
+
+    let mut results = value_stack
+        .split_off(i32::max(0, value_stack.len() as i32 - frame.end_types.len() as i32) as usize);
+    value_stack.truncate(frame.stack_height);
+    value_stack.append(&mut results);
 
     frame.patches.push(Patch {
         location: machinecode.len(),

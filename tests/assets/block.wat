@@ -7,6 +7,7 @@
   (export "parameter-nested-return" (func $func5))
   (export "nested-br_if" (func $func6))
   (export "loop_return" (func $loop_return))
+  (export "truncate_stack" (func $truncate_stack))
   (func $func0
     block
       i32.const 63
@@ -109,5 +110,14 @@
     end $label0
   end $label1
   local.get $cnt
+  )
+  (func $truncate_stack (result i32)
+    block $label0 (result i32)
+      i32.const 1
+      i32.const 2
+      br_if $label0
+      i32.const 3
+      return
+    end $label0
   )
 )
