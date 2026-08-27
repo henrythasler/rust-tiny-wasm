@@ -4,7 +4,7 @@ use super::*;
 
 pub fn compile_return(
     control_stack: &mut [ControlFrame],
-    value_stack: &mut Vec<StackElement>,
+    value_stack: &[StackElement],
     machinecode: &mut Vec<u32>,
 ) {
     let frame = control_stack
@@ -16,10 +16,9 @@ pub fn compile_return(
         "insufficient operands on stack for 'return'"
     );
 
-    let mut results = value_stack
-        .split_off(i32::max(0, value_stack.len() as i32 - frame.end_types.len() as i32) as usize);
-    value_stack.truncate(frame.stack_height);
-    value_stack.append(&mut results);
+    if !frame.end_types.is_empty() && frame.result_register.is_none() {
+        frame.result_register = Some(value_stack.last().unwrap().reg);
+    }
 
     frame.patches.push(Patch {
         location: machinecode.len(),
@@ -373,21 +372,14 @@ pub fn compile_end(
         Opcode::Loop => {}
         Opcode::Block => {
             for patch in frame.patches {
+                let offset = (machinecode.len() - patch.location) as i32 * 4;
+                let location = machinecode
+                    .get_mut(patch.location)
+                    .expect("patch location should point to valid location");
                 match patch.instruction {
-                    Instruction::Br => {
-                        let offset = (machinecode.len() - patch.location) as i32 * 4;
-                        let location = machinecode
-                            .get_mut(patch.location)
-                            .expect("patch location should point to valid location");
-                        branch::patch_branch(offset, location);
-                    }
-                    Instruction::Cbz => {
-                        let offset = (machinecode.len() - patch.location) as i32 * 4;
-                        let location = machinecode
-                            .get_mut(patch.location)
-                            .expect("patch location should point to valid location");
-                        branch::patch_cbz(offset, location);
-                    }
+                    Instruction::Br => branch::patch_branch(offset, location),
+                    Instruction::Cbz => branch::patch_cbz(offset, location),
+                    Instruction::Cbnz => branch::patch_cbnz(offset, location),
                     _ => panic!("unexpected patch instruction"),
                 }
             }

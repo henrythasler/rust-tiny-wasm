@@ -114,7 +114,7 @@
   (func $truncate_stack (result i32)
     block $label0 (result i32)
       i32.const 1
-      i32.const 2
+      i32.const 0
       br_if $label0
       i32.const 3
       return

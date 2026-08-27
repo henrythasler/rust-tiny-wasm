@@ -68,7 +68,7 @@ pub fn compile_function(
                 machinecode,
             ),
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
-            Operator::Return => compile_return(&mut control_stack, &mut value_stack, machinecode),
+            Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
             Operator::Block { blockty } => {
                 compile_block(
                     blockty,
