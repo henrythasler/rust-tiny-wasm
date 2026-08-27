@@ -10,6 +10,8 @@ SYMBOL TABLE:
 00000000000000e8 l     F .text	0000000000000038 set-y
 0000000000000120 l     F .text	0000000000000040 as-if-then
 0000000000000160 l     F .text	0000000000000040 as-if-else
+00000000000001a0 l     F .text	0000000000000048 as-br_if-first
+00000000000001e8 l     F .text	0000000000000048 as-br_if-last
 
 
 Contents of section .text:
@@ -39,6 +41,15 @@ Contents of section .text:
  0170 08008052 68000034 48008052 03000014  ...Rh..4H..R....
  0180 081840f9 081140b9 000080d2 e10308aa  ..@...@.........
  0190 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
+ 01a0 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
+ 01b0 081840f9 081140b9 49008052 89000035  ..@...@.I..R...5
+ 01c0 69008052 03000014 e803092a e903082a  i..R.......*...*
+ 01d0 000080d2 e10309aa ff430091 fd7bc1a8  .........C...{..
+ 01e0 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
+ 01f0 ff4300d1 e00300f9 48008052 091840f9  .C......H..R..@.
+ 0200 291140b9 89000035 69008052 03000014  ).@....5i..R....
+ 0210 e803092a e903082a 000080d2 e10309aa  ...*...*........
+ 0220 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
 
 Disassembly of section .text:
 
@@ -161,3 +172,43 @@ Disassembly of section .text:
  194:	a8c17bfd 	ldp	x29, x30, [sp], #16
  198:	d65f03c0 	ret
  19c:	d503201f 	nop
+
+00000000000001a0 <as-br_if-first>:
+ 1a0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 1a4:	910003fd 	mov	x29, sp
+ 1a8:	d10043ff 	sub	sp, sp, #0x10
+ 1ac:	f90003e0 	str	x0, [sp]
+ 1b0:	f9401808 	ldr	x8, [x0, #48]
+ 1b4:	b9401108 	ldr	w8, [x8, #16]
+ 1b8:	52800049 	mov	w9, #0x2                   	// #2
+ 1bc:	35000089 	cbnz	w9, 1cc <as-br_if-first+0x2c>
+ 1c0:	52800069 	mov	w9, #0x3                   	// #3
+ 1c4:	14000003 	b	1d0 <as-br_if-first+0x30>
+ 1c8:	2a0903e8 	mov	w8, w9
+ 1cc:	2a0803e9 	mov	w9, w8
+ 1d0:	d2800000 	mov	x0, #0x0                   	// #0
+ 1d4:	aa0903e1 	mov	x1, x9
+ 1d8:	910043ff 	add	sp, sp, #0x10
+ 1dc:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 1e0:	d65f03c0 	ret
+ 1e4:	d503201f 	nop
+
+00000000000001e8 <as-br_if-last>:
+ 1e8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 1ec:	910003fd 	mov	x29, sp
+ 1f0:	d10043ff 	sub	sp, sp, #0x10
+ 1f4:	f90003e0 	str	x0, [sp]
+ 1f8:	52800048 	mov	w8, #0x2                   	// #2
+ 1fc:	f9401809 	ldr	x9, [x0, #48]
+ 200:	b9401129 	ldr	w9, [x9, #16]
+ 204:	35000089 	cbnz	w9, 214 <as-br_if-last+0x2c>
+ 208:	52800069 	mov	w9, #0x3                   	// #3
+ 20c:	14000003 	b	218 <as-br_if-last+0x30>
+ 210:	2a0903e8 	mov	w8, w9
+ 214:	2a0803e9 	mov	w9, w8
+ 218:	d2800000 	mov	x0, #0x0                   	// #0
+ 21c:	aa0903e1 	mov	x1, x9
+ 220:	910043ff 	add	sp, sp, #0x10
+ 224:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 228:	d65f03c0 	ret
+ 22c:	d503201f 	nop

@@ -17,7 +17,7 @@ fn test_{{ module.name }}() -> Result<()> {
                 {%- if test.expected != "" %}
     assert_eq!(func.call({{ test.args }})?, {{ test.expected }});
                 {%- else %}
-    func.call()?;
+    func.call({{ test.args }})?;
                 {%- endif -%}
             {%- elif test.variant == "assert_trap" %}
     assert!(matches!(func.call({{ test.args }}).unwrap_err(), runtime::TinyWasmError::Trap(trap_code) if trap_code==runtime::TrapCode::{{ test.expected }}));
