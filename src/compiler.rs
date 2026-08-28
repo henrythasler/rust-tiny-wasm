@@ -94,6 +94,7 @@ pub struct ModuleContext {
     compiler_func_table: Option<CompilerFunctionTable>,
     ctx_func_table: Option<FuncTable>,
     globals: Option<Vec<Global>>,
+    memory: Option<LinearMemory>,
     runtime_ctx: RuntimeCtx,
 }
 
@@ -213,7 +214,12 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     }
                 }
             }
-            MemorySection(_) => { /* ... */ }
+            MemorySection(reader) => {
+                for memory in reader {
+                    let memory = memory?;
+                    module_ctx.memory = Some(LinearMemory::new(memory.initial, memory.maximum))
+                }
+            }
             GlobalSection(reader) => {
                 module_ctx.globals = Some(Vec::new());
                 for global in reader {
@@ -280,7 +286,40 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                 }
             }
             DataCountSection { .. } => { /* ... */ }
-            DataSection(_) => { /* ... */ }
+            DataSection(reader) => {
+                for data in reader {
+                    let data = data?;
+                    let (memory_index, offset) = match data.kind {
+                        wasmparser::DataKind::Active {
+                            memory_index,
+                            offset_expr,
+                        } => (memory_index, parse_const_expr(offset_expr)?),
+                        _ => panic!("Only active data segments are supported"),
+                    };
+
+                    assert_eq!(memory_index, 0, "Only memory index 0 is supported");
+
+                    let offset = match offset {
+                        Value::I32(v) => v as usize,
+                        _ => {
+                            return Err(TinyWasmError::Parser(String::from(
+                                "Only i32 offsets are supported for data segments",
+                            )));
+                        }
+                    };
+
+                    if let Some(linear_memory) = module_ctx.memory.as_mut() {
+                        let end_offset = offset + data.data.len();
+                        // FIXME: resize to next page size
+                        linear_memory.memory.resize(end_offset, 0);
+                        linear_memory.memory[offset..end_offset].copy_from_slice(data.data);
+                    } else {
+                        return Err(TinyWasmError::Parser(String::from(
+                            "Data section found but no linear memory defined",
+                        )));
+                    }
+                }
+            }
 
             // Here we know how many functions we'll be receiving as
             // `CodeSectionEntry`, so we can prepare for that, and

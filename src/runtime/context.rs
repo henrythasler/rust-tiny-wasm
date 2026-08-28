@@ -64,3 +64,26 @@ impl FuncTable {
         ctx.func_table_len = self.elements.len() as u32;
     }
 }
+
+#[derive(Debug)]
+pub struct LinearMemory {
+    pub memory: Vec<u8>,
+    pub length: u64,
+    pub max_length: Option<u64>,
+}
+
+impl LinearMemory {
+    pub fn new(initial_len: u64, max_len: Option<u64>) -> Self {
+        let memory = vec![0; initial_len as usize];
+        LinearMemory {
+            memory,
+            length: initial_len,
+            max_length: max_len,
+        }
+    }
+
+    pub fn sync_to_context(&mut self, ctx: &mut RuntimeCtx) {
+        ctx.memory_base = self.memory.as_mut_ptr();
+        ctx.memory_len = self.length as u32;
+    }
+}
