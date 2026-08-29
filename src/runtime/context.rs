@@ -1,3 +1,5 @@
+pub const WASM_PAGE_SIZE: usize = 65536; // 64 KiB
+
 #[derive(Debug, Default)]
 #[repr(C)]
 pub struct RuntimeCtx {

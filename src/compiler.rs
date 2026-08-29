@@ -19,6 +19,7 @@ mod procedure_call;
 mod stack;
 mod traphandler;
 mod variable_instr;
+mod memory_instr;
 
 use control_instr::*;
 use function::*;
@@ -29,6 +30,7 @@ use procedure_call::*;
 use stack::*;
 use traphandler::*;
 use variable_instr::*;
+use memory_instr::*;
 
 #[derive(Debug)]
 pub enum Opcode {
@@ -135,6 +137,7 @@ pub struct LinkedModule {
     pub runtime_ctx: RuntimeCtx,
     pub func_table: Option<FuncTable>,
     pub globals: Vec<i64>,
+    pub memory: Option<LinearMemory>,
 }
 
 impl LinkedModule {
@@ -144,6 +147,7 @@ impl LinkedModule {
         runtime_ctx: RuntimeCtx,
         func_table: Option<FuncTable>,
         globals: Vec<i64>,
+        memory: Option<LinearMemory>,
     ) -> Self {
         Self {
             machinecode,
@@ -151,6 +155,7 @@ impl LinkedModule {
             runtime_ctx,
             func_table,
             globals,
+            memory,
         }
     }
 }
@@ -310,8 +315,15 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
 
                     if let Some(linear_memory) = module_ctx.memory.as_mut() {
                         let end_offset = offset + data.data.len();
-                        // FIXME: resize to next page size
-                        linear_memory.memory.resize(end_offset, 0);
+                        assert!(
+                            end_offset
+                                <= linear_memory.max_length.unwrap_or(u32::MAX as u64) as usize,
+                            "Data segment exceeds maximum linear memory size of 4 GiB"
+                        );
+                        linear_memory.memory.resize(
+                            (end_offset + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE * WASM_PAGE_SIZE,
+                            0,
+                        );
                         linear_memory.memory[offset..end_offset].copy_from_slice(data.data);
                     } else {
                         return Err(TinyWasmError::Parser(String::from(
@@ -435,6 +447,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         runtime_ctx: module_ctx.runtime_ctx,
         func_table: module_ctx.ctx_func_table,
         globals,
+        memory: module_ctx.memory,
     })
 }
 

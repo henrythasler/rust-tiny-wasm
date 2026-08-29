@@ -19,7 +19,7 @@
   ;; )
   (func $load_i32 (param $index i32) (result i32)
     local.get $index
-    ;; i32.load
+    i32.load
   )
   ;; (func $load_u16 (param $index i32) (result i32)
   ;;   local.get $index

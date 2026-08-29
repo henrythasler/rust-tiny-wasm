@@ -67,6 +67,15 @@ pub fn compile_function(
                 &mut trap_locations,
                 machinecode,
             ),
+            Operator::I32Load { memarg } => {
+                compile_load(
+                    memarg,
+                    module_ctx,
+                    &mut value_stack,
+                    &mut register_pool,
+                    machinecode,
+                );
+            }
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
             Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
             Operator::Block { blockty } => {
@@ -153,7 +162,6 @@ pub fn compile_function(
                     module_ctx,
                     &mut value_stack,
                     &mut register_pool,
-                    // call_patches,
                     &mut trap_locations,
                     machinecode,
                 );

@@ -247,6 +247,8 @@ pub struct Runtime {
     // Owns the allocation referenced by ctx.globals_base.
     #[allow(dead_code)]
     globals: Vec<i64>,
+
+    memory: Option<LinearMemory>,
 }
 
 impl Runtime {
@@ -274,12 +276,15 @@ impl Runtime {
             mem::size_of::<*const u8>()
         );
 
-        // println!("func_table: {:?}", self.func_table);
+        // update the runtime context with the base addresses of the function table and linear memory, if they exist
         let ctx = &mut self.ctx;
         if let Some(func_table) = self.func_table.as_mut() {
             func_table.sync_to_context(ctx);
         }
-        // println!("ctx after sync: {:?}", ctx);
+
+        if let Some(linear_memory) = self.memory.as_mut() {
+            linear_memory.sync_to_context(ctx);
+        }
 
         let callable = unsafe { Callable::<P, R>::new(ptr, ctx) };
         Ok(callable)
@@ -319,10 +324,6 @@ pub fn instantiate_module(mut module: LinkedModule) -> Result<Runtime> {
     // update the runtime context with the base address and length of the JIT code
     module.runtime_ctx.jit_base = machinecode.as_ptr();
     module.runtime_ctx.jit_len = machinecode.len() as u32;
-
-    // println!("Runtime context: {:?}", module.runtime_ctx);
-    // println!("Function table: {:?}", module.func_table);
-
     module.runtime_ctx.globals_base = module.globals.as_mut_ptr();
 
     Ok(Runtime {
@@ -331,6 +332,7 @@ pub fn instantiate_module(mut module: LinkedModule) -> Result<Runtime> {
         func_table: module.func_table,
         functions: module.functions.to_vec(),
         globals: module.globals,
+        memory: module.memory,
     })
 }
 
@@ -363,6 +365,7 @@ mod tests {
             RuntimeCtx::default(),
             None,
             vec![],
+            None,
         );
         let mut runtime = instantiate_module(module)?;
         let _ = runtime.get_function::<(), i32>("test")?;
@@ -382,6 +385,7 @@ mod tests {
             RuntimeCtx::default(),
             None,
             vec![],
+            None,
         );
         let mut runtime = instantiate_module(module)?;
         let func = runtime.get_function::<(), ()>("void")?;
@@ -403,6 +407,7 @@ mod tests {
             RuntimeCtx::default(),
             None,
             vec![],
+            None,
         );
         let mut runtime = instantiate_module(module)?;
         let func = runtime.get_function::<(), i64>("invalid_result")?;
@@ -427,6 +432,7 @@ mod tests {
             RuntimeCtx::default(),
             None,
             vec![],
+            None,
         );
         let mut runtime = instantiate_module(module)?;
         let func = runtime.get_function::<(), i32>("trap_code")?;
@@ -447,6 +453,7 @@ mod tests {
             RuntimeCtx::default(),
             None,
             vec![],
+            None,
         );
         assert_eq!(
             instantiate_module(module).unwrap_err(),
@@ -467,6 +474,7 @@ mod tests {
             RuntimeCtx::default(),
             None,
             vec![],
+            None,
         );
         let mut runtime = instantiate_module(module)?;
         assert_eq!(
