@@ -361,6 +361,18 @@ pub enum MemSize {
     Mem128bit,
 }
 
+impl MemSize {
+    pub fn to_bytes(&self) -> u32 {
+        match self {
+            MemSize::Mem8bit => 1,
+            MemSize::Mem16bit => 2,
+            MemSize::Mem32bit => 4,
+            MemSize::Mem64bit => 8,
+            MemSize::Mem128bit => 16,
+        }
+    }
+}
+
 #[repr(u32)]
 #[derive(Debug, PartialEq, Eq)]
 pub enum AddressingMode {

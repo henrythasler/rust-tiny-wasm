@@ -67,12 +67,14 @@ pub fn compile_function(
                 &mut trap_locations,
                 machinecode,
             ),
-            Operator::I32Load { memarg } => {
+            Operator::I64Load { memarg } | Operator::I32Load { memarg } => {
                 compile_load(
+                    &op,
                     memarg,
                     module_ctx,
                     &mut value_stack,
                     &mut register_pool,
+                    &mut trap_locations,
                     machinecode,
                 );
             }

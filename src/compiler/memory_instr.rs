@@ -3,10 +3,12 @@ use wasmparser::MemArg;
 use super::*;
 
 pub fn compile_load(
+    op: &Operator,
     memarg: MemArg,
     module_ctx: &ModuleContext,
     value_stack: &mut Vec<StackElement>,
     register_pool: &mut RegisterPool,
+    trap_locations: &mut Vec<Patch>,
     machinecode: &mut Vec<u32>,
 ) {
     assert!(
@@ -28,40 +30,107 @@ pub fn compile_load(
         "Only i32 is supported for memory.load instruction"
     );
 
-    // Add the offset to the register containing the address
-    match element.reg {
-        Reg::IReg(reg) => {
-            let result_reg = register_pool.alloc();
-            value_stack.push(StackElement {
-                reg: Reg::IReg(result_reg),
-                valtype: ValType::I32,
-            });
+    let (register_size, signed_variant, mem_size) = match op {
+        Operator::I32Load { .. } => (RegSize::Int32bit, false, MemSize::Mem32bit),
+        Operator::I64Load { .. } => (RegSize::Int64bit, false, MemSize::Mem64bit),
+        _ => panic!("Unsupported load instruction"),
+    };
 
-            machinecode.push(memory::ldr_imm_unsigned_offset(
-                result_reg,
-                CONTEXT_REG,
-                ctx_offsets::MEMORY_BASE,
-                MemSize::Mem64bit,
+    let dynamic_offset_reg = match element.reg {
+        Reg::IReg(reg) => reg,
+        _ => panic!("Only integer registers are supported for memory.load instruction"),
+    };
+
+    // value_stack.push(StackElement {
+    //     reg: Reg::IReg(address_reg),
+    //     valtype: ValType::I32,
+    // });
+
+    if memarg.offset > 0 {
+        if memarg.offset < 0x10000 {
+            machinecode.push(arithmetic::add_imm(
+                dynamic_offset_reg,
+                dynamic_offset_reg,
+                memarg.offset as u32,
+                false,
                 RegSize::Int64bit,
             ));
-
+        } else {
+            let static_offset_reg = register_pool.alloc();
+            compound::mov_large_immediate(
+                static_offset_reg,
+                memarg.offset as i64,
+                RegSize::Int32bit,
+                machinecode,
+            );
             machinecode.push(arithmetic::add_shifted_reg(
-                result_reg,
-                result_reg,
-                reg,
+                dynamic_offset_reg,
+                dynamic_offset_reg,
+                static_offset_reg,
                 Shift::Lsl,
                 0,
                 RegSize::Int64bit,
             ));
-
-            machinecode.push(memory::ldr_imm_unsigned_offset(
-                result_reg,
-                result_reg,
-                memarg.offset as u32, // Assuming each global is 8 bytes; adjust as necessary
-                MemSize::Mem32bit,
-                RegSize::Int32bit,
-            ));
+            register_pool.free(); // Free the static_offset_reg after use
         }
-        _ => panic!("Only integer registers are supported for memory.load instruction"),
     }
+
+    let length_reg = register_pool.alloc();
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        length_reg,
+        CONTEXT_REG,
+        ctx_offsets::MEMORY_LEN,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
+
+    // substract length of the memory to read
+    machinecode.push(arithmetic::sub_imm(
+        length_reg,
+        length_reg,
+        mem_size.to_bytes(),
+        false,
+        RegSize::Int64bit,
+    ));
+    machinecode.push(arithmetic::cmp_shifted_reg(
+        dynamic_offset_reg,
+        length_reg,
+        Shift::Lsl,
+        0,
+        RegSize::Int64bit,
+    ));
+
+    machinecode.push(branch::branch_cond(
+        Condition::LO,
+        TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
+    ));
+    trap_inline(TrapCode::MemoryOutOfBounds, trap_locations, machinecode);
+    register_pool.free(); // length_reg
+
+    let address_reg = register_pool.alloc();
+
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        address_reg,
+        CONTEXT_REG,
+        ctx_offsets::MEMORY_BASE,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
+
+    let result_reg = dynamic_offset_reg;
+    machinecode.push(memory::ldr_reg(
+        result_reg,
+        result_reg,
+        dynamic_offset_reg,
+        IndexExtend::Lsl,
+        0,
+        mem_size,
+        register_size,
+    ));
+    register_pool.free(); // address_reg
+
+    value_stack.push(StackElement {
+        reg: Reg::IReg(result_reg),
+        valtype: ValType::I32,
+    });
 }
