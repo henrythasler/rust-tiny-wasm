@@ -38,7 +38,7 @@ pub fn ldr_imm_unsigned_offset(rt: IReg, rn: IReg, imm: u32, mem: MemSize, size:
 /// This instruction calculates an address from a base register value and an offset register value, loads a word from memory, and writes it to a register. The offset register value can optionally be shifted and extended.
 ///
 /// # Instructions
-/// `ADRP <rd>, <imm>`
+/// `LDR <rt>, [<rn|SP>, <rm>{, <extend> {<amount>}}]`
 ///
 /// # Arguments
 /// * `rt` - The destination register (IReg).
@@ -60,7 +60,11 @@ pub fn ldr_reg(
     size: RegSize,
 ) -> u32 {
     let mut instr: u32 = if mem == MemSize::Mem64bit && size == RegSize::Int64bit {
+        // LDR (64-bit)
         0xF8600800 | if amount == 3 { 0x1000 } else { 0 } | (option as u32) << 13
+    } else if mem == MemSize::Mem32bit && size == RegSize::Int32bit {
+        // LDR (32-bit)
+        0xB8600800 | if amount == 2 { 0x1000 } else { 0 } | (option as u32) << 13
     } else {
         panic!("invalid MemSize or RegSize in ldr_reg")
     };

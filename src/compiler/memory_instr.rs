@@ -30,7 +30,7 @@ pub fn compile_load(
         "Only i32 is supported for memory.load instruction"
     );
 
-    let (register_size, signed_variant, mem_size) = match op {
+    let (register_size, _signed_variant, mem_size) = match op {
         Operator::I32Load { .. } => (RegSize::Int32bit, false, MemSize::Mem32bit),
         Operator::I64Load { .. } => (RegSize::Int64bit, false, MemSize::Mem64bit),
         _ => panic!("Unsupported load instruction"),
@@ -120,7 +120,7 @@ pub fn compile_load(
     let result_reg = dynamic_offset_reg;
     machinecode.push(memory::ldr_reg(
         result_reg,
-        result_reg,
+        address_reg,
         dynamic_offset_reg,
         IndexExtend::Lsl,
         0,

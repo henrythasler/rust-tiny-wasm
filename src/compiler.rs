@@ -12,6 +12,7 @@ use crate::runtime::context::*;
 
 mod control_instr;
 mod function;
+mod memory_instr;
 mod numeric_instr;
 mod parametric_instr;
 mod parser;
@@ -19,10 +20,10 @@ mod procedure_call;
 mod stack;
 mod traphandler;
 mod variable_instr;
-mod memory_instr;
 
 use control_instr::*;
 use function::*;
+use memory_instr::*;
 use numeric_instr::*;
 use parametric_instr::*;
 use parser::*;
@@ -30,7 +31,6 @@ use procedure_call::*;
 use stack::*;
 use traphandler::*;
 use variable_instr::*;
-use memory_instr::*;
 
 #[derive(Debug)]
 pub enum Opcode {
@@ -320,10 +320,9 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                                 <= linear_memory.max_length.unwrap_or(u32::MAX as u64) as usize,
                             "Data segment exceeds maximum linear memory size of 4 GiB"
                         );
-                        linear_memory.memory.resize(
-                            (end_offset + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE * WASM_PAGE_SIZE,
-                            0,
-                        );
+                        linear_memory
+                            .memory
+                            .resize(end_offset.div_ceil(WASM_PAGE_SIZE) * WASM_PAGE_SIZE, 0);
                         linear_memory.memory[offset..end_offset].copy_from_slice(data.data);
                     } else {
                         return Err(TinyWasmError::Parser(String::from(
