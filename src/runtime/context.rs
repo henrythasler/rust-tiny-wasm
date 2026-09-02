@@ -9,9 +9,8 @@ pub struct RuntimeCtx {
     pub func_table_base: *mut FuncTableElement, // ptr to funcref table (heap-allocated, NOT in code buffer)
     pub func_table_len: u32,
     pub _pad2: u32,           // keep 8-byte alignment for the pointer below
-    pub memory_base: *mut u8, // linear memory base, if you have one
-    pub memory_len: u32,
-    pub _pad3: u32, // keep 8-byte alignment for the pointer below
+    pub memory_base: *mut u8, // linear memory base, if you have one; otherwise NULL
+    pub memory_len: u64,
     pub globals_base: *mut i64,
     pub host_call: *const u8, // fn ptr for calling back into Rust (see §5)
                               // ... add fields as needed, but NEVER reorder existing ones once JIT code
@@ -86,6 +85,6 @@ impl LinearMemory {
 
     pub fn sync_to_context(&mut self, ctx: &mut RuntimeCtx) {
         ctx.memory_base = self.memory.as_mut_ptr();
-        ctx.memory_len = self.length as u32;
+        ctx.memory_len = self.length;
     }
 }

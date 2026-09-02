@@ -2,7 +2,7 @@
   (memory 0)
   ;; (global $__stack_pointer (;0;) (mut i32) (i32.const 9232))
   (data (i32.const 767) "\fd0123456789ABCDEF")
-  ;; (export "load_i64" (func $load_i64))
+  (export "load_i64" (func $load_i64))
   (export "load_i32" (func $load_i32))
   ;; (export "load_u16" (func $load_u16))
   ;; (export "load_u8" (func $load_u8))
@@ -13,10 +13,10 @@
   ;; (export "store_i16" (func $store_i16))
   ;; (export "store_i8" (func $store_i8))
   ;; (export "loop" (func $loop))
-  ;; (func $load_i64 (param $index i32) (result i64)
-  ;;   local.get $index
-  ;;   i64.load
-  ;; )
+  (func $load_i64 (param $index i32) (result i64)
+    local.get $index
+    i64.load
+  )
   (func $load_i32 (param $index i32) (result i32)
     local.get $index
     i32.load

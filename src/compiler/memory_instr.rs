@@ -41,11 +41,6 @@ pub fn compile_load(
         _ => panic!("Only integer registers are supported for memory.load instruction"),
     };
 
-    // value_stack.push(StackElement {
-    //     reg: Reg::IReg(address_reg),
-    //     valtype: ValType::I32,
-    // });
-
     if memarg.offset > 0 {
         if memarg.offset < 0x10000 {
             machinecode.push(arithmetic::add_imm(
@@ -60,7 +55,7 @@ pub fn compile_load(
             compound::mov_large_immediate(
                 static_offset_reg,
                 memarg.offset as i64,
-                RegSize::Int32bit,
+                RegSize::Int64bit,
                 machinecode,
             );
             machinecode.push(arithmetic::add_shifted_reg(
@@ -101,7 +96,7 @@ pub fn compile_load(
     ));
 
     machinecode.push(branch::branch_cond(
-        Condition::LO,
+        Condition::LS,
         TRAP_SKIP_BRANCH * INSTRUCTION_SIZE as i32,
     ));
     trap_inline(TrapCode::MemoryOutOfBounds, trap_locations, machinecode);
