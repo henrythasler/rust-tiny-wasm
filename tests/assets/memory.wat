@@ -4,10 +4,11 @@
   (data (i32.const 767) "\fd0123456789ABCDEF")
   (export "load_i64" (func $load_i64))
   (export "load_i32" (func $load_i32))
-  ;; (export "load_u16" (func $load_u16))
-  ;; (export "load_u8" (func $load_u8))
-  ;; (export "load_i8" (func $load_i8))
-  ;; (export "load_u8_offset" (func $load_u8_offset))
+  ;; (export "load_i32_16u" (func $load_i32_16u))
+  ;; (export "load_i32_16s" (func $load_i32_16s))
+  (export "load_i32_8u" (func $load_i32_8u))
+  (export "load_i32_8s" (func $load_i32_8s))
+  (export "load_i32_8u_offset" (func $load_i32_8u_offset))
   ;; (export "store_i64" (func $store_i64))
   ;; (export "store_i32" (func $store_i32))
   ;; (export "store_i16" (func $store_i16))
@@ -21,22 +22,26 @@
     local.get $index
     i32.load
   )
-  ;; (func $load_u16 (param $index i32) (result i32)
+  ;; (func $load_i32_16u (param $index i32) (result i32)
   ;;   local.get $index
   ;;   i32.load16_u
   ;; )
-  ;; (func $load_u8 (param $index i32) (result i32)
+  ;; (func $load_i32_16s (param $index i32) (result i32)
   ;;   local.get $index
-  ;;   i32.load8_u
-  ;; )
-  ;; (func $load_i8 (param $index i32) (result i32)
-  ;;   local.get $index
-  ;;   i32.load8_s
-  ;; )
-  ;; (func $load_u8_offset (param $index i32) (result i32)
-  ;;   local.get $index
-  ;;   i32.load8_u offset=768
-  ;; )
+  ;;   i32.load16_s
+  ;; )  
+  (func $load_i32_8u (param $index i32) (result i32)
+    local.get $index
+    i32.load8_u
+  )
+  (func $load_i32_8s (param $index i32) (result i32)
+    local.get $index
+    i32.load8_s
+  )
+  (func $load_i32_8u_offset (param $index i32) (result i32)
+    local.get $index
+    i32.load8_u offset=768
+  )
   ;; (func $store_i64 (param $index i32) (param $value i64) (result i64)
   ;;   local.get $index
   ;;   local.get $value

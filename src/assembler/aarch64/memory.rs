@@ -39,6 +39,8 @@ pub fn ldr_imm_unsigned_offset(rt: IReg, rn: IReg, imm: u32, mem: MemSize, size:
 ///
 /// # Instructions
 /// `LDR <rt>, [<rn|SP>, <rm>{, <extend> {<amount>}}]`
+/// `LDRH <rt>, [<rn|SP>, <rm>{, <extend> {<amount>}}]`
+/// `LDRB <rt>, [<rn|SP>, <rm>, <extend> {<amount>}]`
 ///
 /// # Arguments
 /// * `rt` - The destination register (IReg).
@@ -65,6 +67,44 @@ pub fn ldr_reg(
     } else if mem == MemSize::Mem32bit && size == RegSize::Int32bit {
         // LDR (32-bit)
         0xB8600800 | if amount == 2 { 0x1000 } else { 0 } | (option as u32) << 13
+    } else if mem == MemSize::Mem16bit && size == RegSize::Int32bit {
+        // LDRH (16-bit)
+        0x78600800 | if amount == 1 { 0x1000 } else { 0 } | (option as u32) << 13
+    } else if mem == MemSize::Mem8bit && size == RegSize::Int32bit {
+        // LDRB (8-bit)
+        0x38600800 | if amount == 0 { 0x1000 } else { 0 } | (option as u32) << 13
+    } else {
+        panic!("invalid MemSize or RegSize in ldr_reg")
+    };
+
+    instr |= (rm & 0x1F) << 16; // Rm (index register)
+    instr |= (rn & 0x1F) << 5; // Rn (base register)
+    instr |= rt & 0x1F; // Rt (source register)
+
+    instr
+}
+
+pub fn ldr_reg_signed(
+    rt: IReg,
+    rn: IReg,
+    rm: IReg,
+    option: IndexExtend,
+    amount: u32,
+    mem: MemSize,
+    size: RegSize,
+) -> u32 {
+    let mut instr: u32 = if mem == MemSize::Mem64bit && size == RegSize::Int64bit {
+        // LDR (64-bit)
+        0xF8600800 | if amount == 3 { 0x1000 } else { 0 } | (option as u32) << 13
+    } else if mem == MemSize::Mem32bit && size == RegSize::Int32bit {
+        // LDR (32-bit)
+        0xB8600800 | if amount == 2 { 0x1000 } else { 0 } | (option as u32) << 13
+    } else if mem == MemSize::Mem16bit && size == RegSize::Int32bit {
+        // LDRSH (16-bit sign-extended)
+        0x78E00800 | if amount == 1 { 0x1000 } else { 0 } | (option as u32) << 13
+    } else if mem == MemSize::Mem8bit && size == RegSize::Int32bit {
+        // LDRSB (8-bit sign-extended)
+        0x38E00800 | if amount == 0 { 0x1000 } else { 0 } | (option as u32) << 13
     } else {
         panic!("invalid MemSize or RegSize in ldr_reg")
     };
@@ -161,12 +201,47 @@ mod tests {
 
     #[test]
     fn test_ldr_reg() {
-        //   // LDRB w0, [x0, x0]
-        //   EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 0, arm64::mem_size_t::MEM_8BIT, reg_size_t::SIZE_32BIT), 0x38607800);
-        //   // LDRH w0, [x0, x0, lsl #1]
-        //   EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 1, arm64::mem_size_t::MEM_16BIT, reg_size_t::SIZE_32BIT), 0x78607800);
-        //   // LDR w0, [x0, x0, lsl #2]
-        //   EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 2, arm64::mem_size_t::MEM_32BIT, reg_size_t::SIZE_32BIT), 0xB8607800);
+        // LDRB w0, [x0, x0]
+        assert_eq!(
+            ldr_reg(
+                IReg::W0,
+                IReg::X0,
+                IReg::X0,
+                IndexExtend::Lsl,
+                0,
+                MemSize::Mem8bit,
+                RegSize::Int32bit
+            ),
+            0x38607800
+        );
+
+        // LDRH w0, [x0, x0, lsl #1]
+        assert_eq!(
+            ldr_reg(
+                IReg::W0,
+                IReg::X0,
+                IReg::X0,
+                IndexExtend::Lsl,
+                1,
+                MemSize::Mem16bit,
+                RegSize::Int32bit
+            ),
+            0x78607800
+        );
+
+        // LDR w0, [x0, x0, lsl #2]
+        assert_eq!(
+            ldr_reg(
+                IReg::W0,
+                IReg::X0,
+                IReg::X0,
+                IndexExtend::Lsl,
+                2,
+                MemSize::Mem32bit,
+                RegSize::Int32bit
+            ),
+            0xB8607800
+        );
         // LDR x0, [x0, x0, lsl #3]
         assert_eq!(
             ldr_reg(

@@ -67,7 +67,12 @@ pub fn compile_function(
                 &mut trap_locations,
                 machinecode,
             ),
-            Operator::I64Load { memarg } | Operator::I32Load { memarg } => {
+            Operator::I64Load { memarg }
+            | Operator::I32Load { memarg }
+            | Operator::I32Load16S { memarg }
+            | Operator::I32Load16U { memarg }
+            | Operator::I32Load8S { memarg }
+            | Operator::I32Load8U { memarg } => {
                 compile_load(
                     &op,
                     memarg,

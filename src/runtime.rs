@@ -284,7 +284,7 @@ impl Runtime {
 
         if let Some(linear_memory) = self.memory.as_mut() {
             linear_memory.sync_to_context(ctx);
-            println!("linear_memory.length: {}, ", linear_memory.length);
+            // println!("linear_memory.length: {}, ", linear_memory.length);
         }
 
         let callable = unsafe { Callable::<P, R>::new(ptr, ctx) };

@@ -30,9 +30,13 @@ pub fn compile_load(
         "Only i32 is supported for memory.load instruction"
     );
 
-    let (register_size, _signed_variant, mem_size) = match op {
+    let (register_size, signed_variant, mem_size) = match op {
         Operator::I32Load { .. } => (RegSize::Int32bit, false, MemSize::Mem32bit),
         Operator::I64Load { .. } => (RegSize::Int64bit, false, MemSize::Mem64bit),
+        Operator::I32Load16S { .. } => (RegSize::Int32bit, true, MemSize::Mem16bit),
+        Operator::I32Load16U { .. } => (RegSize::Int32bit, false, MemSize::Mem16bit),
+        Operator::I32Load8S { .. } => (RegSize::Int32bit, true, MemSize::Mem8bit),
+        Operator::I32Load8U { .. } => (RegSize::Int32bit, false, MemSize::Mem8bit),
         _ => panic!("Unsupported load instruction"),
     };
 
@@ -41,6 +45,7 @@ pub fn compile_load(
         _ => panic!("Only integer registers are supported for memory.load instruction"),
     };
 
+    // add the static offset to the dynamic offset if it's greater than 0
     if memarg.offset > 0 {
         if memarg.offset < 0x10000 {
             machinecode.push(arithmetic::add_imm(
@@ -70,6 +75,7 @@ pub fn compile_load(
         }
     }
 
+    // insert bounds check for the memory access
     let length_reg = register_pool.alloc();
     machinecode.push(memory::ldr_imm_unsigned_offset(
         length_reg,
@@ -112,16 +118,30 @@ pub fn compile_load(
         RegSize::Int64bit,
     ));
 
+    // load the actual data from linear memory using the computed address and offset
+    // differentiate between signed and unsigned variants of the load instruction
     let result_reg = dynamic_offset_reg;
-    machinecode.push(memory::ldr_reg(
-        result_reg,
-        address_reg,
-        dynamic_offset_reg,
-        IndexExtend::Lsl,
-        0,
-        mem_size,
-        register_size,
-    ));
+    if signed_variant {
+        machinecode.push(memory::ldr_reg_signed(
+            result_reg,
+            address_reg,
+            dynamic_offset_reg,
+            IndexExtend::Lsl,
+            0,
+            mem_size,
+            register_size,
+        ));
+    } else {
+        machinecode.push(memory::ldr_reg(
+            result_reg,
+            address_reg,
+            dynamic_offset_reg,
+            IndexExtend::Lsl,
+            0,
+            mem_size,
+            register_size,
+        ));
+    }
     register_pool.free(); // address_reg
 
     value_stack.push(StackElement {
