@@ -116,6 +116,50 @@ pub fn ldr_reg_signed(
     instr
 }
 
+/// This instruction calculates an address from a base register value and an offset register value, and stores a byte, 16-bit halfword, 32-bit word or a 64-bit doubleword to the calculated address, from a register.
+///
+/// # Instructions
+///
+/// `STR <rt>, [<rn|SP>, <rm>{, <extend> {<amount>}}]`
+/// `STR <rt>, [<rn|SP>, <rm>{, <extend> {<amount>}}]`
+/// `STRH <rt>, [<rn|SP>, <rm>{, <extend> {<amount>}}]`
+/// `STRB <rt>, [<rn|SP>, <rm>{, <extend> {<amount>}}]`
+pub fn str_reg(
+    rt: IReg,
+    rn: IReg,
+    rm: IReg,
+    option: IndexExtend,
+    amount: u32,
+    mem_size: MemSize,
+    reg_size: RegSize,
+) -> u32 {
+    let mut instr: u32 = match (mem_size, reg_size) {
+        (MemSize::Mem64bit, RegSize::Int64bit) => {
+            // STR (64-bit)
+            0xF8200800 | if amount == 3 { 0x1000 } else { 0 } | (option as u32) << 13
+        }
+        (MemSize::Mem32bit, RegSize::Int32bit) => {
+            // STR (32-bit)
+            0xB8200800 | if amount == 2 { 0x1000 } else { 0 } | (option as u32) << 13
+        }
+        (MemSize::Mem16bit, RegSize::Int32bit) => {
+            // STRH (16-bit)
+            0x78200800 | if amount == 1 { 0x1000 } else { 0 } | (option as u32) << 13
+        }
+        (MemSize::Mem8bit, RegSize::Int32bit) => {
+            // STRB (8-bit)
+            0x38200800 | if amount == 0 { 0x1000 } else { 0 } | (option as u32) << 13
+        }
+        _ => panic!("invalid MemSize or RegSize in str_reg"),
+    };
+
+    instr |= (rm & 0x1F) << 16; // Rm (index register)
+    instr |= (rn & 0x1F) << 5; // Rn (base register)
+    instr |= rt & 0x1F; // Rt (source register)
+
+    instr
+}
+
 /// This instruction stores a word or a doubleword from a register to memory. The address that is used for the store is calculated from a base register and an immediate offset.
 ///
 /// # Examples
@@ -278,6 +322,62 @@ mod tests {
         assert_eq!(
             str_imm_unsigned_offset(IReg::X1, IReg::SP, 16, MemSize::Mem64bit, RegSize::Int64bit),
             0xF9000BE1
+        );
+    }
+
+    #[test]
+    fn test_str_reg() {
+        // STRB w10, [x5, x4, LSL #0]
+        assert_eq!(
+            str_reg(
+                IReg::W10,
+                IReg::X5,
+                IReg::X4,
+                IndexExtend::Lsl,
+                0,
+                MemSize::Mem8bit,
+                RegSize::Int32bit
+            ),
+            0x382478AA
+        );
+        // STRH w11, [x6, x7, LSL #1]
+        assert_eq!(
+            str_reg(
+                IReg::W11,
+                IReg::X6,
+                IReg::X7,
+                IndexExtend::Lsl,
+                1,
+                MemSize::Mem16bit,
+                RegSize::Int32bit
+            ),
+            0x782778CB
+        );
+        // STR w12, [x8, x9, LSL #2]
+        assert_eq!(
+            str_reg(
+                IReg::W12,
+                IReg::X8,
+                IReg::X9,
+                IndexExtend::Lsl,
+                2,
+                MemSize::Mem32bit,
+                RegSize::Int32bit
+            ),
+            0xB829790C
+        );
+        // STR x13, [x10, x11, LSL #3]
+        assert_eq!(
+            str_reg(
+                IReg::X13,
+                IReg::X10,
+                IReg::X11,
+                IndexExtend::Lsl,
+                3,
+                MemSize::Mem64bit,
+                RegSize::Int64bit
+            ),
+            0xF82B794D
         );
     }
 

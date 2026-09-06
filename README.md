@@ -270,6 +270,14 @@ Local variable instructions in WebAssembly are needed to use function parameters
 - [ ] Implement the globals section; make sure to support mutable and immutable globals incl. their given init value
 - [ ] Pass all test cases in `` 
 
+## Chapter 19 - Linear Memory
+
+### Goals
+
+- [x] Research how linear memory can be provided to the wasm-module at runtime.
+- [x] Implement the most common load and store memory instructions including signed and unsigned variants.
+- [x] Pass all test-cases in `tests/memory_test.rs`.
+
 ## Chapter xx - Rust to Wasm
 
 ### Goals

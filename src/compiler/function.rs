@@ -83,6 +83,20 @@ pub fn compile_function(
                     machinecode,
                 );
             }
+            Operator::I64Store { memarg }
+            | Operator::I32Store { memarg }
+            | Operator::I32Store16 { memarg }
+            | Operator::I32Store8 { memarg } => {
+                compile_store(
+                    &op,
+                    memarg,
+                    module_ctx,
+                    &mut value_stack,
+                    &mut register_pool,
+                    &mut trap_locations,
+                    machinecode,
+                );
+            }
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
             Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
             Operator::Block { blockty } => {
