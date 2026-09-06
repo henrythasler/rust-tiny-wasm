@@ -97,6 +97,13 @@ pub fn compile_function(
                     machinecode,
                 );
             }
+            Operator::MemorySize { mem } => compile_mem_size(
+                mem,
+                module_ctx,
+                &mut value_stack,
+                &mut register_pool,
+                machinecode,
+            ),
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
             Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
             Operator::Block { blockty } => {

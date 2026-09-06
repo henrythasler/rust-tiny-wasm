@@ -13,6 +13,7 @@ SYMBOL TABLE:
 00000000000002b8 l     F .text	0000000000000080 store_i32
 0000000000000338 l     F .text	0000000000000080 store_i32_16u
 00000000000003b8 l     F .text	0000000000000080 store_i32_8u
+0000000000000438 l     F .text	0000000000000028 memory_size
 
 
 Contents of section .text:
@@ -83,7 +84,9 @@ Contents of section .text:
  0400 091440f9 290500d1 1f0109eb 89000054  ..@.)..........T
  0410 410080d2 200080d2 05000014 091040f9  A... .........@.
  0420 28796838 000080d2 e10308aa ff430091  (yh8.........C..
- 0430 fd7bc1a8 c0035fd6                    .{...._.        
+ 0430 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 0440 ff4300d1 e00300f9 081840f9 000080d2  .C........@.....
+ 0450 e10308aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
 
 Disassembly of section .text:
 
@@ -378,3 +381,15 @@ Disassembly of section .text:
  42c:	910043ff 	add	sp, sp, #0x10
  430:	a8c17bfd 	ldp	x29, x30, [sp], #16
  434:	d65f03c0 	ret
+
+0000000000000438 <memory_size>:
+ 438:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 43c:	910003fd 	mov	x29, sp
+ 440:	d10043ff 	sub	sp, sp, #0x10
+ 444:	f90003e0 	str	x0, [sp]
+ 448:	f9401808 	ldr	x8, [x0, #48]
+ 44c:	d2800000 	mov	x0, #0x0                   	// #0
+ 450:	aa0803e1 	mov	x1, x8
+ 454:	910043ff 	add	sp, sp, #0x10
+ 458:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 45c:	d65f03c0 	ret

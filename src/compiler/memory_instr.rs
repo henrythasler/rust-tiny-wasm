@@ -81,7 +81,7 @@ pub fn compile_load(
     machinecode.push(memory::ldr_imm_unsigned_offset(
         length_reg,
         CONTEXT_REG,
-        ctx_offsets::MEMORY_LEN,
+        ctx_offsets::MEMORY_LEN_BYTES,
         MemSize::Mem64bit,
         RegSize::Int64bit,
     ));
@@ -242,7 +242,7 @@ pub fn compile_store(
     machinecode.push(memory::ldr_imm_unsigned_offset(
         length_reg,
         CONTEXT_REG,
-        ctx_offsets::MEMORY_LEN,
+        ctx_offsets::MEMORY_LEN_BYTES,
         MemSize::Mem64bit,
         RegSize::Int64bit,
     ));
@@ -300,4 +300,37 @@ pub fn compile_store(
     register_pool.free(); // address_reg
     register_pool.free(); // dynamic_offset_reg
     register_pool.free(); // value.reg
+}
+
+pub fn compile_mem_size(
+    memory_index: u32,
+    module_ctx: &ModuleContext,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    assert!(
+        module_ctx.memory.is_some(),
+        "Module does not have a memory defined for memory.size instructions"
+    );
+
+    assert!(
+        memory_index == 0,
+        "Only memory index 0 is supported for memory.size instructions"
+    );
+
+    let result_reg = register_pool.alloc();
+
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        result_reg,
+        CONTEXT_REG,
+        ctx_offsets::MEMORY_LEN_PAGES,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
+
+    value_stack.push(StackElement {
+        reg: Reg::IReg(result_reg),
+        valtype: ValType::I32,
+    });
 }

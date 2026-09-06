@@ -300,3 +300,14 @@ fn test_memory_store_u8() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_memory_size() -> Result<()> {
+    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let mut instance = get_module_instance(&module)?;
+
+    let func = instance.get_function::<(), i32>("memory_size")?;
+    assert_eq!(func.call()?, 1);
+
+    Ok(())
+}
