@@ -104,6 +104,13 @@ pub fn compile_function(
                 &mut register_pool,
                 machinecode,
             ),
+            Operator::MemoryGrow { mem } => compile_mem_grow(
+                mem,
+                module_ctx,
+                &mut value_stack,
+                &mut register_pool,
+                machinecode,
+            ),
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
             Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
             Operator::Block { blockty } => {

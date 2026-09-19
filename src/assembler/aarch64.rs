@@ -61,6 +61,9 @@ pub const FLOAT_ARGUMENT_REGS: [FReg; MAX_ARGUMENTS] = [
 pub const RETURN_STATUS_REGISTER: IReg = IReg::X0;
 pub const RETURN_VALUE_REGISTER: IReg = IReg::X1;
 
+// host function return values according to Aarch64 Procedure Call Standard (X0..X7)
+pub const HOST_FUNCTION_RETURN_VALUE_REGISTER: IReg = IReg::X0;
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub enum Reg {
     FReg(FReg),

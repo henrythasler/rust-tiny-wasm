@@ -8,7 +8,9 @@ use super::*;
 
 // mod debugger;
 pub mod context;
+pub mod host_functions;
 use context::*;
+use host_functions::*;
 
 #[repr(u64)]
 #[non_exhaustive]
@@ -249,6 +251,8 @@ pub struct Runtime {
     globals: Vec<i64>,
 
     memory: Option<LinearMemory>,
+
+    host_functions: HostFunctions,
 }
 
 impl Runtime {
@@ -286,6 +290,8 @@ impl Runtime {
             linear_memory.sync_to_context(ctx);
             // println!("linear_memory.length: {}, ", linear_memory.length);
         }
+
+        self.host_functions.sync_to_context(ctx);
 
         let callable = unsafe { Callable::<P, R>::new(ptr, ctx) };
         Ok(callable)
@@ -334,6 +340,7 @@ pub fn instantiate_module(mut module: LinkedModule) -> Result<Runtime> {
         functions: module.functions.to_vec(),
         globals: module.globals,
         memory: module.memory,
+        host_functions: HostFunctions::new(),
     })
 }
 

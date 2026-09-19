@@ -334,3 +334,70 @@ pub fn compile_mem_size(
         valtype: ValType::I32,
     });
 }
+
+pub fn compile_mem_grow(
+    memory_index: u32,
+    module_ctx: &ModuleContext,
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+    machinecode: &mut Vec<u32>,
+) {
+    assert!(
+        module_ctx.memory.is_some(),
+        "Module does not have a memory defined for memory.grow instructions"
+    );
+
+    assert!(
+        memory_index == 0,
+        "Only memory index 0 is supported for memory.grow instructions"
+    );
+
+    // extract and validate the pages to grow
+    let pages = value_stack
+        .pop()
+        .expect("value stack should contain at least one element for memory.grow instructions");
+
+    assert!(
+        pages.valtype == wasmparser::ValType::I32,
+        "Only i32 offset arguments are supported for memory.grow instructions"
+    );
+
+    let pages_reg = match pages.reg {
+        Reg::IReg(reg) => reg,
+        _ => panic!("Only integer registers are supported for memory.grow instructions"),
+    };
+
+    let code_ptr_reg = register_pool.alloc();
+
+    load_context_from_stack(machinecode);
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        code_ptr_reg,
+        CONTEXT_REG,
+        ctx_offsets::HOSTFN_BASE + hostfn_offsets::MEMORY_GROW,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
+
+    let mut stack_size = 0;
+    if register_pool.index > 0 {
+        // save registers to stack before the call
+        stack_size = save_registers(register_pool, machinecode);
+    }
+    // address of the function to be called (callee) is in code_ptr_reg;
+    machinecode.push(branch::branch_link_reg(code_ptr_reg));
+
+    // restore registers from stack after the call; we do this here instead of after the trap check
+    // because we want to free the stack space used for saving registers even if the call traps, so that the stack
+    // is in a consistent state when the trap handler is called.
+    if stack_size > 0 {
+        restore_registers(stack_size, register_pool, machinecode);
+    }
+    register_pool.free(); // code_ptr_reg
+
+    machinecode.push(processing::mov_reg(
+        pages_reg,
+        HOST_FUNCTION_RETURN_VALUE_REGISTER,
+        RegSize::Int32bit,
+    ));
+    value_stack.push(pages);
+}

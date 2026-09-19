@@ -685,7 +685,7 @@ pub fn compile_call_indirect(
     register_pool.free(); // type_index_reg
 
     prepare_parameters(func_type, value_stack, register_pool, machinecode);
-    load_context_from_stack(machinecode);
+    load_context_from_stack(machinecode); // FIXME: Maybe move to the beginning
 
     let mut stack_size = 0;
     if register_pool.index > 0 {

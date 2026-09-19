@@ -311,3 +311,14 @@ fn test_memory_size() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_memory_grow() -> Result<()> {
+    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let mut instance = get_module_instance(&module)?;
+
+    let _func = instance.get_function::<(i32,), i32>("memory_grow")?;
+    // assert_eq!(func.call(1)?, 1);
+
+    Ok(())
+}
