@@ -161,7 +161,10 @@ fn test_memory_load_u8_offset() -> Result<()> {
     assert_eq!(func.call(1)?, 0x31);
 
     // last valid
-    assert_eq!(func.call((WASM_PAGE_SIZE - INT8_SIZE as u64 - 768) as i32)?, 0);
+    assert_eq!(
+        func.call((WASM_PAGE_SIZE - INT8_SIZE as u64 - 768) as i32)?,
+        0
+    );
 
     // first invalid
     let res = func.call(WASM_PAGE_SIZE as i32 - 768).unwrap_err();
@@ -195,7 +198,10 @@ fn test_memory_store_i64() -> Result<()> {
 
     // last valid
     assert_eq!(
-        func.call((WASM_PAGE_SIZE - INT64_SIZE as u64) as i32, 0x1122334455667788)?,
+        func.call(
+            (WASM_PAGE_SIZE - INT64_SIZE as u64) as i32,
+            0x1122334455667788
+        )?,
         0x1122334455667788
     );
 
@@ -284,7 +290,10 @@ fn test_memory_store_u8() -> Result<()> {
     assert_eq!(func.call(768, 0x55)?, 0x55);
 
     // last valid
-    assert_eq!(func.call((WASM_PAGE_SIZE - INT8_SIZE as u64) as i32, 0x11)?, 0x11);
+    assert_eq!(
+        func.call((WASM_PAGE_SIZE - INT8_SIZE as u64) as i32, 0x11)?,
+        0x11
+    );
 
     // first invalid
     let res = func.call(WASM_PAGE_SIZE as i32, 0).unwrap_err();
@@ -319,6 +328,43 @@ fn test_memory_grow() -> Result<()> {
 
     let func = instance.get_function::<(i32,), i32>("memory_grow")?;
     assert_eq!(func.call(3)?, 4);
+
+    let func = instance.get_function::<(i32, i64), i64>("store_i64")?;
+    assert_eq!(func.call(0, 1)?, 1);
+    assert_eq!(func.call(768, 0x55aa55aa55aa55aa)?, 0x55aa55aa55aa55aa);
+
+    // last valid
+    assert_eq!(
+        func.call(
+            (4 * WASM_PAGE_SIZE - INT64_SIZE as u64) as i32,
+            0x1122334455667788
+        )?,
+        0x1122334455667788
+    );
+
+    // first invalid
+    let res = func.call(4 * WASM_PAGE_SIZE as i32, 0).unwrap_err();
+    assert!(
+        matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::MemoryOutOfBounds)
+    );
+
+    // verify write operation
+    let func = instance.get_function::<(i32,), i64>("load_i64")?;
+    assert_eq!(
+        func.call((4 * WASM_PAGE_SIZE - INT64_SIZE as u64) as i32)?,
+        0x1122334455667788
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_memory_loop() -> Result<()> {
+    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let mut instance = get_module_instance(&module)?;
+
+    let func = instance.get_function::<(), i32>("loop")?;
+    assert_eq!(func.call()?, 0);
 
     Ok(())
 }

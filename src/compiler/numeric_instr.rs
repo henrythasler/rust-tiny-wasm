@@ -301,6 +301,20 @@ pub fn compile_binop(
             }
             register_pool.free_float();
         }
+        Operator::I32And | Operator::I64And => {
+            match (op1.reg, op2.reg) {
+                (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(bit::and_reg(
+                    reg1,
+                    reg1,
+                    reg2,
+                    Shift::Lsl,
+                    0,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("and operator only supports integer registers"),
+            }
+            register_pool.free();
+        }
         _ => panic!("Binary operator '{:?}' not supported", op),
     }
 

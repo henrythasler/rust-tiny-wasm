@@ -15,7 +15,7 @@
   (export "store_i32_8u" (func $store_i32_8u))
   (export "memory_size" (func $memory_size))
   (export "memory_grow" (func $memory_grow))
-  ;; (export "loop" (func $loop))
+  (export "loop" (func $loop))
   (func $load_i64 (param $index i32) (result i64)
     local.get $index
     i64.load
@@ -81,37 +81,37 @@
     drop
     memory.size
   )
-  ;; (func $loop (result i32)
-  ;;   (local $var0 i32)
-  ;;   i32.const 1
-  ;;   memory.grow
-  ;;   global.get $__stack_pointer
-  ;;   i32.const 16
-  ;;   i32.sub
-  ;;   local.set $var0
-  ;;   local.get $var0
-  ;;   i32.const 10
-  ;;   i32.store offset=12
-  ;;   block $label0
-  ;;     loop $label1
-  ;;       local.get $var0
-  ;;       i32.load offset=12
-  ;;       i32.const 20
-  ;;       i32.lt_s
-  ;;       i32.const 1
-  ;;       i32.and
-  ;;       i32.eqz
-  ;;       br_if $label0
-  ;;       local.get $var0
-  ;;       local.get $var0
-  ;;       i32.load offset=12
-  ;;       i32.const 1
-  ;;       i32.add
-  ;;       i32.store offset=12
-  ;;       br $label1
-  ;;     end $label1
-  ;;   end $label0
-  ;;   i32.const 0
-  ;;   return
-  ;; )
+  (func $loop (result i32)
+    (local $var0 i32)
+    i32.const 1
+    memory.grow
+    global.get $__stack_pointer
+    i32.const 16
+    i32.sub
+    local.set $var0
+    local.get $var0
+    i32.const 10
+    i32.store offset=12
+    block $label0
+      loop $label1
+        local.get $var0
+        i32.load offset=12
+        i32.const 20
+        i32.lt_s
+        i32.const 1
+        i32.and
+        i32.eqz
+        br_if $label0
+        local.get $var0
+        local.get $var0
+        i32.load offset=12
+        i32.const 1
+        i32.add
+        i32.store offset=12
+        br $label1
+      end $label1
+    end $label0
+    i32.const 0
+    return
+  )
 )

@@ -95,6 +95,10 @@ pub fn compile_br(
     }
 
     match frame.opcode {
+        Opcode::Loop => {
+            let offset = (frame.machinecode_offset as i32 - machinecode.len() as i32) * 4;
+            machinecode.push(branch::branch(offset));
+        }
         Opcode::Block => {
             frame.patches.push(Patch {
                 location: machinecode.len(),

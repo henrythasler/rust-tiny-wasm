@@ -70,6 +70,35 @@ pub fn rbit(rd: IReg, rn: IReg, size: RegSize) -> u32 {
     instr
 }
 
+/// This instruction performs a bitwise AND of two registers, with an optional shift applied to the second source register, and writes the result to the destination register.
+///
+/// `AND rd, rn, rm{, shift #imm6}`
+///
+/// # Arguments
+/// * `rd` - The destination register where the result will be stored.
+/// * `rn` - The first source register.
+/// * `rm` - The second source register, which can be optionally shifted before the AND operation.
+/// * `shift` - The type of shift to apply to the second source register (rm). It can be one of the following: LSL (Logical Shift Left), LSR (Logical Shift Right), ASR (Arithmetic Shift Right), or ROR (Rotate Right).
+/// * `amount` - The amount by which to shift the second source register (rm). This is a 6-bit immediate value (0-63).
+/// * `size` - The size of the registers involved in the operation. It can be either 32-bit or 64-bit.
+///
+/// # Returns
+/// The encoded 32-bit instruction for the AND operation with the specified parameters.
+pub fn and_reg(rd: IReg, rn: IReg, rm: IReg, shift: Shift, amount: u32, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x0A000000, 0x8A000000, size);
+    instr |= ((shift as u32) & 0x03) << 22; // shift operator on rm
+
+    match size {
+        RegSize::Int32bit => instr |= (amount & 0x1F) << 10, // for 32-bit variant, only allow shift amounts 0-31
+        RegSize::Int64bit => instr |= (amount & 0x3F) << 10, // for 64-bit variant, allow shift amounts 0-63
+        _ => panic!("Invalid register size for AND instruction"),
+    }
+    instr |= (rm & 0x1F) << 16; // Rm (second source register)
+    instr |= (rn & 0x1F) << 5; // Rn (source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -116,6 +145,34 @@ mod tests {
         assert_eq!(
             lsr_imm(IReg::W3, IReg::W7, 3, RegSize::Int32bit),
             0x53037CE3
+        );
+    }
+
+    #[test]
+    fn test_and_reg() {
+        // and w13,w14,w15, LSL #16
+        assert_eq!(
+            and_reg(
+                IReg::W13,
+                IReg::W14,
+                IReg::W15,
+                Shift::Lsl,
+                16,
+                RegSize::Int32bit
+            ),
+            0x0A0F41CD
+        );
+        // AND X2, X0, X1
+        assert_eq!(
+            and_reg(
+                IReg::X2,
+                IReg::X0,
+                IReg::X1,
+                Shift::Lsl,
+                0,
+                RegSize::Int64bit
+            ),
+            0x8A010002
         );
     }
 }

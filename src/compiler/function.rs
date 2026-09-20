@@ -302,7 +302,9 @@ pub fn compile_function(
             | Operator::F32Mul
             | Operator::F64Mul
             | Operator::F32Div
-            | Operator::F64Div => {
+            | Operator::F64Div
+            | Operator::I32And
+            | Operator::I64And => {
                 compile_binop(
                     &op,
                     &mut value_stack,
@@ -380,7 +382,8 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I32LeU
         | Operator::I32Eqz
         | Operator::I32DivS
-        | Operator::I32DivU => ValType::I32,
+        | Operator::I32DivU
+        | Operator::I32And => ValType::I32,
         Operator::I64Add
         | Operator::I64Sub
         | Operator::I64Mul
@@ -390,7 +393,8 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I64LeU
         | Operator::I64Eqz
         | Operator::I64DivS
-        | Operator::I64DivU => ValType::I64,
+        | Operator::I64DivU
+        | Operator::I64And => ValType::I64,
         Operator::F32Const { .. } => ValType::F32,
         Operator::F64Const { .. } => ValType::F64,
         Operator::F32Add | Operator::F32Sub | Operator::F32Mul | Operator::F32Div => ValType::F32,
