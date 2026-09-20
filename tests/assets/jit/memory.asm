@@ -14,7 +14,7 @@ SYMBOL TABLE:
 0000000000000338 l     F .text	0000000000000080 store_i32_16u
 00000000000003b8 l     F .text	0000000000000080 store_i32_8u
 0000000000000438 l     F .text	0000000000000028 memory_size
-0000000000000460 l     F .text	0000000000000058 memory_grow
+0000000000000460 l     F .text	0000000000000060 memory_grow
 
 
 Contents of section .text:
@@ -89,11 +89,11 @@ Contents of section .text:
  0440 ff4300d1 e00300f9 081c40f9 000080d2  .C........@.....
  0450 e10308aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
  0460 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
- 0470 e10b00b9 e80b40b9 e00340f9 092440f9  ......@...@..$@.
- 0480 ff4300d1 e80300f9 e90700f9 20013fd6  .C.......... .?.
- 0490 e80340f9 e90740f9 ff430091 e803002a  ..@...@..C.....*
- 04a0 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
- 04b0 c0035fd6 1f2003d5                    .._.. ..        
+ 0470 e10b00b9 e80b40b9 e103082a 092440f9  ......@....*.$@.
+ 0480 290140f9 ff4300d1 e80300f9 e90700f9  ).@..C..........
+ 0490 20013fd6 e80340f9 e90740f9 ff430091   .?...@...@..C..
+ 04a0 e803002a e00340f9 081c40f9 000080d2  ...*..@...@.....
+ 04b0 e10308aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
 
 Disassembly of section .text:
 
@@ -408,19 +408,21 @@ Disassembly of section .text:
  46c:	f90003e0 	str	x0, [sp]
  470:	b9000be1 	str	w1, [sp, #8]
  474:	b9400be8 	ldr	w8, [sp, #8]
- 478:	f94003e0 	ldr	x0, [sp]
+ 478:	2a0803e1 	mov	w1, w8
  47c:	f9402409 	ldr	x9, [x0, #72]
- 480:	d10043ff 	sub	sp, sp, #0x10
- 484:	f90003e8 	str	x8, [sp]
- 488:	f90007e9 	str	x9, [sp, #8]
- 48c:	d63f0120 	blr	x9
- 490:	f94003e8 	ldr	x8, [sp]
- 494:	f94007e9 	ldr	x9, [sp, #8]
- 498:	910043ff 	add	sp, sp, #0x10
- 49c:	2a0003e8 	mov	w8, w0
- 4a0:	d2800000 	mov	x0, #0x0                   	// #0
- 4a4:	aa0803e1 	mov	x1, x8
- 4a8:	910043ff 	add	sp, sp, #0x10
- 4ac:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 4b0:	d65f03c0 	ret
- 4b4:	d503201f 	nop
+ 480:	f9400129 	ldr	x9, [x9]
+ 484:	d10043ff 	sub	sp, sp, #0x10
+ 488:	f90003e8 	str	x8, [sp]
+ 48c:	f90007e9 	str	x9, [sp, #8]
+ 490:	d63f0120 	blr	x9
+ 494:	f94003e8 	ldr	x8, [sp]
+ 498:	f94007e9 	ldr	x9, [sp, #8]
+ 49c:	910043ff 	add	sp, sp, #0x10
+ 4a0:	2a0003e8 	mov	w8, w0
+ 4a4:	f94003e0 	ldr	x0, [sp]
+ 4a8:	f9401c08 	ldr	x8, [x0, #56]
+ 4ac:	d2800000 	mov	x0, #0x0                   	// #0
+ 4b0:	aa0803e1 	mov	x1, x8
+ 4b4:	910043ff 	add	sp, sp, #0x10
+ 4b8:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 4bc:	d65f03c0 	ret

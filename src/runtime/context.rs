@@ -1,6 +1,6 @@
 use super::*;
 
-pub const WASM_PAGE_SIZE: usize = 65536; // 64 KiB
+pub const WASM_PAGE_SIZE: u64 = 65536; // 64 KiB
 
 #[derive(Debug, Default)]
 #[repr(C)]
@@ -91,7 +91,7 @@ impl LinearMemory {
     pub fn sync_to_context(&mut self, ctx: &mut RuntimeCtx) {
         ctx.memory_base = self.memory.as_mut_ptr();
         ctx.memory_len_bytes = self.length;
-        ctx.memory_len_pages = (self.length / WASM_PAGE_SIZE as u64) as u32;
+        ctx.memory_len_pages = (self.length / WASM_PAGE_SIZE) as u32;
     }
 }
 
@@ -104,13 +104,20 @@ pub struct HostFunctions {
     pub elements: Vec<usize>,
 }
 
+impl Default for HostFunctions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HostFunctions {
     pub fn new() -> Self {
-        let elements = vec![memory_grow as *const () as usize];
+        let elements = vec![0; 1]; // currently only memory.grow
         Self { elements }
     }
 
     pub fn sync_to_context(&mut self, ctx: &mut RuntimeCtx) {
+        self.elements[0] = memory_grow as *const () as usize;
         ctx.hostfn_base = self.elements.as_ptr();
     }
 }

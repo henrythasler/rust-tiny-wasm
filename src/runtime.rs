@@ -6,8 +6,8 @@ use super::compiler::*;
 use super::*;
 // use debugger::*;
 
-// mod debugger;
 pub mod context;
+// mod debugger;
 pub mod host_functions;
 use context::*;
 use host_functions::*;
@@ -287,11 +287,19 @@ impl Runtime {
         }
 
         if let Some(linear_memory) = self.memory.as_mut() {
+            ctx.memory_object = linear_memory as *mut LinearMemory;
             linear_memory.sync_to_context(ctx);
             // println!("linear_memory.length: {}, ", linear_memory.length);
+            // println!("ctx.memory_object: {:x}, ", ctx.memory_object as usize);
         }
 
         self.host_functions.sync_to_context(ctx);
+        println!("ctx: {:?}, ", ctx);
+        // println!("ctx.hostfn_base: {:x}, ", ctx.hostfn_base as usize);
+        // println!("memory_grow address: {:x}, ", memory_grow as *const () as usize);
+        // unsafe {memory_grow(ctx, 1)};
+        // ctx.hostfn_base = memory_grow as *const () as *const usize;
+        // println!("patched ctx.hostfn_base: {:x}, ", ctx.hostfn_base as usize);
 
         let callable = unsafe { Callable::<P, R>::new(ptr, ctx) };
         Ok(callable)

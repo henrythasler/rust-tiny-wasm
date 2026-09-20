@@ -78,6 +78,8 @@
   (func $memory_grow (param $pages i32) (result i32)
     local.get $pages
     memory.grow
+    drop
+    memory.size
   )
   ;; (func $loop (result i32)
   ;;   (local $var0 i32)

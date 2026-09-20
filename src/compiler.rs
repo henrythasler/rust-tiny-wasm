@@ -320,7 +320,8 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                                 <= linear_memory.max_length.unwrap_or(u32::MAX as u64) as usize,
                             "Data segment exceeds maximum linear memory size of 4 GiB"
                         );
-                        let new_len = end_offset.div_ceil(WASM_PAGE_SIZE) * WASM_PAGE_SIZE;
+                        let new_len =
+                            end_offset.div_ceil(WASM_PAGE_SIZE as usize) * WASM_PAGE_SIZE as usize;
                         linear_memory.memory.resize(new_len, 0);
                         linear_memory.memory[offset..end_offset].copy_from_slice(data.data);
                         linear_memory.length = new_len as u64;

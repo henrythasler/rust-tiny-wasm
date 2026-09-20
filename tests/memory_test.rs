@@ -18,7 +18,7 @@ fn test_memory_load_i64() -> Result<()> {
     assert_eq!(func.call(768 + 16)?, 0);
 
     // last valid
-    assert_eq!(func.call((WASM_PAGE_SIZE - INT64_SIZE) as i32)?, 0);
+    assert_eq!(func.call((WASM_PAGE_SIZE - INT64_SIZE as u64) as i32)?, 0);
 
     // first invalid
     let res = func.call(WASM_PAGE_SIZE as i32).unwrap_err();
@@ -49,7 +49,7 @@ fn test_memory_load_i32() -> Result<()> {
     assert_eq!(func.call(768 + 16)?, 0);
 
     // last valid
-    assert_eq!(func.call((WASM_PAGE_SIZE - INT32_SIZE) as i32)?, 0);
+    assert_eq!(func.call((WASM_PAGE_SIZE - INT32_SIZE as u64) as i32)?, 0);
 
     // first invalid
     let res = func.call(WASM_PAGE_SIZE as i32).unwrap_err();
@@ -78,7 +78,7 @@ fn test_memory_load_u16() -> Result<()> {
     assert_eq!(func.call(768 + 16)?, 0);
 
     // last valid
-    assert_eq!(func.call((WASM_PAGE_SIZE - INT16_SIZE) as i32)?, 0);
+    assert_eq!(func.call((WASM_PAGE_SIZE - INT16_SIZE as u64) as i32)?, 0);
 
     // first invalid
     let res = func.call(WASM_PAGE_SIZE as i32).unwrap_err();
@@ -120,7 +120,7 @@ fn test_memory_load_u8() -> Result<()> {
     assert_eq!(func.call(768)?, 0x30);
 
     // last valid
-    assert_eq!(func.call((WASM_PAGE_SIZE - INT8_SIZE) as i32)?, 0);
+    assert_eq!(func.call((WASM_PAGE_SIZE - INT8_SIZE as u64) as i32)?, 0);
 
     // first invalid
     let res = func.call(WASM_PAGE_SIZE as i32).unwrap_err();
@@ -161,7 +161,7 @@ fn test_memory_load_u8_offset() -> Result<()> {
     assert_eq!(func.call(1)?, 0x31);
 
     // last valid
-    assert_eq!(func.call((WASM_PAGE_SIZE - INT8_SIZE - 768) as i32)?, 0);
+    assert_eq!(func.call((WASM_PAGE_SIZE - INT8_SIZE as u64 - 768) as i32)?, 0);
 
     // first invalid
     let res = func.call(WASM_PAGE_SIZE as i32 - 768).unwrap_err();
@@ -195,7 +195,7 @@ fn test_memory_store_i64() -> Result<()> {
 
     // last valid
     assert_eq!(
-        func.call((WASM_PAGE_SIZE - INT64_SIZE) as i32, 0x1122334455667788)?,
+        func.call((WASM_PAGE_SIZE - INT64_SIZE as u64) as i32, 0x1122334455667788)?,
         0x1122334455667788
     );
 
@@ -225,7 +225,7 @@ fn test_memory_store_i32() -> Result<()> {
 
     // last valid
     assert_eq!(
-        func.call((WASM_PAGE_SIZE - INT32_SIZE) as i32, 0x11223344)?,
+        func.call((WASM_PAGE_SIZE - INT32_SIZE as u64) as i32, 0x11223344)?,
         0x11223344
     );
 
@@ -255,7 +255,7 @@ fn test_memory_store_u16() -> Result<()> {
 
     // last valid
     assert_eq!(
-        func.call((WASM_PAGE_SIZE - INT16_SIZE) as i32, 0x1122)?,
+        func.call((WASM_PAGE_SIZE - INT16_SIZE as u64) as i32, 0x1122)?,
         0x1122
     );
 
@@ -284,7 +284,7 @@ fn test_memory_store_u8() -> Result<()> {
     assert_eq!(func.call(768, 0x55)?, 0x55);
 
     // last valid
-    assert_eq!(func.call((WASM_PAGE_SIZE - INT8_SIZE) as i32, 0x11)?, 0x11);
+    assert_eq!(func.call((WASM_PAGE_SIZE - INT8_SIZE as u64) as i32, 0x11)?, 0x11);
 
     // first invalid
     let res = func.call(WASM_PAGE_SIZE as i32, 0).unwrap_err();
@@ -317,8 +317,8 @@ fn test_memory_grow() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
-    let _func = instance.get_function::<(i32,), i32>("memory_grow")?;
-    // assert_eq!(func.call(1)?, 1);
+    let func = instance.get_function::<(i32,), i32>("memory_grow")?;
+    assert_eq!(func.call(3)?, 4);
 
     Ok(())
 }

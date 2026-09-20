@@ -369,11 +369,21 @@ pub fn compile_mem_grow(
 
     let code_ptr_reg = register_pool.alloc();
 
-    load_context_from_stack(machinecode);
+    // laod argument into X1
+    machinecode.push(processing::mov_reg(IReg::X1, pages_reg, RegSize::Int32bit));
+
     machinecode.push(memory::ldr_imm_unsigned_offset(
         code_ptr_reg,
         CONTEXT_REG,
-        ctx_offsets::HOSTFN_BASE + hostfn_offsets::MEMORY_GROW,
+        ctx_offsets::HOSTFN_BASE,
+        MemSize::Mem64bit,
+        RegSize::Int64bit,
+    ));
+
+    machinecode.push(memory::ldr_imm_unsigned_offset(
+        code_ptr_reg,
+        code_ptr_reg,
+        hostfn_offsets::MEMORY_GROW,
         MemSize::Mem64bit,
         RegSize::Int64bit,
     ));
@@ -400,4 +410,7 @@ pub fn compile_mem_grow(
         RegSize::Int32bit,
     ));
     value_stack.push(pages);
+
+    // restore ctx into X0
+    load_context_from_stack(machinecode);
 }
