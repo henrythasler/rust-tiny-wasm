@@ -318,6 +318,9 @@ fn test_memory_size() -> Result<()> {
     let func = instance.get_function::<(), i32>("memory_size")?;
     assert_eq!(func.call()?, 1);
 
+    let func = instance.get_function::<(), i32>("memory_size_bytes")?;
+    assert_eq!(func.call()?, 0x10000);
+
     Ok(())
 }
 
@@ -365,6 +368,20 @@ fn test_memory_loop() -> Result<()> {
 
     let func = instance.get_function::<(), i32>("loop")?;
     assert_eq!(func.call()?, 0);
+
+    Ok(())
+}
+
+#[test]
+fn test_memory_extended() -> Result<()> {
+    let module = fs::read(Path::new("tests/assets/memory_extended.wasm"))?;
+    let mut _instance = get_module_instance(&module)?;
+
+    // let func = instance.get_function::<(), i32>("mem_bytes")?;
+    // assert_eq!(func.call()?, 0x10000);
+
+    // let func = instance.get_function::<(), i32>("memtest")?;
+    // assert_eq!(func.call()?, 0);
 
     Ok(())
 }

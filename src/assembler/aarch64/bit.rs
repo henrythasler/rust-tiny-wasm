@@ -37,6 +37,24 @@ pub fn lsr_imm(rd: IReg, rn: IReg, shift: u32, size: RegSize) -> u32 {
     )
 }
 
+/// This instruction shifts a register value left by a variable number of bits, shifting in zeros, and writes the result to the destination register. The value of the second source register modulo the register size in bits gives the number of bits by which the first source register is left-shifted.
+///
+/// `LSLV rd, rn, rm`
+pub fn lslv(rd: IReg, rn: IReg, rm: IReg, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x1AC02000, 0x9AC02000, size);
+    instr |= (rm & 0x1F) << 16; // Rm (second source register)
+    instr |= (rn & 0x1F) << 5; // Rn (source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
+/// Logical shift left (register)
+///
+/// `LSL rd, rn, rm`
+pub fn lsl_reg(rd: IReg, rn: IReg, rm: IReg, size: RegSize) -> u32 {
+    lslv(rd, rn, rm, size)
+}
+
 /**
  * This instruction counts the number of consecutive binary zero bits, starting from the most significant bit in the source register, and places the
  * count in the destination register.
@@ -92,6 +110,35 @@ pub fn and_reg(rd: IReg, rn: IReg, rm: IReg, shift: Shift, amount: u32, size: Re
         RegSize::Int32bit => instr |= (amount & 0x1F) << 10, // for 32-bit variant, only allow shift amounts 0-31
         RegSize::Int64bit => instr |= (amount & 0x3F) << 10, // for 64-bit variant, allow shift amounts 0-63
         _ => panic!("Invalid register size for AND instruction"),
+    }
+    instr |= (rm & 0x1F) << 16; // Rm (second source register)
+    instr |= (rn & 0x1F) << 5; // Rn (source register)
+    instr |= rd & 0x1F; // Rd (desination register)
+    instr
+}
+
+/// This instruction performs a bitwise exclusive OR of two registers, with an optional shift applied to the second source register, and writes the result to the destination register.
+///
+/// `EOR rd, rn, rm{, shift #imm6}`
+///
+/// # Arguments
+/// * `rd` - The destination register where the result will be stored.
+/// * `rn` - The first source register.
+/// * `rm` - The second source register, which can be optionally shifted before the EOR operation.
+/// * `shift` - The type of shift to apply to the second source register (rm). It can be one of the following: LSL (Logical Shift Left), LSR (Logical Shift Right), ASR (Arithmetic Shift Right), or ROR (Rotate Right).
+/// * `amount` - The amount by which to shift the second source register (rm). This is a 6-bit immediate value (0-63).
+/// * `size` - The size of the registers involved in the operation. It can be either 32-bit or 64-bit.
+///
+/// # Returns
+/// The encoded 32-bit instruction for the EOR operation with the specified parameters.
+pub fn eor_reg(rd: IReg, rn: IReg, rm: IReg, shift: Shift, amount: u32, size: RegSize) -> u32 {
+    let mut instr = select_instr(0x4A000000, 0xCA000000, size);
+    instr |= ((shift as u32) & 0x03) << 22; // shift operator on rm
+
+    match size {
+        RegSize::Int32bit => instr |= (amount & 0x1F) << 10, // for 32-bit variant, only allow shift amounts 0-31
+        RegSize::Int64bit => instr |= (amount & 0x3F) << 10, // for 64-bit variant, allow shift amounts 0-63
+        _ => panic!("Invalid register size for EOR instruction"),
     }
     instr |= (rm & 0x1F) << 16; // Rm (second source register)
     instr |= (rn & 0x1F) << 5; // Rn (source register)
@@ -173,6 +220,49 @@ mod tests {
                 RegSize::Int64bit
             ),
             0x8A010002
+        );
+    }
+
+    #[test]
+    fn test_eor_reg() {
+        // eor w13,w14,w15, LSL #16
+        assert_eq!(
+            eor_reg(
+                IReg::W13,
+                IReg::W14,
+                IReg::W15,
+                Shift::Lsl,
+                16,
+                RegSize::Int32bit
+            ),
+            0x4A0F41CD
+        );
+        // EOR X2, X0, X1
+        assert_eq!(
+            eor_reg(
+                IReg::X2,
+                IReg::X0,
+                IReg::X1,
+                Shift::Lsl,
+                0,
+                RegSize::Int64bit
+            ),
+            0xCA010002
+        );
+    }
+
+    #[test]
+    fn test_lsl_reg() {
+        // LSL X2, X0, X1
+        assert_eq!(
+            lsl_reg(IReg::X2, IReg::X0, IReg::X1, RegSize::Int64bit),
+            0x9AC12002
+        );
+
+        // LSL w13, w14, w15
+        assert_eq!(
+            lsl_reg(IReg::W13, IReg::W14, IReg::W15, RegSize::Int32bit),
+            0x1ACF21CD
         );
     }
 }

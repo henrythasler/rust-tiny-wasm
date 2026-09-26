@@ -201,7 +201,14 @@ pub fn compile_function(
                     machinecode,
                 );
             }
-            Operator::I32LtS | Operator::I64LtS | Operator::I32LeU | Operator::I64LeU => {
+            Operator::I32LtS
+            | Operator::I64LtS
+            | Operator::I32LeU
+            | Operator::I64LeU
+            | Operator::I32GtU
+            | Operator::I64GtU
+            | Operator::I32Ne
+            | Operator::I64Ne => {
                 compile_relop(&op, &mut value_stack, &mut register_pool, machinecode)
             }
             Operator::I32Eqz | Operator::I64Eqz => {
@@ -304,7 +311,13 @@ pub fn compile_function(
             | Operator::F32Div
             | Operator::F64Div
             | Operator::I32And
-            | Operator::I64And => {
+            | Operator::I64And
+            | Operator::I32Or
+            | Operator::I64Or
+            | Operator::I32Xor
+            | Operator::I64Xor
+            | Operator::I32Shl
+            | Operator::I64Shl => {
                 compile_binop(
                     &op,
                     &mut value_stack,
@@ -383,7 +396,12 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I32Eqz
         | Operator::I32DivS
         | Operator::I32DivU
-        | Operator::I32And => ValType::I32,
+        | Operator::I32And
+        | Operator::I32Or
+        | Operator::I32Xor
+        | Operator::I32GtU
+        | Operator::I32Ne
+        | Operator::I32Shl => ValType::I32,
         Operator::I64Add
         | Operator::I64Sub
         | Operator::I64Mul
@@ -394,7 +412,12 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I64Eqz
         | Operator::I64DivS
         | Operator::I64DivU
-        | Operator::I64And => ValType::I64,
+        | Operator::I64And
+        | Operator::I64Or
+        | Operator::I64Xor
+        | Operator::I64GtU
+        | Operator::I64Ne
+        | Operator::I64Shl => ValType::I64,
         Operator::F32Const { .. } => ValType::F32,
         Operator::F64Const { .. } => ValType::F64,
         Operator::F32Add | Operator::F32Sub | Operator::F32Mul | Operator::F32Div => ValType::F32,

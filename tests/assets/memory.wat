@@ -14,6 +14,7 @@
   (export "store_i32_16u" (func $store_i32_16u))
   (export "store_i32_8u" (func $store_i32_8u))
   (export "memory_size" (func $memory_size))
+  (export "memory_size_bytes" (func $memory_size_bytes))
   (export "memory_grow" (func $memory_grow))
   (export "loop" (func $loop))
   (func $load_i64 (param $index i32) (result i64)
@@ -74,6 +75,11 @@
   )
   (func $memory_size (result i32)
     memory.size
+  )
+  (func $memory_size_bytes (result i32)
+    memory.size
+    i32.const 0x10000
+    i32.mul
   )
   (func $memory_grow (param $pages i32) (result i32)
     local.get $pages

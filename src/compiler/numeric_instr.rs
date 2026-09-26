@@ -315,6 +315,46 @@ pub fn compile_binop(
             }
             register_pool.free();
         }
+        Operator::I32Or | Operator::I64Or => {
+            match (op1.reg, op2.reg) {
+                (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(bit::orr_reg(
+                    reg1,
+                    reg1,
+                    reg2,
+                    Shift::Lsl,
+                    0,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("or operator only supports integer registers"),
+            }
+            register_pool.free();
+        }
+        Operator::I32Xor | Operator::I64Xor => {
+            match (op1.reg, op2.reg) {
+                (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(bit::eor_reg(
+                    reg1,
+                    reg1,
+                    reg2,
+                    Shift::Lsl,
+                    0,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("xor operator only supports integer registers"),
+            }
+            register_pool.free();
+        }
+        Operator::I32Shl | Operator::I64Shl => {
+            match (op1.reg, op2.reg) {
+                (Reg::IReg(reg1), Reg::IReg(reg2)) => machinecode.push(bit::lsl_reg(
+                    reg1,
+                    reg1,
+                    reg2,
+                    map_valtype_to_regsize(&valtype),
+                )),
+                _ => panic!("shl operator only supports integer registers"),
+            }
+            register_pool.free();
+        }
         _ => panic!("Binary operator '{:?}' not supported", op),
     }
 
@@ -357,6 +397,28 @@ pub fn compile_relop(
                 machinecode.push(conditionals::cset(
                     reg1,
                     Condition::from_u32(Condition::LS ^ 1).unwrap(),
+                    RegSize::Int32bit,
+                ))
+            }
+            _ => panic!("relop operator '{:?}' only supports integer registers", op),
+        },
+        Operator::I32GtU | Operator::I64GtU => match (op1.reg, op2.reg) {
+            (Reg::IReg(reg1), Reg::IReg(reg2)) => {
+                machinecode.push(arithmetic::cmp_shifted_reg(reg1, reg2, Shift::Lsl, 0, size));
+                machinecode.push(conditionals::cset(
+                    reg1,
+                    Condition::from_u32(Condition::HI ^ 1).unwrap(),
+                    RegSize::Int32bit,
+                ))
+            }
+            _ => panic!("relop operator '{:?}' only supports integer registers", op),
+        },
+        Operator::I32Ne | Operator::I64Ne => match (op1.reg, op2.reg) {
+            (Reg::IReg(reg1), Reg::IReg(reg2)) => {
+                machinecode.push(arithmetic::cmp_shifted_reg(reg1, reg2, Shift::Lsl, 0, size));
+                machinecode.push(conditionals::cset(
+                    reg1,
+                    Condition::from_u32(Condition::NE ^ 1).unwrap(),
                     RegSize::Int32bit,
                 ))
             }
