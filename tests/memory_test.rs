@@ -375,10 +375,10 @@ fn test_memory_loop() -> Result<()> {
 #[test]
 fn test_memory_extended() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/memory_extended.wasm"))?;
-    let mut _instance = get_module_instance(&module)?;
+    let mut instance = get_module_instance(&module)?;
 
-    // let func = instance.get_function::<(), i32>("mem_bytes")?;
-    // assert_eq!(func.call()?, 0x10000);
+    let func = instance.get_function::<(), i32>("mem_bytes")?;
+    assert_eq!(func.call()?, 0x10000);
 
     // let func = instance.get_function::<(), i32>("memtest")?;
     // assert_eq!(func.call()?, 0);

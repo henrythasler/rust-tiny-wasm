@@ -14,8 +14,7 @@ pub struct RuntimeCtx {
     pub memory_object: *mut LinearMemory, // ptr to linear memory object (heap-allocated, NOT in code buffer)
     pub memory_base: *mut u8,             // linear memory base, if you have one; otherwise NULL
     pub memory_len_bytes: u64,
-    pub memory_len_pages: u32,
-    pub _pad3: u32, // keep 8-byte alignment for the pointer below
+    pub memory_len_pages: u64,
     pub globals_base: *mut i64,
     pub hostfn_base: *const usize, // fn ptr for calling back into Rust for builtins (e.g. memory.grow, etc.)
 }
@@ -74,24 +73,24 @@ impl FuncTable {
 #[derive(Debug)]
 pub struct LinearMemory {
     pub memory: Vec<u8>,
-    pub length: u64,
-    pub max_length: Option<u64>,
+    pub pages: u64,
+    pub max_pages: Option<u64>,
 }
 
 impl LinearMemory {
-    pub fn new(initial_len: u64, max_len: Option<u64>) -> Self {
-        let memory = vec![0; initial_len as usize];
+    pub fn new(initial: u64, maximum: Option<u64>) -> Self {
+        let memory = vec![0; initial as usize];
         LinearMemory {
             memory,
-            length: initial_len,
-            max_length: max_len,
+            pages: initial,
+            max_pages: maximum,
         }
     }
 
     pub fn sync_to_context(&mut self, ctx: &mut RuntimeCtx) {
         ctx.memory_base = self.memory.as_mut_ptr();
-        ctx.memory_len_bytes = self.length;
-        ctx.memory_len_pages = (self.length / WASM_PAGE_SIZE) as u32;
+        ctx.memory_len_bytes = self.pages * WASM_PAGE_SIZE;
+        ctx.memory_len_pages = self.pages;
     }
 }
 

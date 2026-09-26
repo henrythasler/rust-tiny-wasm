@@ -222,6 +222,10 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             MemorySection(reader) => {
                 for memory in reader {
                     let memory = memory?;
+                    assert!(
+                        memory.memory64 == false,
+                        "64-bit memories are not supported"
+                    );
                     module_ctx.memory = Some(LinearMemory::new(memory.initial, memory.maximum))
                 }
             }
@@ -305,7 +309,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     assert_eq!(memory_index, 0, "Only memory index 0 is supported");
 
                     let offset = match offset {
-                        Value::I32(v) => v as usize,
+                        Value::I32(v) => v as u64,
                         _ => {
                             return Err(TinyWasmError::Parser(String::from(
                                 "Only i32 offsets are supported for data segments",
@@ -314,17 +318,20 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     };
 
                     if let Some(linear_memory) = module_ctx.memory.as_mut() {
-                        let end_offset = offset + data.data.len();
+                        let end_offset = offset + data.data.len() as u64;
+                        let max_pages = linear_memory.max_pages.unwrap_or(u32::MAX as u64);
                         assert!(
-                            end_offset
-                                <= linear_memory.max_length.unwrap_or(u32::MAX as u64) as usize,
-                            "Data segment exceeds maximum linear memory size of 4 GiB"
+                            end_offset <= max_pages * WASM_PAGE_SIZE,
+                            "Data segment exceeds maximum linear memory size of {} pages",
+                            max_pages
                         );
-                        let new_len =
-                            end_offset.div_ceil(WASM_PAGE_SIZE as usize) * WASM_PAGE_SIZE as usize;
-                        linear_memory.memory.resize(new_len, 0);
-                        linear_memory.memory[offset..end_offset].copy_from_slice(data.data);
-                        linear_memory.length = new_len as u64;
+                        let new_pages = end_offset.div_ceil(WASM_PAGE_SIZE);
+                        linear_memory
+                            .memory
+                            .resize((new_pages * WASM_PAGE_SIZE) as usize, 0);
+                        linear_memory.memory[offset as usize..end_offset as usize]
+                            .copy_from_slice(data.data);
+                        linear_memory.pages = new_pages;
                     } else {
                         return Err(TinyWasmError::Parser(String::from(
                             "Data section found but no linear memory defined",
