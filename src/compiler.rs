@@ -2,7 +2,7 @@
 //! Processes a Webassembly module and returns a LinkedModule for subsequent execution
 use std::mem;
 
-use wasmparser::{Operator, Parser, Payload::*, ValType};
+use wasmparser::{ExternalKind, Operator, Parser, Payload::*, ValType};
 
 use super::*;
 use crate::assembler::aarch64::{self, *};
@@ -222,10 +222,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
             MemorySection(reader) => {
                 for memory in reader {
                     let memory = memory?;
-                    assert!(
-                        memory.memory64 == false,
-                        "64-bit memories are not supported"
-                    );
+                    assert!(!memory.memory64, "64-bit memories are not supported");
                     module_ctx.memory = Some(LinearMemory::new(memory.initial, memory.maximum))
                 }
             }
@@ -378,7 +375,8 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                 let function_name = module_ctx
                     .exports
                     .iter()
-                    .find(|&idx| idx.index == function_index)
+                    .filter(|&export| export.r#type == ExternalKind::Func)
+                    .find(|&export| export.index == function_index)
                     .map_or(format!("$func{function_index}"), |v| v.name.clone());
 
                 jit_functions.push(JitObject {

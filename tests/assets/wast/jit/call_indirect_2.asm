@@ -2,7 +2,7 @@
 tests/assets/wast/jit/call_indirect_2.o:     file format elf64-littleaarch64
 
 SYMBOL TABLE:
-0000000000000000 l     F .text	0000000000000038 table
+0000000000000000 l     F .text	0000000000000038 $func0
 0000000000000038 l     F .text	0000000000000028 $func1
 0000000000000060 l     F .text	00000000000000b0 call_indirect
 
@@ -28,7 +28,7 @@ Contents of section .text:
 
 Disassembly of section .text:
 
-0000000000000000 <table>:
+0000000000000000 <$func0>:
    0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
    4:	910003fd 	mov	x29, sp
    8:	d10043ff 	sub	sp, sp, #0x10

@@ -222,13 +222,21 @@ Local variable instructions in WebAssembly are needed to use function parameters
 - [x] Load and parse the WebAssembly module `tests/assets/arithmetics.wasm`.
 - [x] Pass all test-cases in `tests/arithmetics_test.rs`.
 
-## Chapter 11 - Loops
+## Chapter 11 - Comparisons
 
-## Chapter 12 - Conditional Branches
+Comparison instructions take two stack elements, perform a specific comparison operation and return `1` if the comparison is true; otherwise `0`.
 
-## Chapter 13 - Blocks
+- [x] Implement the `i32.lt_s`, `i32.le_u`, `i32.gt_u` and `i32.ne` instructions.
+- [x] Load and parse the WebAssembly module `tests/assets/relop.wasm`.
+- [x] Pass all test-cases in `tests/relop_test.rs`.
 
-## Chapter 14 - Division and Trap Handling
+## Chapter 12 - Loops
+
+## Chapter 13 - Conditional Branches
+
+## Chapter 14 - Blocks
+
+## Chapter 15 - Division and Trap Handling
 
 ### Goals
 
@@ -237,7 +245,7 @@ Local variable instructions in WebAssembly are needed to use function parameters
 - [x] Implement a trap mechanism that supports `IntegerDivisionByZero` and `IntegerOverflow`.
 - [x] Pass all test-cases in `tests/division_test.rs`.
 
-## Chapter 15 - Floating Point Instructions
+## Chapter 16 - Floating Point Instructions
 
 ### Goals
 
@@ -249,33 +257,41 @@ Local variable instructions in WebAssembly are needed to use function parameters
 - [x] Implement single-precision floating point support for `f32.add`, `f32.sub`, `f32.mul` and `f32.div`.
 - [x] Implement double-precision floating point support for `f64.add`, `f64.sub`, `f64.mul` and `f64.div`.
 
-## Chapter 16 - Function Calls
+## Chapter 17 - Function Calls
 
 ### Goals
 
 - [x] Implement the `call` instruction for integer and floating point arguments including return values
 - [x] Pass all test-cases in `tests/call_test.rs`.
 
-## Chapter 17 - Indirect Function Calls
+## Chapter 18 - Indirect Function Calls
 
 ### Goals
 
 - [x] Implement the `call_indirect` instruction for integer and floating point arguments including return values
 - [x] Pass all test-cases in `tests/call_indirect_test.rs`.
 
-## Chapter 18 - Globals
+## Chapter 19 - Globals
 
 ### Goals
 
 - [ ] Implement the globals section; make sure to support mutable and immutable globals incl. their given init value
 - [ ] Pass all test cases in `` 
 
-## Chapter 19 - Linear Memory
+## Chapter 20 - Linear Memory
 
 ### Goals
 
 - [x] Research how linear memory can be provided to the wasm-module at runtime.
 - [x] Implement the most common load and store memory instructions including signed and unsigned variants.
+- [x] Pass all test-cases in `tests/memory_test.rs`.
+
+## Chapter 21 - Host Functions
+
+### Goals
+
+- [x] Research how host-functions can be called from a wasm-module.
+- [x] Implement the `memory.size` and `memory.grow` instructions.
 - [x] Pass all test-cases in `tests/memory_test.rs`.
 
 ## Chapter xx - Rust to Wasm

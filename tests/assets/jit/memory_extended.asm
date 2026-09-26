@@ -2,7 +2,7 @@
 tests/assets/jit/memory_extended.o:     file format elf64-littleaarch64
 
 SYMBOL TABLE:
-0000000000000000 l     F .text	0000000000000038 memory
+0000000000000000 l     F .text	0000000000000038 p32
 0000000000000038 l     F .text	0000000000000038 mem_bytes
 0000000000000070 l     F .text	0000000000000118 test_i32
 0000000000000188 l     F .text	0000000000000050 memtest
@@ -42,7 +42,7 @@ Contents of section .text:
 
 Disassembly of section .text:
 
-0000000000000000 <memory>:
+0000000000000000 <p32>:
    0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
    4:	910003fd 	mov	x29, sp
    8:	d10043ff 	sub	sp, sp, #0x10
@@ -98,7 +98,7 @@ Disassembly of section .text:
   c0:	b9400be8 	ldr	w8, [sp, #8]
   c4:	2a0803e1 	mov	w1, w8
   c8:	f94003e0 	ldr	x0, [sp]
-  cc:	97ffffcd 	bl	0 <memory>
+  cc:	97ffffcd 	bl	0 <p32>
   d0:	b5000560 	cbnz	x0, 17c <test_i32+0x10c>
   d4:	2a0103e8 	mov	w8, w1
   d8:	b90013e8 	str	w8, [sp, #16]
