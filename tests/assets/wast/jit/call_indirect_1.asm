@@ -19,9 +19,9 @@ Contents of section .text:
  0080 0a0840f9 4a11088b 490140f9 4a0940b9  ..@.J...I.@.J.@.
  0090 890000b5 a10080d2 200080d2 12000014  ........ .......
  00a0 5f010071 80000054 c10080d2 200080d2  _..q...T.... ...
- 00b0 0d000014 e00340f9 ff4300d1 e80300f9  ......@..C......
- 00c0 e90700f9 20013fd6 e80340f9 e90740f9  .... .?...@...@.
- 00d0 ff430091 800000b5 ea03012a 000080d2  .C.........*....
+ 00b0 0d000014 ff4300d1 e80300f9 e90700f9  .....C..........
+ 00c0 20013fd6 e80340f9 e90740f9 ff430091   .?...@...@..C..
+ 00d0 a00000b5 ea03012a e00340f9 000080d2  .......*..@.....
  00e0 e1030aaa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
 
 Disassembly of section .text:
@@ -76,16 +76,16 @@ Disassembly of section .text:
   a8:	d28000c1 	mov	x1, #0x6                   	// #6
   ac:	d2800020 	mov	x0, #0x1                   	// #1
   b0:	1400000d 	b	e4 <callt+0x94>
-  b4:	f94003e0 	ldr	x0, [sp]
-  b8:	d10043ff 	sub	sp, sp, #0x10
-  bc:	f90003e8 	str	x8, [sp]
-  c0:	f90007e9 	str	x9, [sp, #8]
-  c4:	d63f0120 	blr	x9
-  c8:	f94003e8 	ldr	x8, [sp]
-  cc:	f94007e9 	ldr	x9, [sp, #8]
-  d0:	910043ff 	add	sp, sp, #0x10
-  d4:	b5000080 	cbnz	x0, e4 <callt+0x94>
-  d8:	2a0103ea 	mov	w10, w1
+  b4:	d10043ff 	sub	sp, sp, #0x10
+  b8:	f90003e8 	str	x8, [sp]
+  bc:	f90007e9 	str	x9, [sp, #8]
+  c0:	d63f0120 	blr	x9
+  c4:	f94003e8 	ldr	x8, [sp]
+  c8:	f94007e9 	ldr	x9, [sp, #8]
+  cc:	910043ff 	add	sp, sp, #0x10
+  d0:	b50000a0 	cbnz	x0, e4 <callt+0x94>
+  d4:	2a0103ea 	mov	w10, w1
+  d8:	f94003e0 	ldr	x0, [sp]
   dc:	d2800000 	mov	x0, #0x0                   	// #0
   e0:	aa0a03e1 	mov	x1, x10
   e4:	910043ff 	add	sp, sp, #0x10

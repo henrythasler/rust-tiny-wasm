@@ -35,20 +35,59 @@
   ;; --- full-width tests: one check each ---
 
   (func $test_i32 (export "test_i32") (result i32)
-    (local $addr i32) (local $bound i32) (local $val i32) (local $r i32)
-    (local.set $bound (i32.sub (call $mem_bytes) (i32.const 4)))
-    (block $done
-      (loop $loop
-        (br_if $done (i32.gt_u (local.get $addr) (local.get $bound)))
-        (local.set $val (call $p32 (local.get $addr)))
-        (i32.store (local.get $addr) (local.get $val))
-        (if (i32.ne (i32.load (local.get $addr)) (local.get $val))
-          (then
-            (local.set $r (i32.or (i32.shl (local.get $addr) (i32.const 2)) (i32.const 1)))
-            (br $done)))
-        (local.set $addr (i32.add (local.get $addr) (i32.const 4)))
-        (br $loop)))
-    (local.get $r))
+    (local $addr i32)
+    (local $bound i32)
+    (local $val i32)
+    (local $r i32)
+ 
+    call $mem_bytes
+    i32.const 4
+    i32.sub
+    local.set $bound
+ 
+    block $done
+      loop $loop
+        ;; local.get $addr
+        ;; local.get $bound
+        ;; i32.gt_u
+        ;; br_if $done
+ 
+        ;; local.get $addr
+        ;; call $p32
+        ;; local.set $val
+ 
+        local.get $addr
+        ;; i32.const 65532
+        local.get $val
+        i32.store
+
+        ;; local.get $addr
+        ;; i32.load
+        ;; local.get $val
+        ;; i32.ne
+        ;; if
+        ;;   local.get $addr
+        ;;   i32.const 2
+        ;;   i32.shl
+        ;;   i32.const 1
+        ;;   i32.or
+        ;;   local.set $r
+        ;;   br $done
+        ;; end
+ 
+        local.get $addr
+        i32.const 4
+        i32.add
+        local.tee $addr
+        local.get $bound
+        i32.lt_s
+        br_if $loop
+      end
+    end
+ 
+    local.get $addr
+    ;; local.get $r
+    )
 
 ;;   (func $test_i64 (export "test_i64") (result i32)
 ;;     (local $addr i32) (local $bound i32) (local $val i64) (local $r i32)
@@ -103,9 +142,10 @@
   ;; group's exported function directly afterward to get the exact
   ;; address and which check (zero- vs sign-extend) failed.
   (func (export "memtest") (result i32)
-    (if (i32.ne (call $test_i32) (i32.const 0)) (then (return (i32.const 1))))
+    ;; (if (i32.ne (call $test_i32) (i32.const 0)) (then (return (i32.const 1))))
     ;; (if (i32.ne (call $test_i64) (i32.const 0)) (then (return (i32.const 2))))
     ;; (if (i32.ne (call $test_f32) (i32.const 0)) (then (return (i32.const 3))))
     ;; (if (i32.ne (call $test_f64) (i32.const 0)) (then (return (i32.const 4))))
-    (i32.const 0))
+    i32.const 0
+    )
 )

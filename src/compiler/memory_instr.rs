@@ -280,9 +280,7 @@ pub fn compile_store(
         RegSize::Int64bit,
     ));
 
-    // load the actual data from linear memory using the computed address and offset
-    // differentiate between signed and unsigned variants of the load instruction
-    // let result_reg = dynamic_offset_reg;
+    // store the actual data to linear memory using the computed address and offset
     match value.reg {
         Reg::IReg(reg) => machinecode.push(memory::str_reg(
             reg,

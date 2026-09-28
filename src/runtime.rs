@@ -289,7 +289,7 @@ impl Runtime {
         if let Some(linear_memory) = self.memory.as_mut() {
             ctx.memory_object = linear_memory as *mut LinearMemory;
             linear_memory.sync_to_context(ctx);
-            // println!("linear_memory.length: {}, ", linear_memory.length);
+            // println!("linear_memory.length: {} pages, ", linear_memory.pages);
             // println!("ctx.memory_object: {:x}, ", ctx.memory_object as usize);
         }
 

@@ -81,6 +81,10 @@ fn main() -> Result<()> {
     // Call the function
     let entrypoint = runtime.get_function::<(i32, i32, i32), i32>(func_name)?;
     let result = entrypoint.call(first, second, third)?;
-    println!("Return value: {}", result.bright_green().bold());
+    println!(
+        "Return value: {} (0x{:x})",
+        result.bright_green().bold(),
+        result
+    );
     Ok(())
 }
