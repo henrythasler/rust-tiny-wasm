@@ -78,16 +78,17 @@ pub struct LinearMemory {
 }
 
 impl LinearMemory {
-    pub fn new(initial: u64, maximum: Option<u64>) -> Self {
-        let memory = vec![0; initial as usize];
+    pub fn new(initial_pages: u64, maximum_pages: Option<u64>) -> Self {
+        let memory = vec![0; (initial_pages * WASM_PAGE_SIZE) as usize];
         LinearMemory {
             memory,
-            pages: initial,
-            max_pages: maximum,
+            pages: initial_pages,
+            max_pages: maximum_pages,
         }
     }
 
     pub fn sync_to_context(&mut self, ctx: &mut RuntimeCtx) {
+        assert!(self.memory.len() as u64 == self.pages * WASM_PAGE_SIZE);
         ctx.memory_base = self.memory.as_mut_ptr();
         ctx.memory_len_bytes = self.pages * WASM_PAGE_SIZE;
         ctx.memory_len_pages = self.pages;

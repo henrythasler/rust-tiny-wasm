@@ -136,7 +136,7 @@ pub struct LinkedModule {
     pub functions: Vec<JitObject>,
     pub runtime_ctx: RuntimeCtx,
     pub func_table: Option<FuncTable>,
-    pub globals: Vec<i64>,
+    pub globals: Option<Vec<i64>>,
     pub memory: Option<LinearMemory>,
 }
 
@@ -146,7 +146,7 @@ impl LinkedModule {
         functions: Vec<JitObject>,
         runtime_ctx: RuntimeCtx,
         func_table: Option<FuncTable>,
-        globals: Vec<i64>,
+        globals: Option<Vec<i64>>,
         memory: Option<LinearMemory>,
     ) -> Self {
         Self {
@@ -441,9 +441,9 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
     }
 
     let globals = if let Some(globals) = module_ctx.globals.as_ref() {
-        globals.iter().map(|global| global.value.to_i64()).collect()
+        Some(globals.iter().map(|global| global.value.to_i64()).collect())
     } else {
-        Vec::new()
+        None
     };
 
     Ok(LinkedModule {

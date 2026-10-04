@@ -248,7 +248,7 @@ pub struct Runtime {
 
     // Owns the allocation referenced by ctx.globals_base.
     #[allow(dead_code)]
-    globals: Vec<i64>,
+    globals: Option<Vec<i64>>,
 
     memory: Option<LinearMemory>,
 
@@ -294,6 +294,19 @@ impl Runtime {
         }
 
         self.host_functions.sync_to_context(ctx);
+
+        if let Some(globals) = self.globals.as_mut() {
+            println!(
+                "globals: len={}, capacity={}, ptr={:p}",
+                globals.len(),
+                globals.capacity(),
+                globals.as_ptr()
+            );
+            ctx.globals_base = globals.as_mut_ptr();
+        } else {
+            ctx.globals_base = std::ptr::null_mut();
+        }
+
         println!("ctx: {:?}, ", ctx);
         // println!("ctx.hostfn_base: {:x}, ", ctx.hostfn_base as usize);
         // println!("memory_grow address: {:x}, ", memory_grow as *const () as usize);
@@ -339,7 +352,6 @@ pub fn instantiate_module(mut module: LinkedModule) -> Result<Runtime> {
     // update the runtime context with the base address and length of the JIT code
     module.runtime_ctx.jit_base = machinecode.as_ptr();
     module.runtime_ctx.jit_len = machinecode.len() as u32;
-    module.runtime_ctx.globals_base = module.globals.as_mut_ptr();
 
     Ok(Runtime {
         machinecode,
@@ -380,7 +392,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
-            vec![],
+            None,
             None,
         );
         let mut runtime = instantiate_module(module)?;
@@ -400,7 +412,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
-            vec![],
+            None,
             None,
         );
         let mut runtime = instantiate_module(module)?;
@@ -422,7 +434,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
-            vec![],
+            None,
             None,
         );
         let mut runtime = instantiate_module(module)?;
@@ -447,7 +459,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
-            vec![],
+            None,
             None,
         );
         let mut runtime = instantiate_module(module)?;
@@ -468,7 +480,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
-            vec![],
+            None,
             None,
         );
         assert_eq!(
@@ -489,7 +501,7 @@ mod tests {
             }],
             RuntimeCtx::default(),
             None,
-            vec![],
+            None,
             None,
         );
         let mut runtime = instantiate_module(module)?;

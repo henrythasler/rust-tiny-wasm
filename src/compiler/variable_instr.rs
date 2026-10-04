@@ -203,9 +203,9 @@ pub fn compile_global_set(
         .get(global_index as usize)
         .expect("Global index out of bounds");
 
-    let temp_reg = register_pool.alloc();
+    let globals_addr_reg = register_pool.alloc();
     machinecode.push(memory::ldr_imm_unsigned_offset(
-        temp_reg,
+        globals_addr_reg,
         CONTEXT_REG,
         ctx_offsets::GLOBALS_BASE,
         MemSize::Mem64bit,
@@ -215,17 +215,17 @@ pub fn compile_global_set(
     match element.reg {
         Reg::IReg(reg) => machinecode.push(memory::str_imm_unsigned_offset(
             reg,
-            temp_reg,
+            globals_addr_reg,
             global_index * 8,
             map_valtype_to_memsize(&global.valtype),
             map_valtype_to_regsize(&global.valtype),
         )),
         Reg::FReg(reg) => machinecode.push(fp_memory::str_imm_unsigned_offset(
             reg,
-            temp_reg,
+            globals_addr_reg,
             global_index * 8,
             map_valtype_to_regsize(&global.valtype),
         )),
     }
-    register_pool.free();
+    register_pool.free();   // globals_addr_reg
 }
