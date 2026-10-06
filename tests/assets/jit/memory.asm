@@ -98,8 +98,8 @@ Contents of section .text:
  04b0 e103082a 092440f9 290140f9 ff4300d1  ...*.$@.).@..C..
  04c0 e80300f9 e90700f9 20013fd6 e80340f9  ........ .?...@.
  04d0 e90740f9 ff430091 e803002a e00340f9  ..@..C.....*..@.
- 04e0 081c40f9 000080d2 e10308aa ff430091  ..@..........C..
- 04f0 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 04e0 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
+ 04f0 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
  0500 ff4300d1 e00300f9 ff0b00b9 28008052  .C..........(..R
  0510 e103082a 092440f9 290140f9 ff4300d1  ...*.$@.).@..C..
  0520 e80300f9 e90700f9 20013fd6 e80340f9  ........ .?...@.
@@ -463,12 +463,12 @@ Disassembly of section .text:
  4d4:	910043ff 	add	sp, sp, #0x10
  4d8:	2a0003e8 	mov	w8, w0
  4dc:	f94003e0 	ldr	x0, [sp]
- 4e0:	f9401c08 	ldr	x8, [x0, #56]
- 4e4:	d2800000 	mov	x0, #0x0                   	// #0
- 4e8:	aa0803e1 	mov	x1, x8
- 4ec:	910043ff 	add	sp, sp, #0x10
- 4f0:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 4f4:	d65f03c0 	ret
+ 4e0:	d2800000 	mov	x0, #0x0                   	// #0
+ 4e4:	aa0803e1 	mov	x1, x8
+ 4e8:	910043ff 	add	sp, sp, #0x10
+ 4ec:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 4f0:	d65f03c0 	ret
+ 4f4:	d503201f 	nop
 
 00000000000004f8 <loop>:
  4f8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!

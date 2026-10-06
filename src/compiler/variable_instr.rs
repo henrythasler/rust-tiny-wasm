@@ -227,5 +227,5 @@ pub fn compile_global_set(
             map_valtype_to_regsize(&global.valtype),
         )),
     }
-    register_pool.free();   // globals_addr_reg
+    register_pool.free(); // globals_addr_reg
 }

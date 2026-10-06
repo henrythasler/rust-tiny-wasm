@@ -315,20 +315,7 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
                     };
 
                     if let Some(linear_memory) = module_ctx.memory.as_mut() {
-                        let end_offset = offset + data.data.len() as u64;
-                        let max_pages = linear_memory.max_pages.unwrap_or(u32::MAX as u64);
-                        assert!(
-                            end_offset <= max_pages * WASM_PAGE_SIZE,
-                            "Data segment exceeds maximum linear memory size of {} pages",
-                            max_pages
-                        );
-                        let new_pages = end_offset.div_ceil(WASM_PAGE_SIZE);
-                        linear_memory
-                            .memory
-                            .resize((new_pages * WASM_PAGE_SIZE) as usize, 0);
-                        linear_memory.memory[offset as usize..end_offset as usize]
-                            .copy_from_slice(data.data);
-                        linear_memory.pages = new_pages;
+                        linear_memory.initialize_from_data(offset as usize, data.data);
                     } else {
                         return Err(TinyWasmError::Parser(String::from(
                             "Data section found but no linear memory defined",
@@ -440,11 +427,10 @@ pub fn compile(module: &[u8]) -> Result<LinkedModule> {
         }
     }
 
-    let globals = if let Some(globals) = module_ctx.globals.as_ref() {
-        Some(globals.iter().map(|global| global.value.to_i64()).collect())
-    } else {
-        None
-    };
+    let globals = module_ctx
+        .globals
+        .as_ref()
+        .map(|globals| globals.iter().map(|global| global.value.to_i64()).collect());
 
     Ok(LinkedModule {
         machinecode,

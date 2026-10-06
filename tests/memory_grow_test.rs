@@ -24,8 +24,12 @@ fn test_memory_grow() -> Result<()> {
     let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
-    let func = instance.get_function::<(i32,), i32>("memory_grow")?;
-    assert_eq!(func.call(3)?, 4);
+    let mem_size = instance.get_function::<(), i32>("memory_size")?;
+    let mem_grow = instance.get_function::<(i32,), i32>("memory_grow")?;
+    assert_eq!(mem_grow.call(2)?, 1);
+    assert_eq!(mem_size.call()?, 3);
+    assert_eq!(mem_grow.call(1)?, 3);
+    assert_eq!(mem_size.call()?, 4);
 
     let func = instance.get_function::<(i32, i64), i64>("store_i64")?;
     assert_eq!(func.call(0, 1)?, 1);
