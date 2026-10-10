@@ -25,9 +25,9 @@
   (func $p32 (export "p32") (param $addr i32) (result i32)
     (i32.xor (local.get $addr) (i32.const 0x9E3779B9)))
 
-;;   (func $p64 (param $addr i32) (result i64)
-;;     (i64.xor (i64.extend_i32_u (local.get $addr))
-;;               (i64.const 0x9E3779B97F4A7C15)))
+  (func $p64 (export "p64") (param $addr i32) (result i64)
+    (i64.xor (i64.extend_i32_u (local.get $addr))
+              (i64.const 0x9E3779B97F4A7C15)))
 
   (func $mem_bytes (export "mem_bytes") (result i32)
     (i32.mul (memory.size) (i32.const 65536)))
@@ -82,21 +82,21 @@
     local.get $r
     )
 
-;;   (func $test_i64 (export "test_i64") (result i32)
-;;     (local $addr i32) (local $bound i32) (local $val i64) (local $r i32)
-;;     (local.set $bound (i32.sub (call $mem_bytes) (i32.const 8)))
-;;     (block $done
-;;       (loop $loop
-;;         (br_if $done (i32.gt_u (local.get $addr) (local.get $bound)))
-;;         (local.set $val (call $p64 (local.get $addr)))
-;;         (i64.store (local.get $addr) (local.get $val))
-;;         (if (i64.ne (i64.load (local.get $addr)) (local.get $val))
-;;           (then
-;;             (local.set $r (i32.or (i32.shl (local.get $addr) (i32.const 2)) (i32.const 1)))
-;;             (br $done)))
-;;         (local.set $addr (i32.add (local.get $addr) (i32.const 8)))
-;;         (br $loop)))
-;;     (local.get $r))
+  (func $test_i64 (export "test_i64") (result i32)
+    (local $addr i32) (local $bound i32) (local $val i64) (local $r i32)
+    (local.set $bound (i32.sub (call $mem_bytes) (i32.const 8)))
+    (block $done
+      (loop $loop
+        (br_if $done (i32.gt_u (local.get $addr) (local.get $bound)))
+        (local.set $val (call $p64 (local.get $addr)))
+        (i64.store (local.get $addr) (local.get $val))
+        (if (i64.ne (i64.load (local.get $addr)) (local.get $val))
+          (then
+            (local.set $r (i32.or (i32.shl (local.get $addr) (i32.const 2)) (i32.const 1)))
+            (br $done)))
+        (local.set $addr (i32.add (local.get $addr) (i32.const 8)))
+        (br $loop)))
+    (local.get $r))
 
 ;;   (func $test_f32 (export "test_f32") (result i32)
 ;;     (local $addr i32) (local $bound i32) (local $bits i32) (local $r i32)
@@ -136,7 +136,7 @@
   ;; address and which check (zero- vs sign-extend) failed.
   (func (export "memtest") (result i32)
     (if (i32.ne (call $test_i32) (i32.const 0)) (then (return (i32.const 1))))
-    ;; (if (i32.ne (call $test_i64) (i32.const 0)) (then (return (i32.const 2))))
+    (if (i32.ne (call $test_i64) (i32.const 0)) (then (return (i32.const 2))))
     ;; (if (i32.ne (call $test_f32) (i32.const 0)) (then (return (i32.const 3))))
     ;; (if (i32.ne (call $test_f64) (i32.const 0)) (then (return (i32.const 4))))
     i32.const 0

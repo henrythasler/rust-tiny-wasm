@@ -321,6 +321,9 @@ fn test_memory_extended() -> Result<()> {
     let func = instance.get_function::<(i32,), i32>("p32")?;
     assert_eq!(func.call(0)? as u32, 0x9E3779B9);
 
+    let func = instance.get_function::<(i32,), i64>("p64")?;
+    assert_eq!(func.call(0)? as u64, 0x9E3779B97F4A7C15);
+
     let func = instance.get_function::<(), i32>("memtest")?;
     assert_eq!(func.call()?, 0);
 

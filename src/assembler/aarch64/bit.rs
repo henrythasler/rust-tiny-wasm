@@ -17,11 +17,18 @@ pub fn orr_reg(rd: IReg, rn: IReg, rm: IReg, shift: Shift, amount: u32, size: Re
 /// In both cases, the destination bits below and above the bitfield are set to zero.
 pub fn ubfm(rd: IReg, rn: IReg, immr: u32, imms: u32, size: RegSize) -> u32 {
     let mut instr = select_instr(0x53000000, 0xD3400000, size);
-    instr |= (immr & 0x3F) << 16; // immr
-    instr |= (imms & 0x3F) << 10; // imms
+    match size {
+        RegSize::Int32bit => instr |= ((immr & 0x1F) << 16) | ((imms & 0x1F) << 10), // for 32-bit variant, only allow shift amounts 0-31
+        RegSize::Int64bit => instr |= ((immr & 0x3F) << 16) | ((imms & 0x3F) << 10), // for 64-bit variant, allow shift amounts 0-63
+        _ => panic!("Invalid register size for ubfm instruction"),
+    }
     instr |= (rn & 0x1F) << 5; // Rn (source register)
     instr |= rd & 0x1F; // Rd (destination register)
     instr
+}
+
+pub fn ubfx(rd: IReg, rn: IReg, lsb: u32, width: u32, size: RegSize) -> u32 {
+    ubfm(rd, rn, lsb, lsb + width - 1, size)
 }
 
 /// Logical Shift Right (immediate).

@@ -329,6 +329,9 @@ pub fn compile_function(
             Operator::I32Ctz | Operator::I64Ctz => {
                 compile_unop(&op, &mut value_stack, machinecode);
             }
+            Operator::I64ExtendI32U => {
+                compile_extend(&op, &mut value_stack, machinecode);
+            }
             _ => {
                 return Err(TinyWasmError::Compiler(format!(
                     "unsupported instruction: {:?} at position {}",

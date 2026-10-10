@@ -146,7 +146,7 @@ pub fn compile_load(
 
     value_stack.push(StackElement {
         reg: Reg::IReg(result_reg),
-        valtype: ValType::I32,
+        valtype: map_regsize_to_valtype(register_size),
     });
 }
 

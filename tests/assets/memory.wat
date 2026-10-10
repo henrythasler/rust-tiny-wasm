@@ -20,10 +20,14 @@
   (func $load_i64 (param $index i32) (result i64)
     local.get $index
     i64.load
+    i64.const 0 ;; make sure we got the correct valtype on the stack
+    i64.or
   )
   (func $load_i32 (param $index i32) (result i32)
     local.get $index
     i32.load
+    i32.const 0 ;; make sure we got the correct valtype on the stack
+    i32.or
   )
   (func $load_i32_16u (param $index i32) (result i32)
     local.get $index

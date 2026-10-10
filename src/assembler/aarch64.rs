@@ -588,6 +588,16 @@ pub fn map_valtype_to_regsize(item: &wasmparser::ValType) -> RegSize {
     }
 }
 
+pub fn map_regsize_to_valtype(size: RegSize) -> wasmparser::ValType {
+    match size {
+        RegSize::Int32bit => wasmparser::ValType::I32,
+        RegSize::Int64bit => wasmparser::ValType::I64,
+        RegSize::Float32bit => wasmparser::ValType::F32,
+        RegSize::Float64bit => wasmparser::ValType::F64,
+        _ => panic!("can't map {:?} to ValType", size),
+    }
+}
+
 pub fn map_valtype_to_memsize(item: &wasmparser::ValType) -> MemSize {
     if *item == wasmparser::ValType::I32 || *item == wasmparser::ValType::F32 {
         MemSize::Mem32bit

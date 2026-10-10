@@ -82,6 +82,34 @@ pub fn compile_unop(
     value_stack.push(operand);
 }
 
+pub fn compile_extend(
+    op: &Operator,
+    value_stack: &mut Vec<StackElement>,
+    machinecode: &mut Vec<u32>,
+) {
+    let len = value_stack.len();
+    assert!(
+        len >= 1,
+        "insufficient operands on stack for sign extension"
+    );
+
+    let operand = value_stack.pop().unwrap();
+
+    match op {
+        Operator::I64ExtendI32U => match operand.reg {
+            Reg::IReg(reg) => {
+                machinecode.push(bit::ubfx(reg, reg, 0, 32, RegSize::Int64bit));
+                value_stack.push(StackElement {
+                    reg: operand.reg,
+                    valtype: ValType::I64,
+                });
+            }
+            _ => panic!("extend operator only supports integer registers"),
+        },
+        _ => panic!("Extend operator '{:?}' not supported", op),
+    }
+}
+
 pub fn compile_testop(
     op: &Operator,
     value_stack: &mut Vec<StackElement>,
@@ -376,8 +404,16 @@ pub fn compile_relop(
     let valtype = map_op_to_valtype(op);
     let size = map_valtype_to_regsize(&valtype);
 
-    assert_eq!(op1.valtype, valtype, "Operand 1 type mismatch for relop");
-    assert_eq!(op2.valtype, valtype, "Operand 2 type mismatch for relop");
+    assert_eq!(
+        op1.valtype, valtype,
+        "Operand 1 type mismatch for relop {:?}",
+        op
+    );
+    assert_eq!(
+        op2.valtype, valtype,
+        "Operand 2 type mismatch for relop {:?}",
+        op
+    );
 
     match op {
         Operator::I32LtS | Operator::I64LtS => match (op1.reg, op2.reg) {
