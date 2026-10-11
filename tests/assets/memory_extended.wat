@@ -98,37 +98,37 @@
         (br $loop)))
     (local.get $r))
 
-;;   (func $test_f32 (export "test_f32") (result i32)
-;;     (local $addr i32) (local $bound i32) (local $bits i32) (local $r i32)
-;;     (local.set $bound (i32.sub (call $mem_bytes) (i32.const 4)))
-;;     (block $done
-;;       (loop $loop
-;;         (br_if $done (i32.gt_u (local.get $addr) (local.get $bound)))
-;;         (local.set $bits (call $p32 (local.get $addr)))
-;;         (f32.store (local.get $addr) (f32.reinterpret_i32 (local.get $bits)))
-;;         (if (i32.ne (i32.reinterpret_f32 (f32.load (local.get $addr))) (local.get $bits))
-;;           (then
-;;             (local.set $r (i32.or (i32.shl (local.get $addr) (i32.const 2)) (i32.const 1)))
-;;             (br $done)))
-;;         (local.set $addr (i32.add (local.get $addr) (i32.const 4)))
-;;         (br $loop)))
-;;     (local.get $r))
+  (func $test_f32 (export "test_f32") (result i32)
+    (local $addr i32) (local $bound i32) (local $bits i32) (local $r i32)
+    (local.set $bound (i32.sub (call $mem_bytes) (i32.const 4)))
+    (block $done
+      (loop $loop
+        (br_if $done (i32.gt_u (local.get $addr) (local.get $bound)))
+        (local.set $bits (call $p32 (local.get $addr)))
+        (f32.store (local.get $addr) (f32.reinterpret_i32 (local.get $bits)))
+        (if (i32.ne (i32.reinterpret_f32 (f32.load (local.get $addr))) (local.get $bits))
+          (then
+            (local.set $r (i32.or (i32.shl (local.get $addr) (i32.const 2)) (i32.const 1)))
+            (br $done)))
+        (local.set $addr (i32.add (local.get $addr) (i32.const 4)))
+        (br $loop)))
+    (local.get $r))
 
-;;   (func $test_f64 (export "test_f64") (result i32)
-;;     (local $addr i32) (local $bound i32) (local $bits i64) (local $r i32)
-;;     (local.set $bound (i32.sub (call $mem_bytes) (i32.const 8)))
-;;     (block $done
-;;       (loop $loop
-;;         (br_if $done (i32.gt_u (local.get $addr) (local.get $bound)))
-;;         (local.set $bits (call $p64 (local.get $addr)))
-;;         (f64.store (local.get $addr) (f64.reinterpret_i64 (local.get $bits)))
-;;         (if (i64.ne (i64.reinterpret_f64 (f64.load (local.get $addr))) (local.get $bits))
-;;           (then
-;;             (local.set $r (i32.or (i32.shl (local.get $addr) (i32.const 2)) (i32.const 1)))
-;;             (br $done)))
-;;         (local.set $addr (i32.add (local.get $addr) (i32.const 8)))
-;;         (br $loop)))
-;;     (local.get $r))
+  (func $test_f64 (export "test_f64") (result i32)
+    (local $addr i32) (local $bound i32) (local $bits i64) (local $r i32)
+    (local.set $bound (i32.sub (call $mem_bytes) (i32.const 8)))
+    (block $done
+      (loop $loop
+        (br_if $done (i32.gt_u (local.get $addr) (local.get $bound)))
+        (local.set $bits (call $p64 (local.get $addr)))
+        (f64.store (local.get $addr) (f64.reinterpret_i64 (local.get $bits)))
+        (if (i64.ne (i64.reinterpret_f64 (f64.load (local.get $addr))) (local.get $bits))
+          (then
+            (local.set $r (i32.or (i32.shl (local.get $addr) (i32.const 2)) (i32.const 1)))
+            (br $done)))
+        (local.set $addr (i32.add (local.get $addr) (i32.const 8)))
+        (br $loop)))
+    (local.get $r))
 
   ;; Runs every group above in turn. Returns 0 if all pass, otherwise the
   ;; 1-based index (1..9) of the first group that failed -- call that
@@ -137,8 +137,8 @@
   (func (export "memtest") (result i32)
     (if (i32.ne (call $test_i32) (i32.const 0)) (then (return (i32.const 1))))
     (if (i32.ne (call $test_i64) (i32.const 0)) (then (return (i32.const 2))))
-    ;; (if (i32.ne (call $test_f32) (i32.const 0)) (then (return (i32.const 3))))
-    ;; (if (i32.ne (call $test_f64) (i32.const 0)) (then (return (i32.const 4))))
+    (if (i32.ne (call $test_f32) (i32.const 0)) (then (return (i32.const 3))))
+    (if (i32.ne (call $test_f64) (i32.const 0)) (then (return (i32.const 4))))
     i32.const 0
     )
 )

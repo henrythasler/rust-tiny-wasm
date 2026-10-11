@@ -82,15 +82,17 @@ pub fn compile_unop(
     value_stack.push(operand);
 }
 
-pub fn compile_extend(
+pub fn compile_cvtop(
     op: &Operator,
     value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
     machinecode: &mut Vec<u32>,
 ) {
     let len = value_stack.len();
     assert!(
         len >= 1,
-        "insufficient operands on stack for sign extension"
+        "insufficient operands on stack for convert operator '{:?}'",
+        op
     );
 
     let operand = value_stack.pop().unwrap();
@@ -98,15 +100,83 @@ pub fn compile_extend(
     match op {
         Operator::I64ExtendI32U => match operand.reg {
             Reg::IReg(reg) => {
+                assert!(
+                    operand.valtype == ValType::I32,
+                    "Operand type mismatch for extend operator"
+                );
                 machinecode.push(bit::ubfx(reg, reg, 0, 32, RegSize::Int64bit));
                 value_stack.push(StackElement {
                     reg: operand.reg,
                     valtype: ValType::I64,
                 });
             }
-            _ => panic!("extend operator only supports integer registers"),
+            _ => panic!("convert operator only supports integer registers"),
         },
-        _ => panic!("Extend operator '{:?}' not supported", op),
+        Operator::F32ReinterpretI32 => {
+            assert!(
+                operand.valtype == ValType::I32,
+                "Operand type mismatch for reinterpret operator"
+            );
+            let target_reg = Reg::FReg(register_pool.alloc_float());
+            machinecode.push(fp_processing::fmov(
+                target_reg,
+                operand.reg,
+                RegSize::Float32bit,
+            ));
+            value_stack.push(StackElement {
+                reg: target_reg,
+                valtype: ValType::F32,
+            });
+        }
+        Operator::I32ReinterpretF32 => {
+            assert!(
+                operand.valtype == ValType::F32,
+                "Operand type mismatch for reinterpret operator"
+            );
+            let target_reg = Reg::IReg(register_pool.alloc());
+            machinecode.push(fp_processing::fmov(
+                target_reg,
+                operand.reg,
+                RegSize::Float32bit,
+            ));
+            value_stack.push(StackElement {
+                reg: target_reg,
+                valtype: ValType::I32,
+            });
+        }
+        Operator::F64ReinterpretI64 => {
+            assert!(
+                operand.valtype == ValType::I64,
+                "Operand type mismatch for reinterpret operator"
+            );
+            let target_reg = Reg::FReg(register_pool.alloc_float());
+            machinecode.push(fp_processing::fmov(
+                target_reg,
+                operand.reg,
+                RegSize::Float64bit,
+            ));
+            value_stack.push(StackElement {
+                reg: target_reg,
+                valtype: ValType::F64,
+            });
+        }
+        Operator::I64ReinterpretF64 => {
+            assert!(
+                operand.valtype == ValType::F64,
+                "Operand type mismatch for reinterpret operator"
+            );
+            let target_reg = Reg::IReg(register_pool.alloc());
+            machinecode.push(fp_processing::fmov(
+                target_reg,
+                operand.reg,
+                RegSize::Float64bit,
+            ));
+            value_stack.push(StackElement {
+                reg: target_reg,
+                valtype: ValType::I64,
+            });
+        }
+        _ => panic!("Convert operator '{:?}' not supported", op),
     }
 }
 

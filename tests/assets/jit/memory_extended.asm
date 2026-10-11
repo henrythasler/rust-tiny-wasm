@@ -7,7 +7,9 @@ SYMBOL TABLE:
 0000000000000080 l     F .text	0000000000000038 mem_bytes
 00000000000000b8 l     F .text	0000000000000110 test_i32
 00000000000001c8 l     F .text	0000000000000118 test_i64
-00000000000002e0 l     F .text	0000000000000078 memtest
+00000000000002e0 l     F .text	0000000000000120 test_f32
+0000000000000400 l     F .text	0000000000000120 test_f64
+0000000000000520 l     F .text	00000000000000c8 memtest
 
 
 Contents of section .text:
@@ -57,14 +59,55 @@ Contents of section .text:
  02b0 06000014 e80b40b9 09018052 0801090b  ......@....R....
  02c0 e80b00b9 d0ffff17 e81b40b9 000080d2  ..........@.....
  02d0 e10308aa ff830091 fd7bc1a8 c0035fd6  .........{...._.
- 02e0 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
- 02f0 72ffff97 c00200b5 e803012a e00340f9  r..........*..@.
- 0300 09008052 1f01096b e8079f1a 68000034  ...R...k....h..4
- 0310 28008052 0c000014 acffff97 800100b5  (..R............
- 0320 e803012a e00340f9 09008052 1f01096b  ...*..@....R...k
- 0330 e8079f1a 68000034 48008052 02000014  ....h..4H..R....
- 0340 08008052 000080d2 e10308aa ff430091  ...R.........C..
- 0350 fd7bc1a8 c0035fd6                    .{...._.        
+ 02e0 fd7bbfa9 fd030091 ff8300d1 e00300f9  .{..............
+ 02f0 ff0b00b9 ff0f00b9 ff1300b9 ff1700b9  ................
+ 0300 60ffff97 800700b5 e803012a e00340f9  `..........*..@.
+ 0310 89008052 0801094b e80f00b9 e80b40b9  ...R...K......@.
+ 0320 e90f40b9 1f01096b e8979f1a e8050035  ..@....k.......5
+ 0330 e80b40b9 e103082a 32ffff97 c00500b5  ..@....*2.......
+ 0340 e803012a e00340f9 e81300b9 e80b40b9  ...*..@.......@.
+ 0350 e91340b9 2801271e 0a1840f9 4a1100d1  ..@.(.'...@.J...
+ 0360 1f010aeb 89000054 410080d2 200080d2  .......TA... ...
+ 0370 21000014 0a1440f9 486928bc e80b40b9  !.....@.Hi(...@.
+ 0380 091840f9 291100d1 1f0109eb 89000054  ..@.)..........T
+ 0390 410080d2 200080d2 17000014 091440f9  A... .........@.
+ 03a0 296968bc 2901261e ea1340b9 3f010a6b  )ih.).&...@.?..k
+ 03b0 e9079f1a 09010034 e90b40b9 4a008052  .......4..@.J..R
+ 03c0 2921ca1a 2a008052 29010a2a e91700b9  )!..*..R)..*....
+ 03d0 06000014 e90b40b9 8a008052 29010a0b  ......@....R)...
+ 03e0 e90b00b9 ceffff17 e81740b9 000080d2  ..........@.....
+ 03f0 e10308aa ff830091 fd7bc1a8 c0035fd6  .........{...._.
+ 0400 fd7bbfa9 fd030091 ff8300d1 e00300f9  .{..............
+ 0410 ff0b00b9 ff0f00b9 ff0b00f9 ff1b00b9  ................
+ 0420 18ffff97 800700b5 e803012a e00340f9  ...........*..@.
+ 0430 09018052 0801094b e80f00b9 e80b40b9  ...R...K......@.
+ 0440 e90f40b9 1f01096b e8979f1a e8050035  ..@....k.......5
+ 0450 e80b40b9 e103082a f8feff97 c00500b5  ..@....*........
+ 0460 e80301aa e00340f9 e80b00f9 e80b40b9  ......@.......@.
+ 0470 e90b40f9 2801679e 0a1840f9 4a2100d1  ..@.(.g...@.J!..
+ 0480 1f010aeb 89000054 410080d2 200080d2  .......TA... ...
+ 0490 21000014 0a1440f9 486928fc e80b40b9  !.....@.Hi(...@.
+ 04a0 091840f9 292100d1 1f0109eb 89000054  ..@.)!.........T
+ 04b0 410080d2 200080d2 17000014 091440f9  A... .........@.
+ 04c0 296968fc 2901669e ea0b40f9 3f010aeb  )ih.).f...@.?...
+ 04d0 e9079f1a 09010034 e90b40b9 4a008052  .......4..@.J..R
+ 04e0 2921ca1a 2a008052 29010a2a e91b00b9  )!..*..R)..*....
+ 04f0 06000014 e90b40b9 0a018052 29010a0b  ......@....R)...
+ 0500 e90b00b9 ceffff17 e81b40b9 000080d2  ..........@.....
+ 0510 e10308aa ff830091 fd7bc1a8 c0035fd6  .........{...._.
+ 0520 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
+ 0530 e2feff97 400500b5 e803012a e00340f9  ....@......*..@.
+ 0540 09008052 1f01096b e8079f1a 68000034  ...R...k....h..4
+ 0550 28008052 20000014 1cffff97 000400b5  (..R ...........
+ 0560 e803012a e00340f9 09008052 1f01096b  ...*..@....R...k
+ 0570 e8079f1a 68000034 48008052 16000014  ....h..4H..R....
+ 0580 58ffff97 c00200b5 e803012a e00340f9  X..........*..@.
+ 0590 09008052 1f01096b e8079f1a 68000034  ...R...k....h..4
+ 05a0 68008052 0c000014 96ffff97 800100b5  h..R............
+ 05b0 e803012a e00340f9 09008052 1f01096b  ...*..@....R...k
+ 05c0 e8079f1a 68000034 88008052 02000014  ....h..4...R....
+ 05d0 08008052 000080d2 e10308aa ff430091  ...R.........C..
+ 05e0 fd7bc1a8 c0035fd6                    .{...._.        
 
 Disassembly of section .text:
 
@@ -262,34 +305,202 @@ Disassembly of section .text:
  2d8:	a8c17bfd 	ldp	x29, x30, [sp], #16
  2dc:	d65f03c0 	ret
 
-00000000000002e0 <memtest>:
+00000000000002e0 <test_f32>:
  2e0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
  2e4:	910003fd 	mov	x29, sp
- 2e8:	d10043ff 	sub	sp, sp, #0x10
+ 2e8:	d10083ff 	sub	sp, sp, #0x20
  2ec:	f90003e0 	str	x0, [sp]
- 2f0:	97ffff72 	bl	b8 <test_i32>
- 2f4:	b50002c0 	cbnz	x0, 34c <memtest+0x6c>
- 2f8:	2a0103e8 	mov	w8, w1
- 2fc:	f94003e0 	ldr	x0, [sp]
- 300:	52800009 	mov	w9, #0x0                   	// #0
- 304:	6b09011f 	cmp	w8, w9
- 308:	1a9f07e8 	cset	w8, ne	// ne = any
- 30c:	34000068 	cbz	w8, 318 <memtest+0x38>
- 310:	52800028 	mov	w8, #0x1                   	// #1
- 314:	1400000c 	b	344 <memtest+0x64>
- 318:	97ffffac 	bl	1c8 <test_i64>
- 31c:	b5000180 	cbnz	x0, 34c <memtest+0x6c>
- 320:	2a0103e8 	mov	w8, w1
- 324:	f94003e0 	ldr	x0, [sp]
- 328:	52800009 	mov	w9, #0x0                   	// #0
- 32c:	6b09011f 	cmp	w8, w9
- 330:	1a9f07e8 	cset	w8, ne	// ne = any
- 334:	34000068 	cbz	w8, 340 <memtest+0x60>
- 338:	52800048 	mov	w8, #0x2                   	// #2
- 33c:	14000002 	b	344 <memtest+0x64>
- 340:	52800008 	mov	w8, #0x0                   	// #0
- 344:	d2800000 	mov	x0, #0x0                   	// #0
- 348:	aa0803e1 	mov	x1, x8
- 34c:	910043ff 	add	sp, sp, #0x10
- 350:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 354:	d65f03c0 	ret
+ 2f0:	b9000bff 	str	wzr, [sp, #8]
+ 2f4:	b9000fff 	str	wzr, [sp, #12]
+ 2f8:	b90013ff 	str	wzr, [sp, #16]
+ 2fc:	b90017ff 	str	wzr, [sp, #20]
+ 300:	97ffff60 	bl	80 <mem_bytes>
+ 304:	b5000780 	cbnz	x0, 3f4 <test_f32+0x114>
+ 308:	2a0103e8 	mov	w8, w1
+ 30c:	f94003e0 	ldr	x0, [sp]
+ 310:	52800089 	mov	w9, #0x4                   	// #4
+ 314:	4b090108 	sub	w8, w8, w9
+ 318:	b9000fe8 	str	w8, [sp, #12]
+ 31c:	b9400be8 	ldr	w8, [sp, #8]
+ 320:	b9400fe9 	ldr	w9, [sp, #12]
+ 324:	6b09011f 	cmp	w8, w9
+ 328:	1a9f97e8 	cset	w8, hi	// hi = pmore
+ 32c:	350005e8 	cbnz	w8, 3e8 <test_f32+0x108>
+ 330:	b9400be8 	ldr	w8, [sp, #8]
+ 334:	2a0803e1 	mov	w1, w8
+ 338:	97ffff32 	bl	0 <p32>
+ 33c:	b50005c0 	cbnz	x0, 3f4 <test_f32+0x114>
+ 340:	2a0103e8 	mov	w8, w1
+ 344:	f94003e0 	ldr	x0, [sp]
+ 348:	b90013e8 	str	w8, [sp, #16]
+ 34c:	b9400be8 	ldr	w8, [sp, #8]
+ 350:	b94013e9 	ldr	w9, [sp, #16]
+ 354:	1e270128 	fmov	s8, w9
+ 358:	f940180a 	ldr	x10, [x0, #48]
+ 35c:	d100114a 	sub	x10, x10, #0x4
+ 360:	eb0a011f 	cmp	x8, x10
+ 364:	54000089 	b.ls	374 <test_f32+0x94>  // b.plast
+ 368:	d2800041 	mov	x1, #0x2                   	// #2
+ 36c:	d2800020 	mov	x0, #0x1                   	// #1
+ 370:	14000021 	b	3f4 <test_f32+0x114>
+ 374:	f940140a 	ldr	x10, [x0, #40]
+ 378:	bc286948 	str	s8, [x10, x8]
+ 37c:	b9400be8 	ldr	w8, [sp, #8]
+ 380:	f9401809 	ldr	x9, [x0, #48]
+ 384:	d1001129 	sub	x9, x9, #0x4
+ 388:	eb09011f 	cmp	x8, x9
+ 38c:	54000089 	b.ls	39c <test_f32+0xbc>  // b.plast
+ 390:	d2800041 	mov	x1, #0x2                   	// #2
+ 394:	d2800020 	mov	x0, #0x1                   	// #1
+ 398:	14000017 	b	3f4 <test_f32+0x114>
+ 39c:	f9401409 	ldr	x9, [x0, #40]
+ 3a0:	bc686929 	ldr	s9, [x9, x8]
+ 3a4:	1e260129 	fmov	w9, s9
+ 3a8:	b94013ea 	ldr	w10, [sp, #16]
+ 3ac:	6b0a013f 	cmp	w9, w10
+ 3b0:	1a9f07e9 	cset	w9, ne	// ne = any
+ 3b4:	34000109 	cbz	w9, 3d4 <test_f32+0xf4>
+ 3b8:	b9400be9 	ldr	w9, [sp, #8]
+ 3bc:	5280004a 	mov	w10, #0x2                   	// #2
+ 3c0:	1aca2129 	lsl	w9, w9, w10
+ 3c4:	5280002a 	mov	w10, #0x1                   	// #1
+ 3c8:	2a0a0129 	orr	w9, w9, w10
+ 3cc:	b90017e9 	str	w9, [sp, #20]
+ 3d0:	14000006 	b	3e8 <test_f32+0x108>
+ 3d4:	b9400be9 	ldr	w9, [sp, #8]
+ 3d8:	5280008a 	mov	w10, #0x4                   	// #4
+ 3dc:	0b0a0129 	add	w9, w9, w10
+ 3e0:	b9000be9 	str	w9, [sp, #8]
+ 3e4:	17ffffce 	b	31c <test_f32+0x3c>
+ 3e8:	b94017e8 	ldr	w8, [sp, #20]
+ 3ec:	d2800000 	mov	x0, #0x0                   	// #0
+ 3f0:	aa0803e1 	mov	x1, x8
+ 3f4:	910083ff 	add	sp, sp, #0x20
+ 3f8:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 3fc:	d65f03c0 	ret
+
+0000000000000400 <test_f64>:
+ 400:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 404:	910003fd 	mov	x29, sp
+ 408:	d10083ff 	sub	sp, sp, #0x20
+ 40c:	f90003e0 	str	x0, [sp]
+ 410:	b9000bff 	str	wzr, [sp, #8]
+ 414:	b9000fff 	str	wzr, [sp, #12]
+ 418:	f9000bff 	str	xzr, [sp, #16]
+ 41c:	b9001bff 	str	wzr, [sp, #24]
+ 420:	97ffff18 	bl	80 <mem_bytes>
+ 424:	b5000780 	cbnz	x0, 514 <test_f64+0x114>
+ 428:	2a0103e8 	mov	w8, w1
+ 42c:	f94003e0 	ldr	x0, [sp]
+ 430:	52800109 	mov	w9, #0x8                   	// #8
+ 434:	4b090108 	sub	w8, w8, w9
+ 438:	b9000fe8 	str	w8, [sp, #12]
+ 43c:	b9400be8 	ldr	w8, [sp, #8]
+ 440:	b9400fe9 	ldr	w9, [sp, #12]
+ 444:	6b09011f 	cmp	w8, w9
+ 448:	1a9f97e8 	cset	w8, hi	// hi = pmore
+ 44c:	350005e8 	cbnz	w8, 508 <test_f64+0x108>
+ 450:	b9400be8 	ldr	w8, [sp, #8]
+ 454:	2a0803e1 	mov	w1, w8
+ 458:	97fffef8 	bl	38 <p64>
+ 45c:	b50005c0 	cbnz	x0, 514 <test_f64+0x114>
+ 460:	aa0103e8 	mov	x8, x1
+ 464:	f94003e0 	ldr	x0, [sp]
+ 468:	f9000be8 	str	x8, [sp, #16]
+ 46c:	b9400be8 	ldr	w8, [sp, #8]
+ 470:	f9400be9 	ldr	x9, [sp, #16]
+ 474:	9e670128 	fmov	d8, x9
+ 478:	f940180a 	ldr	x10, [x0, #48]
+ 47c:	d100214a 	sub	x10, x10, #0x8
+ 480:	eb0a011f 	cmp	x8, x10
+ 484:	54000089 	b.ls	494 <test_f64+0x94>  // b.plast
+ 488:	d2800041 	mov	x1, #0x2                   	// #2
+ 48c:	d2800020 	mov	x0, #0x1                   	// #1
+ 490:	14000021 	b	514 <test_f64+0x114>
+ 494:	f940140a 	ldr	x10, [x0, #40]
+ 498:	fc286948 	str	d8, [x10, x8]
+ 49c:	b9400be8 	ldr	w8, [sp, #8]
+ 4a0:	f9401809 	ldr	x9, [x0, #48]
+ 4a4:	d1002129 	sub	x9, x9, #0x8
+ 4a8:	eb09011f 	cmp	x8, x9
+ 4ac:	54000089 	b.ls	4bc <test_f64+0xbc>  // b.plast
+ 4b0:	d2800041 	mov	x1, #0x2                   	// #2
+ 4b4:	d2800020 	mov	x0, #0x1                   	// #1
+ 4b8:	14000017 	b	514 <test_f64+0x114>
+ 4bc:	f9401409 	ldr	x9, [x0, #40]
+ 4c0:	fc686929 	ldr	d9, [x9, x8]
+ 4c4:	9e660129 	fmov	x9, d9
+ 4c8:	f9400bea 	ldr	x10, [sp, #16]
+ 4cc:	eb0a013f 	cmp	x9, x10
+ 4d0:	1a9f07e9 	cset	w9, ne	// ne = any
+ 4d4:	34000109 	cbz	w9, 4f4 <test_f64+0xf4>
+ 4d8:	b9400be9 	ldr	w9, [sp, #8]
+ 4dc:	5280004a 	mov	w10, #0x2                   	// #2
+ 4e0:	1aca2129 	lsl	w9, w9, w10
+ 4e4:	5280002a 	mov	w10, #0x1                   	// #1
+ 4e8:	2a0a0129 	orr	w9, w9, w10
+ 4ec:	b9001be9 	str	w9, [sp, #24]
+ 4f0:	14000006 	b	508 <test_f64+0x108>
+ 4f4:	b9400be9 	ldr	w9, [sp, #8]
+ 4f8:	5280010a 	mov	w10, #0x8                   	// #8
+ 4fc:	0b0a0129 	add	w9, w9, w10
+ 500:	b9000be9 	str	w9, [sp, #8]
+ 504:	17ffffce 	b	43c <test_f64+0x3c>
+ 508:	b9401be8 	ldr	w8, [sp, #24]
+ 50c:	d2800000 	mov	x0, #0x0                   	// #0
+ 510:	aa0803e1 	mov	x1, x8
+ 514:	910083ff 	add	sp, sp, #0x20
+ 518:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 51c:	d65f03c0 	ret
+
+0000000000000520 <memtest>:
+ 520:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 524:	910003fd 	mov	x29, sp
+ 528:	d10043ff 	sub	sp, sp, #0x10
+ 52c:	f90003e0 	str	x0, [sp]
+ 530:	97fffee2 	bl	b8 <test_i32>
+ 534:	b5000540 	cbnz	x0, 5dc <memtest+0xbc>
+ 538:	2a0103e8 	mov	w8, w1
+ 53c:	f94003e0 	ldr	x0, [sp]
+ 540:	52800009 	mov	w9, #0x0                   	// #0
+ 544:	6b09011f 	cmp	w8, w9
+ 548:	1a9f07e8 	cset	w8, ne	// ne = any
+ 54c:	34000068 	cbz	w8, 558 <memtest+0x38>
+ 550:	52800028 	mov	w8, #0x1                   	// #1
+ 554:	14000020 	b	5d4 <memtest+0xb4>
+ 558:	97ffff1c 	bl	1c8 <test_i64>
+ 55c:	b5000400 	cbnz	x0, 5dc <memtest+0xbc>
+ 560:	2a0103e8 	mov	w8, w1
+ 564:	f94003e0 	ldr	x0, [sp]
+ 568:	52800009 	mov	w9, #0x0                   	// #0
+ 56c:	6b09011f 	cmp	w8, w9
+ 570:	1a9f07e8 	cset	w8, ne	// ne = any
+ 574:	34000068 	cbz	w8, 580 <memtest+0x60>
+ 578:	52800048 	mov	w8, #0x2                   	// #2
+ 57c:	14000016 	b	5d4 <memtest+0xb4>
+ 580:	97ffff58 	bl	2e0 <test_f32>
+ 584:	b50002c0 	cbnz	x0, 5dc <memtest+0xbc>
+ 588:	2a0103e8 	mov	w8, w1
+ 58c:	f94003e0 	ldr	x0, [sp]
+ 590:	52800009 	mov	w9, #0x0                   	// #0
+ 594:	6b09011f 	cmp	w8, w9
+ 598:	1a9f07e8 	cset	w8, ne	// ne = any
+ 59c:	34000068 	cbz	w8, 5a8 <memtest+0x88>
+ 5a0:	52800068 	mov	w8, #0x3                   	// #3
+ 5a4:	1400000c 	b	5d4 <memtest+0xb4>
+ 5a8:	97ffff96 	bl	400 <test_f64>
+ 5ac:	b5000180 	cbnz	x0, 5dc <memtest+0xbc>
+ 5b0:	2a0103e8 	mov	w8, w1
+ 5b4:	f94003e0 	ldr	x0, [sp]
+ 5b8:	52800009 	mov	w9, #0x0                   	// #0
+ 5bc:	6b09011f 	cmp	w8, w9
+ 5c0:	1a9f07e8 	cset	w8, ne	// ne = any
+ 5c4:	34000068 	cbz	w8, 5d0 <memtest+0xb0>
+ 5c8:	52800088 	mov	w8, #0x4                   	// #4
+ 5cc:	14000002 	b	5d4 <memtest+0xb4>
+ 5d0:	52800008 	mov	w8, #0x0                   	// #0
+ 5d4:	d2800000 	mov	x0, #0x0                   	// #0
+ 5d8:	aa0803e1 	mov	x1, x8
+ 5dc:	910043ff 	add	sp, sp, #0x10
+ 5e0:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 5e4:	d65f03c0 	ret

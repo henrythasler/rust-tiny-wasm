@@ -30,14 +30,15 @@ pub fn compile_load(
         "Only i32 offset arguments are supported for memory.load instructions"
     );
 
-    let (register_size, is_signed, mem_size) = match op {
-        Operator::I64Load { .. } => (RegSize::Int64bit, false, MemSize::Mem64bit),
-        Operator::I32Load { .. } => (RegSize::Int32bit, false, MemSize::Mem32bit),
-        Operator::I32Load16S { .. } => (RegSize::Int32bit, true, MemSize::Mem16bit),
-        Operator::I32Load16U { .. } => (RegSize::Int32bit, false, MemSize::Mem16bit),
-        Operator::I32Load8S { .. } => (RegSize::Int32bit, true, MemSize::Mem8bit),
-        Operator::I32Load8U { .. } => (RegSize::Int32bit, false, MemSize::Mem8bit),
-
+    let (is_float, register_size, is_signed, mem_size) = match op {
+        Operator::I64Load { .. } => (false, RegSize::Int64bit, false, MemSize::Mem64bit),
+        Operator::I32Load { .. } => (false, RegSize::Int32bit, false, MemSize::Mem32bit),
+        Operator::I32Load16S { .. } => (false, RegSize::Int32bit, true, MemSize::Mem16bit),
+        Operator::I32Load16U { .. } => (false, RegSize::Int32bit, false, MemSize::Mem16bit),
+        Operator::I32Load8S { .. } => (false, RegSize::Int32bit, true, MemSize::Mem8bit),
+        Operator::I32Load8U { .. } => (false, RegSize::Int32bit, false, MemSize::Mem8bit),
+        Operator::F32Load { .. } => (true, RegSize::Float32bit, false, MemSize::Mem32bit),
+        Operator::F64Load { .. } => (true, RegSize::Float64bit, false, MemSize::Mem64bit),
         _ => panic!("Unsupported memory.load instruction"),
     };
 
@@ -121,33 +122,54 @@ pub fn compile_load(
 
     // load the actual data from linear memory using the computed address and offset
     // differentiate between signed and unsigned variants of the load instruction
-    let result_reg = dynamic_offset_reg;
-    match is_signed {
-        true => machinecode.push(memory::ldr_reg_signed(
-            result_reg,
-            address_reg,
-            dynamic_offset_reg,
-            IndexExtend::Lsl,
-            0,
-            mem_size,
-            register_size,
-        )),
-        false => machinecode.push(memory::ldr_reg(
-            result_reg,
-            address_reg,
-            dynamic_offset_reg,
-            IndexExtend::Lsl,
-            0,
-            mem_size,
-            register_size,
-        )),
+    match is_float {
+        false => {
+            // re-use the dynamic_offset_reg for the result of the load operation
+            let result_reg = dynamic_offset_reg;
+            match is_signed {
+                true => machinecode.push(memory::ldr_reg_signed(
+                    result_reg,
+                    address_reg,
+                    dynamic_offset_reg,
+                    IndexExtend::Lsl,
+                    0,
+                    mem_size,
+                    register_size,
+                )),
+                false => machinecode.push(memory::ldr_reg(
+                    result_reg,
+                    address_reg,
+                    dynamic_offset_reg,
+                    IndexExtend::Lsl,
+                    0,
+                    mem_size,
+                    register_size,
+                )),
+            }
+            value_stack.push(StackElement {
+                reg: Reg::IReg(result_reg),
+                valtype: map_regsize_to_valtype(register_size),
+            });
+        }
+        true => {
+            // allocate a new floating-point register for the result of the load operation
+            let result_reg = register_pool.alloc_float();
+            machinecode.push(fp_memory::ldr_reg(
+                result_reg,
+                address_reg,
+                dynamic_offset_reg,
+                IndexExtend::Lsl,
+                0,
+                mem_size,
+                register_size,
+            ));
+            value_stack.push(StackElement {
+                reg: Reg::FReg(result_reg),
+                valtype: map_regsize_to_valtype(register_size),
+            });
+        }
     }
     register_pool.free(); // address_reg
-
-    value_stack.push(StackElement {
-        reg: Reg::IReg(result_reg),
-        valtype: map_regsize_to_valtype(register_size),
-    });
 }
 
 pub fn compile_store(
@@ -174,6 +196,8 @@ pub fn compile_store(
         Operator::I32Store { .. } => (RegSize::Int32bit, MemSize::Mem32bit),
         Operator::I32Store16 { .. } => (RegSize::Int32bit, MemSize::Mem16bit),
         Operator::I32Store8 { .. } => (RegSize::Int32bit, MemSize::Mem8bit),
+        Operator::F32Store { .. } => (RegSize::Float32bit, MemSize::Mem32bit),
+        Operator::F64Store { .. } => (RegSize::Float64bit, MemSize::Mem64bit),
         _ => panic!("Unsupported memory.store instruction"),
     };
 
@@ -291,9 +315,15 @@ pub fn compile_store(
             mem_size,
             register_size,
         )),
-        Reg::FReg(_reg) => {
-            panic!("Floating point store operations are not supported");
-        }
+        Reg::FReg(reg) => machinecode.push(fp_memory::str_reg(
+            reg,
+            address_reg,
+            dynamic_offset_reg,
+            IndexExtend::Lsl,
+            0,
+            mem_size,
+            register_size,
+        )),
     }
     register_pool.free(); // address_reg
     register_pool.free(); // dynamic_offset_reg

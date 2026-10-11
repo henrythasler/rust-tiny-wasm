@@ -72,7 +72,9 @@ pub fn compile_function(
             | Operator::I32Load16S { memarg }
             | Operator::I32Load16U { memarg }
             | Operator::I32Load8S { memarg }
-            | Operator::I32Load8U { memarg } => {
+            | Operator::I32Load8U { memarg }
+            | Operator::F32Load { memarg }
+            | Operator::F64Load { memarg } => {
                 compile_load(
                     &op,
                     memarg,
@@ -86,7 +88,9 @@ pub fn compile_function(
             Operator::I64Store { memarg }
             | Operator::I32Store { memarg }
             | Operator::I32Store16 { memarg }
-            | Operator::I32Store8 { memarg } => {
+            | Operator::I32Store8 { memarg }
+            | Operator::F32Store { memarg }
+            | Operator::F64Store { memarg } => {
                 compile_store(
                     &op,
                     memarg,
@@ -329,8 +333,12 @@ pub fn compile_function(
             Operator::I32Ctz | Operator::I64Ctz => {
                 compile_unop(&op, &mut value_stack, machinecode);
             }
-            Operator::I64ExtendI32U => {
-                compile_extend(&op, &mut value_stack, machinecode);
+            Operator::I64ExtendI32U
+            | Operator::F32ReinterpretI32
+            | Operator::I32ReinterpretF32
+            | Operator::F64ReinterpretI64
+            | Operator::I64ReinterpretF64 => {
+                compile_cvtop(&op, &mut value_stack, &mut register_pool, machinecode);
             }
             _ => {
                 return Err(TinyWasmError::Compiler(format!(

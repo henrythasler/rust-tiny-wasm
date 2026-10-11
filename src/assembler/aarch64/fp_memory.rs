@@ -1,5 +1,61 @@
 use super::*;
 
+pub fn str_reg(
+    rt: FReg,
+    rn: IReg,
+    rm: IReg,
+    option: IndexExtend,
+    amount: u32,
+    mem_size: MemSize,
+    reg_size: RegSize,
+) -> u32 {
+    let mut instr: u32 = match (mem_size, reg_size) {
+        (MemSize::Mem64bit, RegSize::Float64bit) => {
+            // STR (64-bit)
+            0xFC200800 | if amount == 3 { 0x1000 } else { 0 } | (option as u32) << 13
+        }
+        (MemSize::Mem32bit, RegSize::Float32bit) => {
+            // STR (32-bit)
+            0xBC200800 | if amount == 2 { 0x1000 } else { 0 } | (option as u32) << 13
+        }
+        _ => panic!("invalid MemSize or RegSize in float ldr_reg"),
+    };
+
+    instr |= (rm & 0x1F) << 16; // Rm (index register)
+    instr |= (rn & 0x1F) << 5; // Rn (base register)
+    instr |= rt & 0x1F; // Rt (source register)
+
+    instr
+}
+
+pub fn ldr_reg(
+    rt: FReg,
+    rn: IReg,
+    rm: IReg,
+    option: IndexExtend,
+    amount: u32,
+    mem_size: MemSize,
+    reg_size: RegSize,
+) -> u32 {
+    let mut instr: u32 = match (mem_size, reg_size) {
+        (MemSize::Mem64bit, RegSize::Float64bit) => {
+            // LDR (64-bit)
+            0xFC600800 | if amount == 3 { 0x1000 } else { 0 } | (option as u32) << 13
+        }
+        (MemSize::Mem32bit, RegSize::Float32bit) => {
+            // LDR (32-bit)
+            0xBC600800 | if amount == 2 { 0x1000 } else { 0 } | (option as u32) << 13
+        }
+        _ => panic!("invalid MemSize or RegSize in float ldr_reg"),
+    };
+
+    instr |= (rm & 0x1F) << 16; // Rm (index register)
+    instr |= (rn & 0x1F) << 5; // Rn (base register)
+    instr |= rt & 0x1F; // Rt (source register)
+
+    instr
+}
+
 pub fn str_imm_unsigned_offset(rt: FReg, rn: IReg, imm: u32, size: RegSize) -> u32 {
     let mut imm = imm;
     let mut instr: u32 = if size == RegSize::Float8bit {
@@ -57,6 +113,37 @@ pub fn ldr_imm_unsigned_offset(rt: FReg, rn: IReg, imm: u32, size: RegSize) -> u
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_str_reg() {
+        // STR s10, [x5, x4, LSL #0]
+        assert_eq!(
+            str_reg(
+                FReg::S10,
+                IReg::X5,
+                IReg::X4,
+                IndexExtend::Lsl,
+                0,
+                MemSize::Mem32bit,
+                RegSize::Float32bit
+            ),
+            0xBC2468AA
+        );
+
+        // STR d13, [x15, x14, LSL #3]
+        assert_eq!(
+            str_reg(
+                FReg::D13,
+                IReg::X15,
+                IReg::X14,
+                IndexExtend::Lsl,
+                3,
+                MemSize::Mem64bit,
+                RegSize::Float64bit
+            ),
+            0xFC2E79ED
+        );
+    }
 
     #[test]
     fn test_str_imm_unsigned_offset() {
