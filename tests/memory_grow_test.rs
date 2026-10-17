@@ -7,7 +7,7 @@ use tiny_wasm::*;
 
 #[test]
 fn test_memory_size() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_grow.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(), i32>("memory_size")?;
@@ -21,7 +21,7 @@ fn test_memory_size() -> Result<()> {
 
 #[test]
 fn test_memory_grow() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_grow.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let mem_size = instance.get_function::<(), i32>("memory_size")?;
@@ -62,7 +62,7 @@ fn test_memory_grow() -> Result<()> {
 
 #[test]
 fn test_memory_loop() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_grow.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(), i32>("loop")?;

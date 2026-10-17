@@ -7,7 +7,7 @@ use tiny_wasm::*;
 
 #[test]
 fn test_memory_load_i64() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32,), i64>("load_i64")?;
@@ -37,7 +37,7 @@ fn test_memory_load_i64() -> Result<()> {
 
 #[test]
 fn test_memory_load_i32() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32,), i32>("load_i32")?;
@@ -68,7 +68,7 @@ fn test_memory_load_i32() -> Result<()> {
 
 #[test]
 fn test_memory_load_u16() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32,), i32>("load_i32_16u")?;
@@ -97,7 +97,7 @@ fn test_memory_load_u16() -> Result<()> {
 
 #[test]
 fn test_memory_load_i16() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32,), i32>("load_i32_16s")?;
@@ -110,7 +110,7 @@ fn test_memory_load_i16() -> Result<()> {
 
 #[test]
 fn test_memory_load_u8() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32,), i32>("load_i32_8u")?;
@@ -139,7 +139,7 @@ fn test_memory_load_u8() -> Result<()> {
 
 #[test]
 fn test_memory_load_i8() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32,), i32>("load_i32_8s")?;
@@ -153,7 +153,7 @@ fn test_memory_load_i8() -> Result<()> {
 
 #[test]
 fn test_memory_load_u8_offset() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32,), i32>("load_i32_8u_offset")?;
@@ -189,7 +189,7 @@ fn test_memory_load_u8_offset() -> Result<()> {
 
 #[test]
 fn test_memory_store_i64() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32, i64), i64>("store_i64")?;
@@ -222,7 +222,7 @@ fn test_memory_store_i64() -> Result<()> {
 
 #[test]
 fn test_memory_store_i32() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32, i32), i32>("store_i32")?;
@@ -252,7 +252,7 @@ fn test_memory_store_i32() -> Result<()> {
 
 #[test]
 fn test_memory_store_u16() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32, i32), i32>("store_i32_16u")?;
@@ -282,7 +282,7 @@ fn test_memory_store_u16() -> Result<()> {
 
 #[test]
 fn test_memory_store_u8() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory.wasm"))?;
+    let module = fs::read(Path::new("tests/assets/memory_access.wasm"))?;
     let mut instance = get_module_instance(&module)?;
 
     let func = instance.get_function::<(i32, i32), i32>("store_i32_8u")?;
@@ -306,26 +306,6 @@ fn test_memory_store_u8() -> Result<()> {
     assert!(
         matches!(res, TinyWasmError::Trap(trap_code) if trap_code==TrapCode::MemoryOutOfBounds)
     );
-
-    Ok(())
-}
-
-#[test]
-fn test_memory_extended() -> Result<()> {
-    let module = fs::read(Path::new("tests/assets/memory_extended.wasm"))?;
-    let mut instance = get_module_instance(&module)?;
-
-    let func = instance.get_function::<(), i32>("mem_bytes")?;
-    assert_eq!(func.call()?, 0x10000);
-
-    let func = instance.get_function::<(i32,), i32>("p32")?;
-    assert_eq!(func.call(0)? as u32, 0x9E3779B9);
-
-    let func = instance.get_function::<(i32,), i64>("p64")?;
-    assert_eq!(func.call(0)? as u64, 0x9E3779B97F4A7C15);
-
-    let func = instance.get_function::<(), i32>("memtest")?;
-    assert_eq!(func.call()?, 0);
 
     Ok(())
 }

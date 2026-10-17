@@ -262,10 +262,34 @@ fn wast_to_test(input_path: &str, output_path: &str, blocked: &[&str]) {
     }
 }
 
+fn wat_to_wasm(input_path: &str, output_path: &str) {
+    for entry in
+        fs::read_dir(Path::new(input_path)).expect("Should be able to read the folder content")
+    {
+        let entry = entry.unwrap();
+        let file = entry.path();
+
+        // Skip if not a .wat file
+        if file.extension().and_then(|e| e.to_str()) != Some("wat") {
+            continue;
+        }
+
+        println!("cargo:rerun-if-changed={file:?}");
+        let wasm = wat::parse_file(&file).expect("Failed to compile WAT to WASM");
+
+        let wasm_filename = file.file_stem().unwrap().to_str().unwrap().to_string();
+        let mut output_path = Path::new(output_path).join(&wasm_filename);
+        output_path.set_extension("wasm");
+
+        fs::write(&output_path, wasm).expect("fs::write() should be able to write");
+    }
+}
+
 fn main() -> std::io::Result<()> {
     // convert all wast-testcases to integration tests
     let blocked = vec!["invalid", "draft", "dummy"];
     wast_to_test("tests/assets/wast", "tests", &blocked);
+    wat_to_wasm("tests/assets", "tests/assets");
 
     Ok(())
 }
