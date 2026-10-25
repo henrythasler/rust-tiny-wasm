@@ -519,6 +519,17 @@ pub fn compile_relop(
             }
             _ => panic!("relop operator '{:?}' only supports integer registers", op),
         },
+        Operator::I32GtS | Operator::I64GtS => match (op1.reg, op2.reg) {
+            (Reg::IReg(reg1), Reg::IReg(reg2)) => {
+                machinecode.push(arithmetic::cmp_shifted_reg(reg1, reg2, Shift::Lsl, 0, size));
+                machinecode.push(conditionals::cset(
+                    reg1,
+                    Condition::from_u32(Condition::GT ^ 1).unwrap(),
+                    RegSize::Int32bit,
+                ))
+            }
+            _ => panic!("relop operator '{:?}' only supports integer registers", op),
+        },
         Operator::I32Ne | Operator::I64Ne => match (op1.reg, op2.reg) {
             (Reg::IReg(reg1), Reg::IReg(reg2)) => {
                 machinecode.push(arithmetic::cmp_shifted_reg(reg1, reg2, Shift::Lsl, 0, size));
@@ -537,6 +548,7 @@ pub fn compile_relop(
         reg: op1.reg,
         valtype: ValType::I32,
     });
+    // FIXME: What if the operand registers are swapped?
     register_pool.free();
 }
 

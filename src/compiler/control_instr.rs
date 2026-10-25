@@ -50,6 +50,7 @@ pub fn compile_block(
         result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![],
+        unreachable: false,
     });
 }
 
@@ -76,6 +77,7 @@ pub fn compile_loop(
         result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![],
+        unreachable: false,
     });
 }
 
@@ -203,6 +205,7 @@ pub fn compile_if(
                     location: machinecode.len(),
                     instruction: Instruction::Cbz,
                 }],
+                unreachable: false,
             });
             machinecode.push(branch::cbz(reg, 0, RegSize::Int32bit));
         }
@@ -253,6 +256,7 @@ pub fn compile_else(
                     location: machinecode.len(),
                     instruction: Instruction::Br,
                 }],
+                unreachable: false,
             });
             machinecode.push(branch::branch(0));
         }
@@ -291,6 +295,14 @@ pub fn compile_end(
     // restore register pool to state at the beginning of the block, so registers used in this block are available again
     register_pool.index = frame.register_index.unwrap_or(0) + frame.end_types.len() as i32;
 
+    assert_eq!(
+        value_stack.len(),
+        frame.stack_height + frame.end_types.len(),
+        "Length of value stack ({}) should match block result ({})",
+        value_stack.len(),
+        frame.stack_height + frame.end_types.len()
+    );
+
     // stack unwinding register alignment
     if !frame.end_types.is_empty()
         && let Some(expected_reg) = frame.result_register
@@ -316,14 +328,6 @@ pub fn compile_end(
             }
         }
     }
-
-    assert_eq!(
-        value_stack.len(),
-        frame.stack_height + frame.end_types.len(),
-        "Length of value stack ({}) should match block result ({})",
-        value_stack.len(),
-        frame.stack_height + frame.end_types.len()
-    );
 
     match frame.opcode {
         Opcode::Func => {

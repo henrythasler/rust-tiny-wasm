@@ -73,6 +73,7 @@ pub struct ControlFrame {
     pub result_register: Option<Reg>,
     pub machinecode_offset: usize,
     pub patches: Vec<Patch>,
+    pub unreachable: bool,
 }
 
 #[derive(Debug, Clone)]

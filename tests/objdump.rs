@@ -9,7 +9,11 @@ use tiny_wasm::*;
 
 #[test]
 fn test_objdump() {
-    let base_paths = vec![Path::new("tests/assets"), Path::new("tests/assets/wast")];
+    let base_paths = vec![
+        Path::new("tests/assets"),
+        Path::new("tests/assets/wast"),
+        // Path::new("tests/assets/rs"),
+    ];
 
     for base in base_paths {
         fs::create_dir_all(base.join("jit")).expect("Should be able to create dir");

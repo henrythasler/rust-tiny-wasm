@@ -25,6 +25,7 @@ pub fn compile_function(
         result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![],
+        unreachable: false,
     }];
 
     let mut trap_locations: Vec<Patch> = vec![];
@@ -62,11 +63,15 @@ pub fn compile_function(
         let index = reader.original_position();
         let op = reader.read().unwrap();
         match op {
-            Operator::Unreachable => trap_inline(
-                TrapCode::UnreachableCodeReached,
-                &mut trap_locations,
-                machinecode,
-            ),
+            Operator::Unreachable => {
+                trap_inline(
+                    TrapCode::UnreachableCodeReached,
+                    &mut trap_locations,
+                    machinecode,
+                );
+                control_stack.last_mut().unwrap().unreachable = true;
+
+            }
             Operator::I64Load { memarg }
             | Operator::I32Load { memarg }
             | Operator::I32Load16S { memarg }
@@ -211,6 +216,8 @@ pub fn compile_function(
             | Operator::I64LeU
             | Operator::I32GtU
             | Operator::I64GtU
+            | Operator::I32GtS
+            | Operator::I64GtS
             | Operator::I32Ne
             | Operator::I64Ne => {
                 compile_relop(&op, &mut value_stack, &mut register_pool, machinecode)
@@ -411,6 +418,7 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I32Or
         | Operator::I32Xor
         | Operator::I32GtU
+        | Operator::I32GtS
         | Operator::I32Ne
         | Operator::I32Shl => ValType::I32,
         Operator::I64Add
@@ -427,6 +435,7 @@ pub fn map_op_to_valtype(op: &Operator) -> ValType {
         | Operator::I64Or
         | Operator::I64Xor
         | Operator::I64GtU
+        | Operator::I64GtS
         | Operator::I64Ne
         | Operator::I64Shl => ValType::I64,
         Operator::F32Const { .. } => ValType::F32,
