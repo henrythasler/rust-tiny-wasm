@@ -286,22 +286,36 @@ pub fn compile_end(
     let frame = control_stack
         .pop()
         .expect("control stack should contain at least one element on 'end' opcode");
+    let len_end_types = frame.end_types.len();
+
+    if frame.unreachable {
+        // polymorphic: discard everything above the frame, synthesize results
+        value_stack.truncate(frame.stack_height);
+        for ty in &frame.end_types {
+            value_stack.push(StackElement {
+                reg: frame
+                    .result_register
+                    .expect("result register for block with results"),
+                valtype: *ty,
+            });
+        }
+    } else {
+        assert_eq!(
+            value_stack.len(),
+            frame.stack_height + len_end_types,
+            "Length of value stack ({}) should match block result ({})",
+            value_stack.len(),
+            frame.stack_height + len_end_types
+        );
+    }
 
     let mut results = value_stack
-        .split_off(i32::max(0, value_stack.len() as i32 - frame.end_types.len() as i32) as usize);
+        .split_off(i32::max(0, value_stack.len() as i32 - len_end_types as i32) as usize);
     value_stack.truncate(frame.stack_height);
     value_stack.append(&mut results);
 
     // restore register pool to state at the beginning of the block, so registers used in this block are available again
-    register_pool.index = frame.register_index.unwrap_or(0) + frame.end_types.len() as i32;
-
-    assert_eq!(
-        value_stack.len(),
-        frame.stack_height + frame.end_types.len(),
-        "Length of value stack ({}) should match block result ({})",
-        value_stack.len(),
-        frame.stack_height + frame.end_types.len()
-    );
+    register_pool.index = frame.register_index.unwrap_or(0) + len_end_types as i32;
 
     // stack unwinding register alignment
     if !frame.end_types.is_empty()

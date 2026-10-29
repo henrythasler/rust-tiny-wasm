@@ -69,8 +69,9 @@ pub fn compile_function(
                     &mut trap_locations,
                     machinecode,
                 );
-                control_stack.last_mut().unwrap().unreachable = true;
-
+                let frame = control_stack.last_mut().unwrap();
+                frame.unreachable = true;
+                // value_stack.truncate(frame.stack_height);
             }
             Operator::I64Load { memarg }
             | Operator::I32Load { memarg }
@@ -121,7 +122,11 @@ pub fn compile_function(
                 machinecode,
             ),
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
-            Operator::Return => compile_return(&mut control_stack, &value_stack, machinecode),
+            Operator::Return => {
+                compile_return(&mut control_stack, &value_stack, machinecode);
+                let frame = control_stack.last_mut().unwrap();
+                frame.unreachable = true;
+            },
             Operator::Block { blockty } => {
                 compile_block(
                     blockty,
@@ -139,6 +144,8 @@ pub fn compile_function(
                     // &mut register_pool,
                     machinecode,
                 );
+                let frame = control_stack.last_mut().unwrap();
+                frame.unreachable = true;
             }
             Operator::BrIf { relative_depth } => {
                 compile_brif(
