@@ -12,7 +12,7 @@ fn test_objdump() {
     let base_paths = vec![
         Path::new("tests/assets"),
         Path::new("tests/assets/wast"),
-        // Path::new("tests/assets/rs"),
+        Path::new("tests/assets/rs"),
     ];
 
     for base in base_paths {

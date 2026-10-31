@@ -12,3 +12,8 @@ fn panic(_info: &PanicInfo) -> ! {
 pub extern "C" fn add(a: i64, b: i64) -> i64 {
     a + b
 }
+
+// #[no_mangle]
+// pub extern "C" fn sqrt(a: f32) -> f32 {
+//     libm::sqrtf(a)
+// }

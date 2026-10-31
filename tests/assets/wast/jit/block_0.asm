@@ -13,10 +13,10 @@ SYMBOL TABLE:
 00000000000001d8 l     F .text	0000000000000038 as-test-operand
 0000000000000210 l     F .text	0000000000000040 as-compare-left
 0000000000000250 l     F .text	0000000000000040 as-compare-right
-0000000000000290 l     F .text	0000000000000038 as-br_if-value
-00000000000002c8 l     F .text	0000000000000040 as-br_if-value-cond
-0000000000000308 l     F .text	0000000000000048 nested-br-value
-0000000000000350 l     F .text	0000000000000050 nested-br_if-value
+0000000000000290 l     F .text	0000000000000030 as-br_if-value
+00000000000002c0 l     F .text	0000000000000030 as-br_if-value-cond
+00000000000002f0 l     F .text	0000000000000040 nested-br-value
+0000000000000330 l     F .text	0000000000000040 nested-br_if-value
 
 
 Contents of section .text:
@@ -62,22 +62,19 @@ Contents of section .text:
  0270 1f01096b e8879f1a e903082a 000080d2  ...k.......*....
  0280 e10309aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
  0290 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
- 02a0 08018052 04000014 29008052 49000035  ...R....)..RI..5
- 02b0 e8008052 000080d2 e10308aa ff430091  ...R.........C..
- 02c0 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
- 02d0 ff4300d1 e00300f9 c8008052 29018052  .C.........R)..R
- 02e0 04000014 69000035 e8008052 e903082a  ....i..5...R...*
- 02f0 000080d2 e10309aa ff430091 fd7bc1a8  .........C...{..
- 0300 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
- 0310 ff4300d1 e00300f9 28008052 49008052  .C......(..RI..R
- 0320 89008052 09018052 03000014 01000014  ...R...R........
- 0330 09028052 0801090b 000080d2 e10308aa  ...R............
- 0340 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
- 0350 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
- 0360 28008052 49008052 89008052 09018052  (..RI..R...R...R
- 0370 05000014 2a008052 4a000035 09048052  ....*..RJ..5...R
- 0380 09028052 0801090b 000080d2 e10308aa  ...R............
- 0390 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
+ 02a0 08018052 01000014 000080d2 e10308aa  ...R............
+ 02b0 ff430091 fd7bc1a8 c0035fd6 1f2003d5  .C...{...._.. ..
+ 02c0 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
+ 02d0 c8008052 29018052 01000014 000080d2  ...R)..R........
+ 02e0 e10309aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
+ 02f0 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
+ 0300 28008052 49008052 89008052 09018052  (..RI..R...R...R
+ 0310 02000014 09028052 0801090b 000080d2  .......R........
+ 0320 e10308aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
+ 0330 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
+ 0340 28008052 49008052 89008052 09018052  (..RI..R...R...R
+ 0350 02000014 09028052 0801090b 000080d2  .......R........
+ 0360 e10308aa ff430091 fd7bc1a8 c0035fd6  .....C...{...._.
 
 Disassembly of section .text:
 
@@ -273,72 +270,60 @@ Disassembly of section .text:
  298:	d10043ff 	sub	sp, sp, #0x10
  29c:	f90003e0 	str	x0, [sp]
  2a0:	52800108 	mov	w8, #0x8                   	// #8
- 2a4:	14000004 	b	2b4 <as-br_if-value+0x24>
- 2a8:	52800029 	mov	w9, #0x1                   	// #1
- 2ac:	35000049 	cbnz	w9, 2b4 <as-br_if-value+0x24>
- 2b0:	528000e8 	mov	w8, #0x7                   	// #7
- 2b4:	d2800000 	mov	x0, #0x0                   	// #0
- 2b8:	aa0803e1 	mov	x1, x8
- 2bc:	910043ff 	add	sp, sp, #0x10
- 2c0:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 2c4:	d65f03c0 	ret
+ 2a4:	14000001 	b	2a8 <as-br_if-value+0x18>
+ 2a8:	d2800000 	mov	x0, #0x0                   	// #0
+ 2ac:	aa0803e1 	mov	x1, x8
+ 2b0:	910043ff 	add	sp, sp, #0x10
+ 2b4:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 2b8:	d65f03c0 	ret
+ 2bc:	d503201f 	nop
 
-00000000000002c8 <as-br_if-value-cond>:
- 2c8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
- 2cc:	910003fd 	mov	x29, sp
- 2d0:	d10043ff 	sub	sp, sp, #0x10
- 2d4:	f90003e0 	str	x0, [sp]
- 2d8:	528000c8 	mov	w8, #0x6                   	// #6
- 2dc:	52800129 	mov	w9, #0x9                   	// #9
- 2e0:	14000004 	b	2f0 <as-br_if-value-cond+0x28>
- 2e4:	35000069 	cbnz	w9, 2f0 <as-br_if-value-cond+0x28>
- 2e8:	528000e8 	mov	w8, #0x7                   	// #7
- 2ec:	2a0803e9 	mov	w9, w8
- 2f0:	d2800000 	mov	x0, #0x0                   	// #0
- 2f4:	aa0903e1 	mov	x1, x9
- 2f8:	910043ff 	add	sp, sp, #0x10
- 2fc:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 300:	d65f03c0 	ret
- 304:	d503201f 	nop
+00000000000002c0 <as-br_if-value-cond>:
+ 2c0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 2c4:	910003fd 	mov	x29, sp
+ 2c8:	d10043ff 	sub	sp, sp, #0x10
+ 2cc:	f90003e0 	str	x0, [sp]
+ 2d0:	528000c8 	mov	w8, #0x6                   	// #6
+ 2d4:	52800129 	mov	w9, #0x9                   	// #9
+ 2d8:	14000001 	b	2dc <as-br_if-value-cond+0x1c>
+ 2dc:	d2800000 	mov	x0, #0x0                   	// #0
+ 2e0:	aa0903e1 	mov	x1, x9
+ 2e4:	910043ff 	add	sp, sp, #0x10
+ 2e8:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 2ec:	d65f03c0 	ret
 
-0000000000000308 <nested-br-value>:
- 308:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
- 30c:	910003fd 	mov	x29, sp
- 310:	d10043ff 	sub	sp, sp, #0x10
- 314:	f90003e0 	str	x0, [sp]
- 318:	52800028 	mov	w8, #0x1                   	// #1
- 31c:	52800049 	mov	w9, #0x2                   	// #2
- 320:	52800089 	mov	w9, #0x4                   	// #4
- 324:	52800109 	mov	w9, #0x8                   	// #8
- 328:	14000003 	b	334 <nested-br-value+0x2c>
- 32c:	14000001 	b	330 <nested-br-value+0x28>
- 330:	52800209 	mov	w9, #0x10                  	// #16
- 334:	0b090108 	add	w8, w8, w9
- 338:	d2800000 	mov	x0, #0x0                   	// #0
- 33c:	aa0803e1 	mov	x1, x8
- 340:	910043ff 	add	sp, sp, #0x10
- 344:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 348:	d65f03c0 	ret
- 34c:	d503201f 	nop
+00000000000002f0 <nested-br-value>:
+ 2f0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 2f4:	910003fd 	mov	x29, sp
+ 2f8:	d10043ff 	sub	sp, sp, #0x10
+ 2fc:	f90003e0 	str	x0, [sp]
+ 300:	52800028 	mov	w8, #0x1                   	// #1
+ 304:	52800049 	mov	w9, #0x2                   	// #2
+ 308:	52800089 	mov	w9, #0x4                   	// #4
+ 30c:	52800109 	mov	w9, #0x8                   	// #8
+ 310:	14000002 	b	318 <nested-br-value+0x28>
+ 314:	52800209 	mov	w9, #0x10                  	// #16
+ 318:	0b090108 	add	w8, w8, w9
+ 31c:	d2800000 	mov	x0, #0x0                   	// #0
+ 320:	aa0803e1 	mov	x1, x8
+ 324:	910043ff 	add	sp, sp, #0x10
+ 328:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 32c:	d65f03c0 	ret
 
-0000000000000350 <nested-br_if-value>:
- 350:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
- 354:	910003fd 	mov	x29, sp
- 358:	d10043ff 	sub	sp, sp, #0x10
- 35c:	f90003e0 	str	x0, [sp]
- 360:	52800028 	mov	w8, #0x1                   	// #1
- 364:	52800049 	mov	w9, #0x2                   	// #2
- 368:	52800089 	mov	w9, #0x4                   	// #4
- 36c:	52800109 	mov	w9, #0x8                   	// #8
- 370:	14000005 	b	384 <nested-br_if-value+0x34>
- 374:	5280002a 	mov	w10, #0x1                   	// #1
- 378:	3500004a 	cbnz	w10, 380 <nested-br_if-value+0x30>
- 37c:	52800409 	mov	w9, #0x20                  	// #32
- 380:	52800209 	mov	w9, #0x10                  	// #16
- 384:	0b090108 	add	w8, w8, w9
- 388:	d2800000 	mov	x0, #0x0                   	// #0
- 38c:	aa0803e1 	mov	x1, x8
- 390:	910043ff 	add	sp, sp, #0x10
- 394:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 398:	d65f03c0 	ret
- 39c:	d503201f 	nop
+0000000000000330 <nested-br_if-value>:
+ 330:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 334:	910003fd 	mov	x29, sp
+ 338:	d10043ff 	sub	sp, sp, #0x10
+ 33c:	f90003e0 	str	x0, [sp]
+ 340:	52800028 	mov	w8, #0x1                   	// #1
+ 344:	52800049 	mov	w9, #0x2                   	// #2
+ 348:	52800089 	mov	w9, #0x4                   	// #4
+ 34c:	52800109 	mov	w9, #0x8                   	// #8
+ 350:	14000002 	b	358 <nested-br_if-value+0x28>
+ 354:	52800209 	mov	w9, #0x10                  	// #16
+ 358:	0b090108 	add	w8, w8, w9
+ 35c:	d2800000 	mov	x0, #0x0                   	// #0
+ 360:	aa0803e1 	mov	x1, x8
+ 364:	910043ff 	add	sp, sp, #0x10
+ 368:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 36c:	d65f03c0 	ret

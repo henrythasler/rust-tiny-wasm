@@ -22,6 +22,7 @@ pub fn compile_function(
         stack_height: value_stack.len(),
         value_stack: None,
         register_index: None,
+        float_register_index: None,
         result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![],
@@ -59,9 +60,30 @@ pub fn compile_function(
         variables.extend(save_locals_to_stack(&mut stack_offset, locals, machinecode));
     }
 
+    // number of nested frames opened inside the current unreachable frame (not pushed on the control stack)
+    let mut unreachable_depth = 0usize;
+
     'expression: while !reader.eof() {
         let index = reader.original_position();
         let op = reader.read().unwrap();
+
+        // dead code is not compiled; only track block nesting until the unreachable frame ends
+        if control_stack.last().unwrap().unreachable {
+            match op {
+                Operator::Block { .. } | Operator::Loop { .. } | Operator::If { .. } => {
+                    unreachable_depth += 1;
+                    continue;
+                }
+                Operator::End if unreachable_depth > 0 => {
+                    unreachable_depth -= 1;
+                    continue;
+                }
+                Operator::Else if unreachable_depth > 0 => continue,
+                Operator::End | Operator::Else => {}
+                _ => continue,
+            }
+        }
+
         match op {
             Operator::Unreachable => {
                 trap_inline(
@@ -69,9 +91,7 @@ pub fn compile_function(
                     &mut trap_locations,
                     machinecode,
                 );
-                let frame = control_stack.last_mut().unwrap();
-                frame.unreachable = true;
-                // value_stack.truncate(frame.stack_height);
+                mark_unreachable(&mut control_stack, &mut value_stack, &mut register_pool);
             }
             Operator::I64Load { memarg }
             | Operator::I32Load { memarg }
@@ -124,9 +144,8 @@ pub fn compile_function(
             Operator::Drop => compile_drop(&mut value_stack, &mut register_pool),
             Operator::Return => {
                 compile_return(&mut control_stack, &value_stack, machinecode);
-                let frame = control_stack.last_mut().unwrap();
-                frame.unreachable = true;
-            },
+                mark_unreachable(&mut control_stack, &mut value_stack, &mut register_pool);
+            }
             Operator::Block { blockty } => {
                 compile_block(
                     blockty,
@@ -144,8 +163,7 @@ pub fn compile_function(
                     // &mut register_pool,
                     machinecode,
                 );
-                let frame = control_stack.last_mut().unwrap();
-                frame.unreachable = true;
+                mark_unreachable(&mut control_stack, &mut value_stack, &mut register_pool);
             }
             Operator::BrIf { relative_depth } => {
                 compile_brif(

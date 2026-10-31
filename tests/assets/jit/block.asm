@@ -9,20 +9,20 @@ SYMBOL TABLE:
 00000000000000c8 l     F .text	0000000000000048 parameter-br_if
 0000000000000110 l     F .text	0000000000000048 parameter-nested-return
 0000000000000158 l     F .text	0000000000000060 nested-br_if
-00000000000001b8 l     F .text	0000000000000050 loop_return
-0000000000000208 l     F .text	0000000000000040 truncate_stack
+00000000000001b8 l     F .text	0000000000000040 loop_return
+00000000000001f8 l     F .text	0000000000000040 truncate_stack
 
 
 Contents of section .text:
  0000 fd7bbfa9 fd030091 ff4300d1 e00300f9  .{.......C......
  0010 e8078052 000080d2 e1031faa ff430091  ...R.........C..
  0020 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
- 0030 ff4300d1 e00300f9 48058052 02000014  .C......H..R....
- 0040 68018052 000080d2 e10308aa ff430091  h..R.........C..
- 0050 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
- 0060 ff4300d1 e00300f9 48058052 02000014  .C......H..R....
- 0070 68018052 000080d2 e10308aa ff430091  h..R.........C..
- 0080 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 0030 ff4300d1 e00300f9 48058052 01000014  .C......H..R....
+ 0040 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
+ 0050 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
+ 0060 ff4300d1 e00300f9 48058052 01000014  .C......H..R....
+ 0070 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
+ 0080 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
  0090 ff4300d1 e00300f9 08048052 09008052  .C.........R...R
  00a0 a9000035 48058052 29008052 49000035  ...5H..R)..RI..5
  00b0 68018052 000080d2 e10308aa ff430091  h..R.........C..
@@ -43,14 +43,13 @@ Contents of section .text:
  01a0 000080d2 e10308aa ff430091 fd7bc1a8  .........C...{..
  01b0 c0035fd6 1f2003d5 fd7bbfa9 fd030091  .._.. ...{......
  01c0 ff4300d1 e00300f9 ff0b00b9 e80b40b9  .C............@.
- 01d0 49008052 0801090b e80b00b9 05000014  I..R............
- 01e0 49018052 1f01096b e8a79f1a 08ffff35  I..R...k.......5
- 01f0 e80b40b9 000080d2 e10308aa ff430091  ..@..........C..
- 0200 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
- 0210 ff4300d1 e00300f9 28008052 09008052  .C......(..R...R
- 0220 89000035 69008052 03000014 e803092a  ...5i..R.......*
- 0230 e903082a 000080d2 e10309aa ff430091  ...*.........C..
- 0240 fd7bc1a8 c0035fd6                    .{...._.        
+ 01d0 49008052 0801090b e80b00b9 01000014  I..R............
+ 01e0 e80b40b9 000080d2 e10308aa ff430091  ..@..........C..
+ 01f0 fd7bc1a8 c0035fd6 fd7bbfa9 fd030091  .{...._..{......
+ 0200 ff4300d1 e00300f9 28008052 09008052  .C......(..R...R
+ 0210 69000035 69008052 02000014 e903082a  i..5i..R.......*
+ 0220 000080d2 e10309aa ff430091 fd7bc1a8  .........C...{..
+ 0230 c0035fd6 1f2003d5                    .._.. ..        
 
 Disassembly of section .text:
 
@@ -72,13 +71,13 @@ Disassembly of section .text:
   30:	d10043ff 	sub	sp, sp, #0x10
   34:	f90003e0 	str	x0, [sp]
   38:	52800548 	mov	w8, #0x2a                  	// #42
-  3c:	14000002 	b	44 <simple-br-i32+0x1c>
-  40:	52800168 	mov	w8, #0xb                   	// #11
-  44:	d2800000 	mov	x0, #0x0                   	// #0
-  48:	aa0803e1 	mov	x1, x8
-  4c:	910043ff 	add	sp, sp, #0x10
-  50:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  54:	d65f03c0 	ret
+  3c:	14000001 	b	40 <simple-br-i32+0x18>
+  40:	d2800000 	mov	x0, #0x0                   	// #0
+  44:	aa0803e1 	mov	x1, x8
+  48:	910043ff 	add	sp, sp, #0x10
+  4c:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  50:	d65f03c0 	ret
+  54:	d503201f 	nop
 
 0000000000000058 <simple-return>:
   58:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
@@ -86,13 +85,13 @@ Disassembly of section .text:
   60:	d10043ff 	sub	sp, sp, #0x10
   64:	f90003e0 	str	x0, [sp]
   68:	52800548 	mov	w8, #0x2a                  	// #42
-  6c:	14000002 	b	74 <simple-return+0x1c>
-  70:	52800168 	mov	w8, #0xb                   	// #11
-  74:	d2800000 	mov	x0, #0x0                   	// #0
-  78:	aa0803e1 	mov	x1, x8
-  7c:	910043ff 	add	sp, sp, #0x10
-  80:	a8c17bfd 	ldp	x29, x30, [sp], #16
-  84:	d65f03c0 	ret
+  6c:	14000001 	b	70 <simple-return+0x18>
+  70:	d2800000 	mov	x0, #0x0                   	// #0
+  74:	aa0803e1 	mov	x1, x8
+  78:	910043ff 	add	sp, sp, #0x10
+  7c:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  80:	d65f03c0 	ret
+  84:	d503201f 	nop
 
 0000000000000088 <simple-br_if>:
   88:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
@@ -188,32 +187,28 @@ Disassembly of section .text:
  1d0:	52800049 	mov	w9, #0x2                   	// #2
  1d4:	0b090108 	add	w8, w8, w9
  1d8:	b9000be8 	str	w8, [sp, #8]
- 1dc:	14000005 	b	1f0 <loop_return+0x38>
- 1e0:	52800149 	mov	w9, #0xa                   	// #10
- 1e4:	6b09011f 	cmp	w8, w9
- 1e8:	1a9fa7e8 	cset	w8, lt	// lt = tstop
- 1ec:	35ffff08 	cbnz	w8, 1cc <loop_return+0x14>
- 1f0:	b9400be8 	ldr	w8, [sp, #8]
- 1f4:	d2800000 	mov	x0, #0x0                   	// #0
- 1f8:	aa0803e1 	mov	x1, x8
- 1fc:	910043ff 	add	sp, sp, #0x10
- 200:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 204:	d65f03c0 	ret
+ 1dc:	14000001 	b	1e0 <loop_return+0x28>
+ 1e0:	b9400be8 	ldr	w8, [sp, #8]
+ 1e4:	d2800000 	mov	x0, #0x0                   	// #0
+ 1e8:	aa0803e1 	mov	x1, x8
+ 1ec:	910043ff 	add	sp, sp, #0x10
+ 1f0:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 1f4:	d65f03c0 	ret
 
-0000000000000208 <truncate_stack>:
- 208:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
- 20c:	910003fd 	mov	x29, sp
- 210:	d10043ff 	sub	sp, sp, #0x10
- 214:	f90003e0 	str	x0, [sp]
- 218:	52800028 	mov	w8, #0x1                   	// #1
- 21c:	52800009 	mov	w9, #0x0                   	// #0
- 220:	35000089 	cbnz	w9, 230 <truncate_stack+0x28>
- 224:	52800069 	mov	w9, #0x3                   	// #3
- 228:	14000003 	b	234 <truncate_stack+0x2c>
- 22c:	2a0903e8 	mov	w8, w9
- 230:	2a0803e9 	mov	w9, w8
- 234:	d2800000 	mov	x0, #0x0                   	// #0
- 238:	aa0903e1 	mov	x1, x9
- 23c:	910043ff 	add	sp, sp, #0x10
- 240:	a8c17bfd 	ldp	x29, x30, [sp], #16
- 244:	d65f03c0 	ret
+00000000000001f8 <truncate_stack>:
+ 1f8:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+ 1fc:	910003fd 	mov	x29, sp
+ 200:	d10043ff 	sub	sp, sp, #0x10
+ 204:	f90003e0 	str	x0, [sp]
+ 208:	52800028 	mov	w8, #0x1                   	// #1
+ 20c:	52800009 	mov	w9, #0x0                   	// #0
+ 210:	35000069 	cbnz	w9, 21c <truncate_stack+0x24>
+ 214:	52800069 	mov	w9, #0x3                   	// #3
+ 218:	14000002 	b	220 <truncate_stack+0x28>
+ 21c:	2a0803e9 	mov	w9, w8
+ 220:	d2800000 	mov	x0, #0x0                   	// #0
+ 224:	aa0903e1 	mov	x1, x9
+ 228:	910043ff 	add	sp, sp, #0x10
+ 22c:	a8c17bfd 	ldp	x29, x30, [sp], #16
+ 230:	d65f03c0 	ret
+ 234:	d503201f 	nop

@@ -2,7 +2,7 @@
 //! Processes a Webassembly module and returns a LinkedModule for subsequent execution
 use std::mem;
 
-use wasmparser::{ExternalKind, Operator, Parser, Payload::*, ValType};
+use wasmparser::{ExternalKind, Operator, Parser, ValType};
 
 use super::*;
 use crate::assembler::aarch64::{self, *};
@@ -70,6 +70,7 @@ pub struct ControlFrame {
     pub stack_height: usize,
     pub value_stack: Option<Vec<StackElement>>,
     pub register_index: Option<i32>,
+    pub float_register_index: Option<i32>,
     pub result_register: Option<Reg>,
     pub machinecode_offset: usize,
     pub patches: Vec<Patch>,

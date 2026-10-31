@@ -2,6 +2,19 @@ use wasmparser::{BlockType, FuncType};
 
 use super::*;
 
+/// Marks the current frame unreachable: the value stack becomes polymorphic (emptied to the frame's height).
+pub fn mark_unreachable(
+    control_stack: &mut [ControlFrame],
+    value_stack: &mut Vec<StackElement>,
+    register_pool: &mut RegisterPool,
+) {
+    let frame = control_stack.last_mut().unwrap();
+    frame.unreachable = true;
+    value_stack.truncate(frame.stack_height);
+    register_pool.index = frame.register_index.unwrap_or(0);
+    register_pool.float_index = frame.float_register_index.unwrap_or(0);
+}
+
 pub fn compile_return(
     control_stack: &mut [ControlFrame],
     value_stack: &[StackElement],
@@ -47,6 +60,7 @@ pub fn compile_block(
         stack_height: value_stack.len(),
         value_stack: Some(value_stack.to_vec()),
         register_index: Some(register_pool.index),
+        float_register_index: Some(register_pool.float_index),
         result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![],
@@ -74,6 +88,7 @@ pub fn compile_loop(
         stack_height: value_stack.len(),
         value_stack: Some(value_stack.to_vec()),
         register_index: Some(register_pool.index),
+        float_register_index: Some(register_pool.float_index),
         result_register: None,
         machinecode_offset: machinecode.len(),
         patches: vec![],
@@ -199,6 +214,7 @@ pub fn compile_if(
                 stack_height: value_stack.len(),
                 value_stack: Some(value_stack.to_vec()),
                 register_index: Some(register_pool.index),
+                float_register_index: Some(register_pool.float_index),
                 result_register: None,
                 machinecode_offset: machinecode.len(),
                 patches: vec![Patch {
@@ -242,6 +258,7 @@ pub fn compile_else(
             // Restore value stack and register pool to state at the beginning of the 'if' block
             *value_stack = frame.value_stack.unwrap();
             register_pool.index = frame.register_index.unwrap();
+            register_pool.float_index = frame.float_register_index.unwrap();
 
             control_stack.push(ControlFrame {
                 opcode: Opcode::Else,
@@ -249,7 +266,8 @@ pub fn compile_else(
                 end_types: frame.end_types,
                 stack_height: value_stack.len(),
                 value_stack: None,
-                register_index: None,
+                register_index: frame.register_index,
+                float_register_index: frame.float_register_index,
                 result_register: None,
                 machinecode_offset: machinecode.len(),
                 patches: vec![Patch {
@@ -291,11 +309,16 @@ pub fn compile_end(
     if frame.unreachable {
         // polymorphic: discard everything above the frame, synthesize results
         value_stack.truncate(frame.stack_height);
+        register_pool.index = frame.register_index.unwrap_or(0);
+        register_pool.float_index = frame.float_register_index.unwrap_or(0);
         for ty in &frame.end_types {
+            let reg = match ty {
+                ValType::I32 | ValType::I64 => Reg::IReg(register_pool.alloc()),
+                ValType::F32 | ValType::F64 => Reg::FReg(register_pool.alloc_float()),
+                _ => panic!("Unsupported result type for block"),
+            };
             value_stack.push(StackElement {
-                reg: frame
-                    .result_register
-                    .expect("result register for block with results"),
+                reg: frame.result_register.unwrap_or(reg),
                 valtype: *ty,
             });
         }
@@ -315,7 +338,13 @@ pub fn compile_end(
     value_stack.append(&mut results);
 
     // restore register pool to state at the beginning of the block, so registers used in this block are available again
-    register_pool.index = frame.register_index.unwrap_or(0) + len_end_types as i32;
+    let float_results = frame
+        .end_types
+        .iter()
+        .filter(|ty| matches!(ty, ValType::F32 | ValType::F64))
+        .count() as i32;
+    register_pool.index = frame.register_index.unwrap_or(0) + len_end_types as i32 - float_results;
+    register_pool.float_index = frame.float_register_index.unwrap_or(0) + float_results;
 
     // stack unwinding register alignment
     if !frame.end_types.is_empty()
